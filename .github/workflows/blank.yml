@@ -4,17 +4,50 @@ on:
   push:
     branches:
       - main
-env:
-  GITHUB_TOKEN: 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
+
 jobs:
   merge-develop:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Merge Main to Develop
-        uses: pascalgn/automerge-action@v0.14.0
+        uses: actions/github-script@v4
         with:
-          token: ${{ secrets.TOKEN }}
-          source_branch: main
-          target_branch: develop
-          merge_method: squash
+          script: |
+            const github = require('@actions/github');
+
+            async function run() {
+              const base = 'develop';
+              const head = 'main';
+              const octokit = new github.GitHub(process.env.GITHUB_TOKEN);
+
+              const { data: pullRequests } = await octokit.pulls.list({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                state: 'open',
+                base,
+                head,
+              });
+
+              if (pullRequests.length > 0) {
+                console.log(`There is already an open pull request from ${head} to ${base}`);
+                return;
+              }
+
+              try {
+                const { data: mergeResult } = await octokit.repos.merge({
+                  owner: github.context.repo.owner,
+                  repo: github.context.repo.repo,
+                  base,
+                  head,
+                  commit_message: `Merge ${head} into ${base}`,
+                });
+                console.log(`Merged ${head} into ${base} with commit ${mergeResult.sha}`);
+              } catch (error) {
+                console.log(`Failed to merge ${head} into ${base}: ${error.message}`);
+              }
+            }
+
+            run();
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
