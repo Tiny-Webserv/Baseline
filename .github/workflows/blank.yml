@@ -16,4 +16,4 @@ jobs:
           method: squash
           branch: main
           merge-to: develop
-          github_token: ${{ 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 }}
+          github_token: ${{ myMac.PAT }}
