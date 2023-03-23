@@ -1,0 +1,19 @@
+name: Merge Main to Develop Branch
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  merge-develop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Merge Main to Develop
+        uses: dawidd6/action-merge@v5
+        with:
+          method: squash
+          branch: main
+          merge-to: develop
+          github_token: ${{ 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 }}
