@@ -13,7 +13,7 @@ jobs:
       - name: Merge Main to Develop
         uses: pascalgn/automerge-action@v0.14.0
         with:
-          token: ${{ secrets.myMac }}
+          token: ${{ secrets.TOKEN }}
           source_branch: main
           target_branch: develop
           merge_method: squash
