@@ -14,16 +14,13 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const github = require('@actions/github');
-
             async function run() {
               const base = 'develop';
               const head = 'main';
-              const octokit = new github.GitHub(process.env.GITHUB_TOKEN);
 
-              const { data: pullRequests } = await octokit.pulls.list({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
+              const { data: pullRequests } = await github.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
                 state: 'open',
                 base,
                 head,
@@ -35,9 +32,9 @@ jobs:
               }
 
               try {
-                const { data: mergeResult } = await octokit.repos.merge({
-                  owner: github.context.repo.owner,
-                  repo: github.context.repo.repo,
+                const { data: mergeResult } = await github.repos.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
                   base,
                   head,
                   commit_message: `Merge ${head} into ${base}`,
