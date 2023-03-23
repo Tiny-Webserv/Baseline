@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: wrtie
+      pull-requests: write
     steps:
       - uses: actions/checkout@v2
       - name: Merge Main to Develop
