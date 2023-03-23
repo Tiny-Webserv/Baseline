@@ -5,7 +5,7 @@ on:
     branches:
       - main
 env:
-  GITHUB_TOKEN: myMac
+  GITHUB_TOKEN: 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
 jobs:
   merge-develop:
     runs-on: ubuntu-latest
