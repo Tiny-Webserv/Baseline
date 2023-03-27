@@ -1,10 +1,9 @@
 #include "Request.hpp"
-//#include "ServerBlock.hpp"
+//#include "ServerBlock.hpp" // TODO 이후에 해당 파일 생겼을 때 주석 해제하기
 
 Request::Request(ServerBlock &server) : _server(server), _chunked(false) {
 
 }
-
 
 Request::~Request() {
 }
@@ -44,4 +43,8 @@ std::stringstream  &Request::GetStream() {
 
 ServerBlock	&Request::GetServer() {
 	return _server;
+}
+
+const char	*Request::HTTPVersionError::what() const {
+	return "HTTP Version error : The version must be HTTP 1.1";
 }
