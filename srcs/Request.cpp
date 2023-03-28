@@ -70,10 +70,3 @@ Request::Request(const Request	&request) {
 		return ;
 	*this = request;
 }
-
-//bool	Request::operator > (const Request	&compare) {}
-//bool	Request::operator < (const Request	&compare);
-//bool	Request::operator >= (const Request	&compare);
-//bool	Request::operator <= (const Request	&compare);
-//bool	Request::operator == (const Request	&compare);
-//bool	Request::operator != (const Request	&compare);
