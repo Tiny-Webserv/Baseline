@@ -2,6 +2,16 @@
 
 config::config() {}
 
+void Itos(int num, std::string &ret) {
+    // char s = 'c';
+    // ret += s;
+    if (num >= 10) {
+        Itos(num / 10, ret);
+        ret += static_cast<char>((num % 10) + 48);
+    } else
+        ret += static_cast<char>(num + 48);
+}
+
 config::config(std::string filename) {
     // 파일 열어서 파싱하기
     std::string config_file;
@@ -34,40 +44,26 @@ config::config(std::string filename) {
                 continue;
             }
             if (token == "listen") {
-                if (this->server_Block[server_Block_Idx].listen.second != -1) {
-                    std::cout << "err 2\n" << std::endl;
+                (ss >> token);
+                ///;없는 경우 예외처리 추가?
+                int size = token.size() - 1;
+                std::string test_len = "";
+                // this->server_Block[server_Block_Idx].port =
+                // atoi(token.c_str());
+                Itos(atoi(token.c_str()), test_len);
+                if ((int)test_len.size() == size)
+                    this->server_Block[server_Block_Idx].port =
+                        atoi(token.c_str());
+                else {
+                    std::cout << test_len << std::endl;
+                    std::cout << test_len.size() << std::endl;
+
+                    std::cout << atoi(token.c_str()) << std::endl;
+                    std::cout << size << std::endl;
+
+                    std::cout << "port err" << std::endl;
                     exit(1);
                 }
-                (ss >> token); // token 전진
-                std::string temp_str = token;
-                std::string save_str = "";
-                std::string test = "";
-                // const char *temp_str_char = temp_str.c_str();
-                int i = 0;
-                int flag = 0;
-                while (temp_str[i]) {
-                    if (temp_str[i] == ':') {
-                        flag = 1;
-                        i++;
-                        while (temp_str[i]) {
-                            test += temp_str[i];
-                            i++;
-                        }
-                        break;
-                    }
-                    save_str += temp_str[i];
-                    i++;
-                }
-                // char *save_chr_ptr = static_cast<char*>(&temp_str[i]);
-                if (flag) {
-                    this->server_Block[server_Block_Idx].listen.first =
-                        save_str;
-                    this->server_Block[server_Block_Idx].listen.second =
-                        //(atoi(temp_str.c_str()));
-                        (atoi(test.c_str()));
-                } else
-                    this->server_Block[server_Block_Idx].listen.second =
-                        (atoi(save_str.c_str()));
                 continue;
             }
             if (token == "location") {
@@ -128,8 +124,8 @@ config::config(std::string filename) {
                     if (token == "limit_except") {
                         while (token != "{") {
                             ss >> token;
-                            this->server_Block[server_Block_Idx]
-                                .limit_Except->push_back(token);
+                            this->server_Block[server_Block_Idx].loca[this->server_Block[server_Block_Idx].loca_block_cnt]
+                                .limit_Except.push_back(token);
                         }
                         while (token != "}")
                             ss >> token;
@@ -138,9 +134,16 @@ config::config(std::string filename) {
                 }
             }
             if (token == "server_name") {
-                ss >> token;
-                token.erase(token.size() - 1, 1);
-                this->server_Block[server_Block_Idx].server_Name = token;
+                while (ss >> token) {
+                    if (token[token.size() - 1] == ';') {
+                        token.erase(token.size() - 1, 1);
+                        this->server_Block[server_Block_Idx]
+                            .server_Name.push_back(token);
+                        break;
+                    }
+                    this->server_Block[server_Block_Idx].server_Name.push_back(
+                        token);
+                }
                 continue;
             }
             if (token == "error_page") {
@@ -197,7 +200,9 @@ config::config(std::string filename) {
             // if token == "upload"
         }
     }
-
+    if (!server_stack.empty()) {
+        std::cout << "scope err" << std::endl;
+    }
     // if (server_stack.empty() && token != "server") {
     // 	std::cout << "err\n" << std::endl;
     // 	exit(1);
@@ -209,6 +214,7 @@ config::config(std::string filename) {
     // else
     // 	continue;
 }
+//
 
 // server 확인
 // 확인 >> server_stack add
