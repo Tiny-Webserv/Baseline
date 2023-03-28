@@ -1,6 +1,7 @@
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
+#include <utility>
 
 enum Method { GET = 1, POST = 2, DELETE = 3 };
 
@@ -8,7 +9,7 @@ class ServerBlock {
 };
 
 /* TODO 목표 : 파싱
-        - 리퀘스트문 예시 4-5개 만들기
+        - 리퀘스트문 예시 4-5개 만들기class "std::__1::basic_stringstream<char, std::__1::char_traits<char>, std::__1::allocator<char>>" has no member "to_string"C/C++(135)
 			- get, delete, post
 			- chunked
 			- errors?
@@ -19,6 +20,7 @@ class ServerBlock {
 
 class Request {
 private :
+// static int count; <-
 	int _method;
 	std::string _target;
 	std::string _contentType;
@@ -28,6 +30,8 @@ private :
 	ServerBlock &_server;
 public :
 	Request(ServerBlock &server);
+	Request(const Request &request);
+	Request  &operator=(const Request &request);
 	virtual ~Request();
 
 	// Setter
@@ -45,8 +49,20 @@ public :
 	std::stringstream	&GetStream();
 	ServerBlock			&GetServer();
 
+	bool	operator > (const Request	&compare);
+	bool	operator < (const Request	&compare);
+	bool	operator >= (const Request	&compare);
+	bool	operator <= (const Request	&compare);
+	bool	operator == (const Request	&compare);
+	bool	operator != (const Request	&compare);
+
 	class HTTPVersionError : public std::exception {
 	public:
-    const char * what() const;
+    const char *what() const throw();
+	};
+
+	class MethodError : public std::exception {
+	public:
+    const char *what() const throw();
 	};
 };
