@@ -1,4 +1,5 @@
 #include "Request.hpp"
+#include "get_next_line.h"
 #include <algorithm>
 #include <map>
 
@@ -7,22 +8,28 @@
 // 3. 해당 값에 따라 변수에 저장하기
 // 4. 예외처리 들어가기
 
-Request	*ParseRequest(int	fd, std::map<int, Request *> clients, ServerBlock	&server) {
+Request	*ParseRequest(int	fd, std::map<int, Request *> &clients, ServerBlock	&server) {
+	char *line = get_next_line(fd);
+	std::stringstream	ss;
+	while (line) {
+		ss << line;
+		free(line);
+		line = get_next_line(fd);
+	}
 	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
-    if (clientsIterator == clients.end())
-	{
-        Request	*request = new Request(server);
+    if (clientsIterator == clients.end()) {
+        Request	*request = new Request(server, ss);
         clients.insert(std::pair<int, Request*>(fd, request));
     }
+	else {
+		Request	*request = clients[fd];
+		request->GetStream() << ss.str();
+	}
+	// test 코드 입니다.
 	Request	*request = clients[fd];
-    std::stringstream &ss = request->GetStream();
-
-
-
-    auto ret = clients.insert(std::make_pair(fd, request));
-    if (!ret.second) {
-                ret.first->second = request;
-    }
+	std::cout << request->GetStream().str();
+	//
+	return request;
 }
 
 //std::map<int, Request> my_map;

@@ -2,10 +2,9 @@
 #include <sstream>
 #include <string>
 #include <utility>
-
+#include <map>
 
 enum Method { GET = 1, POST = 2, DELETE = 3 };
-
 class ServerBlock {
 };
 
@@ -31,6 +30,7 @@ private :
 	ServerBlock &_server;
 public :
 	Request(ServerBlock &server);
+	Request(ServerBlock &server, std::stringstream	&stream);
 	Request(const Request &request);
 	Request  &operator=(const Request &request);
 	virtual ~Request();
@@ -40,7 +40,7 @@ public :
 	void	SetTarget(std::string	target);
 	void	SetContentType(std::string contentType);
 	void	SetChunked(bool	chunked);
-	void	SetStream(std::string	stream);
+	void	SetStream(std::stringstream	&stream);
 
 	// Getter
 	int					GetMethod();
@@ -50,12 +50,12 @@ public :
 	std::stringstream	&GetStream();
 	ServerBlock			&GetServer();
 
-	bool	operator > (const Request	&compare);
-	bool	operator < (const Request	&compare);
-	bool	operator >= (const Request	&compare);
-	bool	operator <= (const Request	&compare);
-	bool	operator == (const Request	&compare);
-	bool	operator != (const Request	&compare);
+	//bool	operator > (const Request	&compare);
+	//bool	operator < (const Request	&compare);
+	//bool	operator >= (const Request	&compare);
+	//bool	operator <= (const Request	&compare);
+	//bool	operator == (const Request	&compare);
+	//bool	operator != (const Request	&compare);
 
 	class HTTPVersionError : public std::exception {
 	public:
@@ -67,3 +67,5 @@ public :
     const char *what() const throw();
 	};
 };
+
+Request *ParseRequest(int fd, std::map<int, Request *> &clients, ServerBlock &server);
