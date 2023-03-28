@@ -7,22 +7,16 @@
 // 3. 해당 값에 따라 변수에 저장하기
 // 4. 예외처리 들어가기
 
-Request	*ParseRequest(int	fd, std::map<int, Request> clients, ServerBlock	&server) {
-	std::map<int, Request>::iterator clientsIterator = clients.find(fd);
+Request	*ParseRequest(int	fd, std::map<int, Request *> clients, ServerBlock	&server) {
+	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
     if (clientsIterator == clients.end())
 	{
-        // std::pair<std::map<int, Request>::iterator, bool> pairValue;
-        // pairValue = clients.insert(std::pair(fd, Request(server)));
-        // clientsIterator = pairValue.first();
-
-        Request	request(server);
-        clients.insert(std::pair<int, Request>(fd, request));
-		clients[fd] = request;
+        Request	*request = new Request(server);
+        clients.insert(std::pair<int, Request*>(fd, request));
     }
-        //   std::stringstream &ss = clients->GetStream();
+	Request	*request = clients[fd];
+    std::stringstream &ss = request->GetStream();
 
-        //Request	request(server);
-		clients.insert(std::make_pair(fd, request));
 
 
     auto ret = clients.insert(std::make_pair(fd, request));
