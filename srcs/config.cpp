@@ -123,7 +123,7 @@ config::config(std::string filename) {
 					}
 					if (token == "root") {
 						(ss >> token);
-						//
+						token.erase(token.size() - 1, 1);
 						this->server_Block[server_Block_Idx]
 							.loca[this->server_Block[server_Block_Idx]
 									  .loca_block_cnt]
@@ -164,6 +164,16 @@ config::config(std::string filename) {
 								exit(1);
 							}
 						}
+						continue;
+					}
+					if (token == "index") {
+						while (ss >> token) {
+							if (token[token.size() - 1] == ';')
+								break;
+							this->server_Block[server_Block_Idx].loca[server_Block[server_Block_Idx].loca_block_cnt].index.push_back(token);
+						}
+						token.erase(token.size() - 1, 1);
+						this->server_Block[server_Block_Idx].loca[server_Block[server_Block_Idx].loca_block_cnt].index.push_back(token);
 						continue;
 					}
 					if (token == "return") {
@@ -239,7 +249,7 @@ config::config(std::string filename) {
 			if (token == "index") {
 				while (ss >> token) {
 					if (token[token.size() - 1] == ';')
-						break ;
+						break;
 					this->server_Block[server_Block_Idx].index.push_back(token);
 				}
 				token.erase(token.size() - 1, 1);

@@ -15,6 +15,7 @@ struct location_block {
     std::string root;
 	std::pair<int, std::string>	Return;
     std::vector<std::string> limit_Except;
+    std::vector<std::string> index;
     int autoindex; ///-1,0,1일 경우 초기화 -1로 해야함. 구현부에서 처리(1)만
     // std::string try_Files;
     // std::string cgi경로
