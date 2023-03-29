@@ -21,7 +21,7 @@ class ServerBlock {
 class Request {
 private :
 // static int count; <-
-	int _method;
+	Method _method;
 	std::string _target;
 	std::string _contentType;
 	// FIX : chunked 변수 필요한지 고민해봐야함
@@ -36,7 +36,7 @@ public :
 	virtual ~Request();
 
 	// Setter
-	void	SetMethod(int	method);
+	void	SetMethod(Method	method);
 	void	SetTarget(std::string	target);
 	void	SetContentType(std::string contentType);
 	void	SetChunked(bool	chunked);
@@ -56,6 +56,9 @@ public :
 	//bool	operator <= (const Request	&compare);
 	//bool	operator == (const Request	&compare);
 	//bool	operator != (const Request	&compare);
+
+	void	setStartLine(std::string	startLine);
+	void	setHeader(std::string	header);
 
 	class HTTPVersionError : public std::exception {
 	public:

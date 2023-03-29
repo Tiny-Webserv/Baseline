@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <map>
 
-// 1. 파일 디스크립터로부터 리드해오기
-// 2. startline, header, body 분리하기
-// 3. 해당 값에 따라 변수에 저장하기
-// 4. 예외처리 들어가기
+// TODO 1. 파일 디스크립터로부터 리드해오기
+// TODO 2. startline, header, body 분리하기 -> request 객체 안에서
+// TODO 3. 해당 값에 따라 변수에 저장하기
+// TODO 4. 예외처리 들어가기
 
 Request	*ParseRequest(int	fd, std::map<int, Request *> &clients, ServerBlock	&server) {
 	char *line = get_next_line(fd);

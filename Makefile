@@ -1,13 +1,13 @@
 NAME = webserv
 CC = c++
-CCFLAGS = -Wall -Werror -Wextra -std=c++98 -fsanitize=address -g3
+CCFLAGS =  -std=c++98 -g3 -fsanitize=address #-Wall -Werror -Wextra
 INC_LINK = -I./incs
 
 SRCS_PATH = ./srcs
 
 SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Request.cpp ParseRequest.cpp \
-	rmain.cpp
+	rmain.cpp utils.cpp
 
 SRCS2 = webserv.cpp config.cpp
 

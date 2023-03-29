@@ -1,21 +1,28 @@
 #include "Request.hpp"
+#include "utils.hpp"
+#include <algorithm>
 //#include "ServerBlock.hpp" // TODO 이후에 해당 파일 생겼을 때 주석 해제하기
-
 
 Request::Request(ServerBlock &server) : _chunked(false), _server(server) {
 
 }
 
 // TODO 생성자에서 chunked인지 아닌지 처리하므로 굳이 초기화 리스트에서 초기화할 필요 없음. 수정할 것
-Request::Request(ServerBlock &server, std::stringstream	&stream) : _chunked(false), _server(server) {
+Request::Request(ServerBlock &server, std::stringstream	&stream) : _server(server) {
 // TODO start line, header, body 파싱하기
-	_stream << stream.str();
+	int startPos = 0;
+	int crlfPos;
+	std::vector<std::string> splited = Split(stream.str(), "\r\n");
+	setStartLine(splited[0]);
+	setHeader(splited[1]);
+	for (std::vector<std::string>::iterator	iter = splited.begin() + 2; iter != splited.end(); iter++)
+		_stream << *iter << "\n";
 }
 
 Request::~Request() {
 }
 
-void  Request::SetMethod(int  method) {
+void  Request::SetMethod(Method  method) {
 	_method = method;
 }
 
@@ -74,4 +81,35 @@ Request::Request(const Request	&request) : _chunked(false), _server(request._ser
 	if (this == &request)
 		return ;
 	*this = request;
+}
+
+void Request::setStartLine(std::string startLine){
+	   	std::vector<std::string> data = Split(startLine, std::string(" "));
+
+		if (!data[0].compare("GET"))
+			_method = GET;
+		else if (!data[0].compare("POST"))
+			_method = POST;
+		else if (!data[0].compare("DELETE"))
+			_method = DELETE;
+		else
+			throw MethodError();
+		_target = data[1];
+
+		if (data[2].compare("HTTP/1.1"))
+			throw HTTPVersionError();
+
+}
+
+void Request::setHeader(std::string header) {
+	std::cout << "header : " << header << std::endl;
+	std::vector<std::string>	splited = Split(header, ": ");
+	std::vector<std::string>::iterator	iter;
+
+	iter = find(splited.begin(), splited.end(), "Content-Type");
+	if (iter != splited.end() && iter + 1 != splited.end())
+		_contentType = *(iter + 1);
+	iter = find(splited.begin(), splited.end(), "Transfer-Encoding");
+	if (iter != splited.end() && iter + 1 != splited.end() && !(iter + 1)->compare("chunked"))
+		_chunked = true;
 }
