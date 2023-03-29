@@ -13,12 +13,15 @@
 struct location_block {
     std::string location_Target;
     std::string root;
+	std::pair<int, std::string>	Return;
     std::vector<std::string> limit_Except;
+    int autoindex; ///-1,0,1일 경우 초기화 -1로 해야함. 구현부에서 처리(1)만
     // std::string try_Files;
     // std::string cgi경로
     location_block() {
         location_Target = "";
         root = "";
+        autoindex = -1;
     }
 };
 
@@ -30,7 +33,6 @@ struct server_block {
     unsigned long client_Max_Body_Size;
     std::map<int, std::string> return_Info;
     std::string root;
-    bool autoindex;
     std::vector<std::string> index;
     std::vector<location_block> loca;
     int loca_block_cnt;
@@ -38,7 +40,6 @@ struct server_block {
         port = -1;
         client_Max_Body_Size = 1024;
         root = "";
-        autoindex = false;
         loca_block_cnt = 0;
         // error_page;
         // limit_Except
