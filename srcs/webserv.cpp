@@ -32,12 +32,12 @@ int main(int ac, char **av) {
 					  << std::endl;
 			int k2 = con.server_Block[i].loca[j].limit_Except.size();
 			if (k2 != 0)
-				std::cout << con.server_Block[i].loca[j].location_Target
-						<< " limit_except 목록 : " << std::endl;
+				std::cout << "limit_except 목록 : ";
 			for (int k = 0 ; k < k2 ; k ++)
 			{
-				std::cout << con.server_Block[i].loca[j].limit_Except[k] << std::endl;
+				std::cout << con.server_Block[i].loca[j].limit_Except[k] << " ";
 			}
+			std::cout << std::endl;
 		}
 		// std::cout << "error page : " << con.server_Block[i].error_Page[key]
 		// << std::endl;

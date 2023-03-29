@@ -122,8 +122,9 @@ config::config(std::string filename) {
                         continue;
                     }
                     if (token == "limit_except") {
-                        while (token != "{") {
-                            ss >> token;
+                        while (ss >> token) {
+							if (token == "{")
+								break ;
                             this->server_Block[server_Block_Idx].loca[this->server_Block[server_Block_Idx].loca_block_cnt]
                                 .limit_Except.push_back(token);
                         }
