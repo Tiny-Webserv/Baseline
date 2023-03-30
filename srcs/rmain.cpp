@@ -15,9 +15,14 @@ int  main() {
 	std::cout << "fd : " << fd << std::endl;
 	ParseRequest(fd, clients, serverBlock);
 	close(fd);
-	//fd = open("./docs/delete.md", O_RDONLY, 0666);
-	//std::cout << "fd : " << fd << std::endl;
-	//ParseRequest(fd, clients, serverBlock);
+	fd = open("./docs/requestTest2", O_RDONLY, 0666);
+	ParseRequest(fd, clients, serverBlock);
+	close(fd);
+	fd = open("./docs/requestTest3", O_RDONLY, 0666);
+	ParseRequest(fd, clients, serverBlock);
+	close(fd);
+	std::cout << "================================" << std::endl;
+	std::cout << clients[fd]->GetStream().str() << std::endl;
 	return 0;
 
 }
