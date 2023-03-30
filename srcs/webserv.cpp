@@ -50,6 +50,14 @@ int main(int ac, char **av) {
 		for (int j = 0; j < con.server_Block[i].loca_block_cnt; j++) {
 			std::cout << "========= " << j + 1
 					  << " 번째 location block=============" << std::endl;
+
+			// location index 체크
+			n2 = con.server_Block[i].loca[j].index.size();
+			for (size_t k = 0; k < n2; k++) {
+				std::cout
+					<< "index: " << con.server_Block[i].loca[j].index[k]
+					<< std::endl;
+			}
 			// location target check
 			std::cout << "target : "
 					  << con.server_Block[i].loca[j].location_Target
@@ -58,11 +66,11 @@ int main(int ac, char **av) {
 					  << std::endl;
 			// limit_except 체크
 			int k2 = con.server_Block[i].loca[j].limit_Except.size();
-			if (k2 != 0)
-			{
+			if (k2 != 0) {
 				std::cout << "limit_except 목록 : ";
 				for (int k = 0; k < k2; k++) {
-					std::cout << con.server_Block[i].loca[j].limit_Except[k] << " ";
+					std::cout << con.server_Block[i].loca[j].limit_Except[k]
+							  << " ";
 				}
 			}
 			std::cout << std::endl;
@@ -74,11 +82,12 @@ int main(int ac, char **av) {
 				std::cout << "false" << std::endl;
 
 			// return 체크
-			// std::cout << "===================return=============" << std::endl;
+			// std::cout << "===================return=============" <<
+			// std::endl;
 			std::cout << "return : code = "
 					  << con.server_Block[i].loca[j].Return.first;
-			std::cout << " uri  = "
-					  << con.server_Block[i].loca[j].Return.second << std::endl;
+			std::cout << " uri  = " << con.server_Block[i].loca[j].Return.second
+					  << std::endl;
 
 			std::cout << std::endl;
 			std::cout << std::endl;

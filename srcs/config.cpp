@@ -1,5 +1,8 @@
 #include "config.hpp"
 
+int nginx_word(std::string line);
+bool test(std::string line);
+
 config::config() {}
 
 void Itos(int num, std::string &ret) {
@@ -66,16 +69,18 @@ config::config(std::string filename) {
 				std::string test_len = "";
 				// this->server_Block[server_Block_Idx].port =
 				// atoi(token.c_str());
+				if (this->server_Block[server_Block_Idx].port != -1)
+					continue;
 				Itos(atoi(token.c_str()), test_len);
 				if ((int)test_len.size() == size)
 					this->server_Block[server_Block_Idx].port =
 						atoi(token.c_str());
 				else {
-					std::cout << test_len << std::endl;
-					std::cout << test_len.size() << std::endl;
+					// std::cout << test_len << std::endl;
+					// std::cout << test_len.size() << std::endl;
 
-					std::cout << atoi(token.c_str()) << std::endl;
-					std::cout << size << std::endl;
+					// std::cout << atoi(token.c_str()) << std::endl;
+					// std::cout << size << std::endl;
 
 					std::cout << "port err" << std::endl;
 					exit(1);
@@ -110,11 +115,29 @@ config::config(std::string filename) {
 										  .loca_block_cnt]
 								.root =
 								this->server_Block[server_Block_Idx].root;
-						if (this->server_Block[server_Block_Idx]
+						/////
+						if (this->server_Block[server_Block_Idx] ////
 								.loca[this->server_Block[server_Block_Idx]
 										  .loca_block_cnt]
-								.root == "") {
-							std::cout << "err serroot, location root"
+								.index.empty()) {
+							this->server_Block[server_Block_Idx]
+								.loca[this->server_Block[server_Block_Idx]
+										  .loca_block_cnt]
+								.index =
+								this->server_Block[server_Block_Idx].index;
+							// std::cout <<
+							// this->server_Block[server_Block_Idx].index[0];
+						}
+						/////
+						if (this->server_Block[server_Block_Idx]
+									.loca[this->server_Block[server_Block_Idx]
+											  .loca_block_cnt]
+									.root == "" ||
+							this->server_Block[server_Block_Idx]
+								.loca[this->server_Block[server_Block_Idx]
+										  .loca_block_cnt]
+								.index.empty()) { //////
+							std::cout << "err serroot, location root or index"
 									  << std::endl;
 							exit(1);
 						}
@@ -123,11 +146,16 @@ config::config(std::string filename) {
 					}
 					if (token == "root") {
 						(ss >> token);
-						token.erase(token.size() - 1, 1);
-						this->server_Block[server_Block_Idx]
-							.loca[this->server_Block[server_Block_Idx]
-									  .loca_block_cnt]
-							.root = token;
+						if (this->server_Block[server_Block_Idx]
+								.loca[this->server_Block[server_Block_Idx]
+										  .loca_block_cnt]
+								.root.empty()) {
+							token.erase(token.size() - 1, 1);
+							this->server_Block[server_Block_Idx]
+								.loca[this->server_Block[server_Block_Idx]
+										  .loca_block_cnt]
+								.root = token;
+						}
 						continue;
 					}
 					if (token == "limit_except") {
@@ -170,10 +198,15 @@ config::config(std::string filename) {
 						while (ss >> token) {
 							if (token[token.size() - 1] == ';')
 								break;
-							this->server_Block[server_Block_Idx].loca[server_Block[server_Block_Idx].loca_block_cnt].index.push_back(token);
+							this->server_Block[server_Block_Idx]
+								.loca[server_Block[server_Block_Idx]
+										  .loca_block_cnt]
+								.index.push_back(token);
 						}
 						token.erase(token.size() - 1, 1);
-						this->server_Block[server_Block_Idx].loca[server_Block[server_Block_Idx].loca_block_cnt].index.push_back(token);
+						this->server_Block[server_Block_Idx]
+							.loca[server_Block[server_Block_Idx].loca_block_cnt]
+							.index.push_back(token);
 						continue;
 					}
 					if (token == "return") {
@@ -242,8 +275,10 @@ config::config(std::string filename) {
 			}
 			if (token == "root") {
 				ss >> token;
-				token.erase(token.size() - 1, 1);
-				this->server_Block[server_Block_Idx].root = token;
+				if (this->server_Block[server_Block_Idx].root.empty()) {
+					token.erase(token.size() - 1, 1);
+					this->server_Block[server_Block_Idx].root = token;
+				}
 				continue;
 			}
 			if (token == "index") {
@@ -261,8 +296,10 @@ config::config(std::string filename) {
 	}
 
 	if (!server_stack.empty()) {
+		// port == -1 에러 처리 listen없는 경우.
 		std::cout << "scope err" << std::endl;
 	}
+
 	// if (server_stack.empty() && token != "server") {
 	// 	std::cout << "err\n" << std::endl;
 	// 	exit(1);
@@ -319,31 +356,51 @@ std::string config::open_File(std::string filename) {
 		exit(1);
 	}
 	while (getline(file, line, '\n')) {
+		if (nginx_word(line) == 0) {
+			std::cout << "; err" << std::endl;
+			exit(1);
+		}
 		file_Save += line;
 		file_Save += " ";
 	}
 	return file_Save;
 }
 
+bool test(std::string line) {
+	size_t len = line.size() - 1;
+	size_t idx = 0;
+	while (line[idx] != ';') {
+		idx++;
+		if (len < idx)
+			return false;
+	}
+	if (len != idx)
+		return false;
+	return true;
+}
 // 실제 지시어 체크하는 부분
-// int config::nginx_word(std::string word)
-// {
-// 	std::string words[12] = {
-// 		"listen",
-// 		"server_names",
-// 		"error_page",
-// 		"client_max_body_size",
-// 		"limit_except",
-// 		"return",
-// 		"root",
-// 		"autoindex",
-// 		"index",
-// 		"location",
-// 		"upload_pass",
-// 		"upload_store"
-// 	};
-// 	return(0);
-// }
+int nginx_word(std::string line) {
+	std::stringstream ss(line);
+	std::string FirstToken;
+	ss >> FirstToken;
+	std::string words[8] = {
+		"listen", "server_name", "error_page", "client_max_body_size",
+		"return", "root",        "autoindex",  "index"};
+	for (int i = 0; i < 8; i++) {
+		if (words[i] == FirstToken) {
+			if (test(line))
+				return 1;
+			else {
+				std::cout << "=====semicolon test======" << std::endl;
+				std::cout << FirstToken << std::endl;
+				std::cout << "=====semicolon test======" << std::endl;
+
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
 
 // 26번줄 반복문에서 상태 체크 조건문은 0, 1, 2 만 확인해서 각 상태 함수
 // 호출하면 깔끔? status server - > 그냥 좆 된 듯
