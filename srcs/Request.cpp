@@ -1,12 +1,13 @@
 #include "Request.hpp"
 #include "utils.hpp"
+#include "StateCode.hpp"
 #include <algorithm>
 // #include "ServerBlock.hpp" // TODO 이후에 해당 파일 생겼을 때 주석 해제하기
 
 Request::Request(ServerBlock &server) : _chunked(false), _server(server) {}
 
 Request::Request(ServerBlock &server, std::stringstream &stream)
-    : _errorCode(0), _chunked(false), _server(server) {
+    : _errorCode(OK), _chunked(false), _server(server) {
     std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
     try {
@@ -14,8 +15,14 @@ Request::Request(ServerBlock &server, std::stringstream &stream)
         setHeader(splited[1]);
 		std::vector<std::string>::iterator	iter = splited.begin() + 3;
         SetBody(iter);
-    } catch (const std::exception &e) {
-        SetErrorCode(413);
+    } catch (const Request::ChunkBodySizeError	&e) {
+		SetErrorCode(PayloadTooLarge);
+		SetErrorMessages(e.what());
+	} catch (const Request::HTTPVersionError	&e) {
+		SetErrorCode(HTTPVersionNotSupported);
+		SetErrorMessages(e.what());
+	} catch (const std::exception &e) {
+        SetErrorCode(BadRequest);
         SetErrorMessages(e.what());
     }
 }
@@ -68,8 +75,9 @@ const char *Request::MethodError::what() const throw() {
 }
 
 const char *Request::ChunkBodySizeError::what() const throw() {
-    return "Size error : Bad request";
+    return "Size error : Request Entity Too Large";
 }
+
 Request &Request::operator=(const Request &request) {
     _method = request._method;
     _target = request._target;

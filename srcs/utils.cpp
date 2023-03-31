@@ -1,10 +1,7 @@
 #include <cstring>
-#include <iostream>
 #include <string>
 #include <vector>
 
-// TODO 같은 순서의 스트링 기준이 아닌, 둘 중 하나만 오면 처리됨. 이전에
-// 라피신의 스플릿 함수와 같은 상황. 고칠 필요성 있음
 std::vector<std::string> Split(std::string lines, std::string charSet) {
 	char *token;
 	char *rest = const_cast<char *>(lines.c_str());
