@@ -62,11 +62,11 @@ Config::Config(std::string filename) {
             if (token == "location") {
                 (ss >> token);
                 this->_ServerBlockObject[server_Block_Idx]._Location.push_back(
-                    location_block());
+                    LocationBlock());
                 this->_ServerBlockObject[server_Block_Idx]
                     ._Location[this->_ServerBlockObject[server_Block_Idx]
                                    ._LocationBlockSize]
-                    ._LocationTarget = token;
+                    .SetLocationTarget(token);
                 (ss >> token);
                 if (token != "{") {
                     std::cout << "err3\n" << std::endl;
@@ -82,37 +82,39 @@ Config::Config(std::string filename) {
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Root == "")
+                                .GetRoot() == "")
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Root =
-                                this->_ServerBlockObject[server_Block_Idx]
-                                    ._Root;
+                                .SetRoot(
+                                    this->_ServerBlockObject[server_Block_Idx]
+                                        ._Root);
                         if (this->_ServerBlockObject[server_Block_Idx]
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Index.empty()) {
+                                .GetIndex()
+                                .empty()) {
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Index =
-                                this->_ServerBlockObject[server_Block_Idx]
-                                    ._Index;
+                                .SetIndex(
+                                    this->_ServerBlockObject[server_Block_Idx]
+                                        ._Index);
                         }
                         if (this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[this->_ServerBlockObject
                                                    [server_Block_Idx]
                                                        ._LocationBlockSize]
-                                    ._Root == "" ||
+                                    .GetRoot() == "" ||
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Index.empty()) {
+                                .GetIndex()
+                                .empty()) {
                             std::cout << "err serroot, location root or _Index"
                                       << std::endl;
                             exit(1);
@@ -127,13 +129,14 @@ Config::Config(std::string filename) {
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Root.empty()) {
+                                .GetRoot()
+                                .empty()) {
                             token.erase(token.size() - 1, 1);
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._Root = token;
+                                .SetRoot(token);
                         }
                         continue;
                     }
@@ -145,7 +148,7 @@ Config::Config(std::string filename) {
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._LimitExcept.push_back(token);
+                                .AddLimitExcept(token);
                         }
                         while (token != "}")
                             ss >> token;
@@ -157,19 +160,19 @@ Config::Config(std::string filename) {
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._AutoIndex == -1) {
+                                .GetAutoIndex() == -1) {
                             if (token == "on;") {
                                 this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[this->_ServerBlockObject
                                                    [server_Block_Idx]
                                                        ._LocationBlockSize]
-                                    ._AutoIndex = 1;
+                                    .SetAutoIndex(1);
                             } else if (token == "off;") {
                                 this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[this->_ServerBlockObject
                                                    [server_Block_Idx]
                                                        ._LocationBlockSize]
-                                    ._AutoIndex = 0;
+                                    .SetAutoIndex(0);
                             } else {
                                 std::cout << "autoindex err" << std::endl;
                                 exit(1);
@@ -184,13 +187,13 @@ Config::Config(std::string filename) {
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location[_ServerBlockObject[server_Block_Idx]
                                                ._LocationBlockSize]
-                                ._Index.push_back(token);
+                                .AddIndex(token);
                         }
                         token.erase(token.size() - 1, 1);
                         this->_ServerBlockObject[server_Block_Idx]
                             ._Location[_ServerBlockObject[server_Block_Idx]
                                            ._LocationBlockSize]
-                            ._Index.push_back(token);
+                            .AddIndex(token);
                         continue;
                     }
                     if (token == "return") {
@@ -198,19 +201,21 @@ Config::Config(std::string filename) {
                                           ._LocationBlockSize;
                         if (this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[LocaIdx]
-                                    ._Return.first == 0 &&
+                                    .GetReturn()
+                                    .first == 0 &&
                             this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[LocaIdx]
-                                    ._Return.second == "") {
+                                    .GetReturn()
+                                    .second == "") {
                             ss >> token;
-                            this->_ServerBlockObject[server_Block_Idx]
-                                ._Location[LocaIdx]
-                                ._Return.first = atoi(token.c_str());
+                            std::pair<int, std::string> temp;
+                            temp.first = atoi(token.c_str());
                             ss >> token;
                             token.erase(token.size() - 1, 1);
+                            temp.second = token;
                             this->_ServerBlockObject[server_Block_Idx]
                                 ._Location[LocaIdx]
-                                ._Return.second = token;
+                                .SetReturn(temp);
                         } else {
                             while (ss >> token) {
                                 if (token[token.size() - 1] == ';')
@@ -224,7 +229,7 @@ Config::Config(std::string filename) {
                                 ._Location
                                     [this->_ServerBlockObject[server_Block_Idx]
                                          ._LocationBlockSize]
-                                ._UploadPass != "") {
+                                .GetUploadPass() != "") {
                             continue;
                         }
                         ss >> token;
@@ -233,7 +238,7 @@ Config::Config(std::string filename) {
                             ._Location
                                 [this->_ServerBlockObject[server_Block_Idx]
                                      ._LocationBlockSize]
-                            ._UploadPass = token;
+                            .SetUploadPass(token);
                         continue;
                     }
                 }

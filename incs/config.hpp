@@ -1,6 +1,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
+#include "LocationBlock.hpp"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -10,23 +11,24 @@
 #include <utility>
 #include <vector>
 
-struct location_block {
-    std::string _LocationTarget;
-    std::string _Root;
-    std::string _UploadPass;
-    std::pair<int, std::string> _Return;
-    std::vector<std::string> _LimitExcept;
-    std::vector<std::string> _Index;
-    int _AutoIndex;
-    // std::string try_Files;
-    // std::string cgi경로
-    location_block() {
-        _UploadPass = "";
-        _LocationTarget = "";
-        _Root = "";
-        _AutoIndex = -1;
-    }
-};
+
+//struct LocationBlock {
+//    std::string _LocationTarget;
+//    std::string _Root;
+//    std::string _UploadPass;
+//    std::pair<int, std::string> _Return;
+//    std::vector<std::string> _LimitExcept;
+//    std::vector<std::string> _Index;
+//    int _AutoIndex;
+//    // std::string try_Files;
+//    // std::string cgi경로
+//    LocationBlock() {
+//        _UploadPass = "";
+//        _LocationTarget = "";
+//        _Root = "";
+//        _AutoIndex = -1;
+//    }
+//};
 
 struct ServerBlock {
     int _Port;
@@ -35,7 +37,7 @@ struct ServerBlock {
     unsigned long _ClientMaxBodySize;
     std::string _Root;
     std::vector<std::string> _Index;
-    std::vector<location_block> _Location;
+    std::vector<LocationBlock> _Location;
     int _LocationBlockSize;
     ServerBlock() {
         _Port = -1;
