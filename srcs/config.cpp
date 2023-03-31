@@ -6,8 +6,6 @@ bool test(std::string line);
 Config::Config() {}
 
 void Itos(int num, std::string &ret) {
-    // char s = 'c';
-    // ret += s;
     if (num >= 10) {
         Itos(num / 10, ret);
         ret += static_cast<char>((num % 10) + 48);
@@ -28,10 +26,9 @@ Config::Config(std::string filename) {
     while (ss >> token) {
         if (token == "server") {
             ss >> token;
-            if (token == "{") { ///{ 아닌 경우 에러 처리 필요하긴 함.
+            if (token == "{") {
                 server_stack.push_back("{");
-                server_Block.push_back(server_block());
-                // continue;
+                _ServerBlockObject.push_back(ServerBlock());
             } else {
                 std::cout << "server { 필수" << std::endl;
             }
@@ -39,22 +36,6 @@ Config::Config(std::string filename) {
             std::cout << " or must \"server\" first" << std::endl;
             exit(1);
         }
-
-        // ##################################################
-        // if (token == "server")
-        //     continue;
-        // if (token == "{") { ///{ 아닌 경우 에러 처리 필요하긴 함.
-        //     server_stack.push_back("{");
-        //     server_Block.push_back(server_block());
-        //     // continue;
-        // }
-        // ##################################################
-
-        // else ??delete!
-        // {
-        // 	std::cout << "err1\n" << std::endl;
-        // 	exit(1);
-        // }
         while (!server_stack.empty()) {
             (ss >> token);
             if (token == "}") {
@@ -64,95 +45,94 @@ Config::Config(std::string filename) {
             }
             if (token == "listen") {
                 (ss >> token);
-                ///;없는 경우 예외처리 추가?
                 int size = token.size() - 1;
                 std::string test_len = "";
-                // this->server_Block[server_Block_Idx].port =
-                // atoi(token.c_str());
-                if (this->server_Block[server_Block_Idx]._Port != -1)
+                if (this->_ServerBlockObject[server_Block_Idx]._Port != -1)
                     continue;
                 Itos(atoi(token.c_str()), test_len);
                 if ((int)test_len.size() == size)
-                    this->server_Block[server_Block_Idx]._Port =
+                    this->_ServerBlockObject[server_Block_Idx]._Port =
                         atoi(token.c_str());
                 else {
-                    // std::cout << test_len << std::endl;
-                    // std::cout << test_len.size() << std::endl;
-
-                    // std::cout << atoi(token.c_str()) << std::endl;
-                    // std::cout << size << std::endl;
-
                     std::cout << "port err" << std::endl;
                     exit(1);
                 }
                 continue;
             }
             if (token == "location") {
-                (ss >> token); // token 전진
-                this->server_Block[server_Block_Idx]._Location.push_back(
+                (ss >> token);
+                this->_ServerBlockObject[server_Block_Idx]._Location.push_back(
                     location_block());
-                this->server_Block[server_Block_Idx]
-                    ._Location[this->server_Block[server_Block_Idx]._LocationBlockSize]
+                this->_ServerBlockObject[server_Block_Idx]
+                    ._Location[this->_ServerBlockObject[server_Block_Idx]
+                                   ._LocationBlockSize]
                     ._LocationTarget = token;
-                (ss >> token); // token 전진
+                (ss >> token);
                 if (token != "{") {
                     std::cout << "err3\n" << std::endl;
                     exit(1);
                 }
                 location_stack.push_back("{");
 
-                //(ss >> token);
-                while (!location_stack.empty()) { // ;삭제 필요함
+                while (!location_stack.empty()) {
                     (ss >> token);
                     if (token == "}") {
                         location_stack.pop_back();
-                        if (this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Root == "")
-                            this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Root =
-                                this->server_Block[server_Block_Idx]._Root;
-                        /////
-                        if (this->server_Block[server_Block_Idx] ////
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                                this->_ServerBlockObject[server_Block_Idx]
+                                    ._Root;
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Index.empty()) {
-                            this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Index =
-                                this->server_Block[server_Block_Idx]._Index;
-                            // std::cout <<
-                            // this->server_Block[server_Block_Idx]._Index[0];
+                                this->_ServerBlockObject[server_Block_Idx]
+                                    ._Index;
                         }
-                        /////
-                        if (this->server_Block[server_Block_Idx]
-                                    ._Location[this->server_Block[server_Block_Idx]
-                                              ._LocationBlockSize]._Root == "" ||
-                            this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
-                                ._Index.empty()) { //////
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                    ._Location[this->_ServerBlockObject
+                                                   [server_Block_Idx]
+                                                       ._LocationBlockSize]
+                                    ._Root == "" ||
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
+                                ._Index.empty()) {
                             std::cout << "err serroot, location root or _Index"
                                       << std::endl;
                             exit(1);
                         }
-                        this->server_Block[server_Block_Idx]._LocationBlockSize++;
+                        this->_ServerBlockObject[server_Block_Idx]
+                            ._LocationBlockSize++;
                         continue;
                     }
                     if (token == "root") {
                         (ss >> token);
-                        if (this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Root.empty()) {
                             token.erase(token.size() - 1, 1);
-                            this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._Root = token;
                         }
                         continue;
@@ -161,9 +141,10 @@ Config::Config(std::string filename) {
                         while (ss >> token) {
                             if (token == "{")
                                 break;
-                            this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._LimitExcept.push_back(token);
                         }
                         while (token != "}")
@@ -172,19 +153,22 @@ Config::Config(std::string filename) {
                     }
                     if (token == "autoindex") {
                         ss >> token;
-                        if (this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._AutoIndex == -1) {
                             if (token == "on;") {
-                                this->server_Block[server_Block_Idx]
-                                    ._Location[this->server_Block[server_Block_Idx]
-                                              ._LocationBlockSize]
+                                this->_ServerBlockObject[server_Block_Idx]
+                                    ._Location[this->_ServerBlockObject
+                                                   [server_Block_Idx]
+                                                       ._LocationBlockSize]
                                     ._AutoIndex = 1;
                             } else if (token == "off;") {
-                                this->server_Block[server_Block_Idx]
-                                    ._Location[this->server_Block[server_Block_Idx]
-                                              ._LocationBlockSize]
+                                this->_ServerBlockObject[server_Block_Idx]
+                                    ._Location[this->_ServerBlockObject
+                                                   [server_Block_Idx]
+                                                       ._LocationBlockSize]
                                     ._AutoIndex = 0;
                             } else {
                                 std::cout << "autoindex err" << std::endl;
@@ -197,33 +181,34 @@ Config::Config(std::string filename) {
                         while (ss >> token) {
                             if (token[token.size() - 1] == ';')
                                 break;
-                            this->server_Block[server_Block_Idx]
-                                ._Location[server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                            this->_ServerBlockObject[server_Block_Idx]
+                                ._Location[_ServerBlockObject[server_Block_Idx]
+                                               ._LocationBlockSize]
                                 ._Index.push_back(token);
                         }
                         token.erase(token.size() - 1, 1);
-                        this->server_Block[server_Block_Idx]
-                            ._Location[server_Block[server_Block_Idx]._LocationBlockSize]
+                        this->_ServerBlockObject[server_Block_Idx]
+                            ._Location[_ServerBlockObject[server_Block_Idx]
+                                           ._LocationBlockSize]
                             ._Index.push_back(token);
                         continue;
                     }
                     if (token == "return") {
-                        int LocaIdx =
-                            this->server_Block[server_Block_Idx]._LocationBlockSize;
-                        if (this->server_Block[server_Block_Idx]
+                        int LocaIdx = this->_ServerBlockObject[server_Block_Idx]
+                                          ._LocationBlockSize;
+                        if (this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[LocaIdx]
                                     ._Return.first == 0 &&
-                            this->server_Block[server_Block_Idx]
+                            this->_ServerBlockObject[server_Block_Idx]
                                     ._Location[LocaIdx]
                                     ._Return.second == "") {
                             ss >> token;
-                            this->server_Block[server_Block_Idx]
+                            this->_ServerBlockObject[server_Block_Idx]
                                 ._Location[LocaIdx]
                                 ._Return.first = atoi(token.c_str());
                             ss >> token;
                             token.erase(token.size() - 1, 1);
-                            this->server_Block[server_Block_Idx]
+                            this->_ServerBlockObject[server_Block_Idx]
                                 ._Location[LocaIdx]
                                 ._Return.second = token;
                         } else {
@@ -235,17 +220,19 @@ Config::Config(std::string filename) {
                         continue;
                     }
                     if (token == "upload_pass") {
-                        if (this->server_Block[server_Block_Idx]
-                                ._Location[this->server_Block[server_Block_Idx]
-                                          ._LocationBlockSize]
+                        if (this->_ServerBlockObject[server_Block_Idx]
+                                ._Location
+                                    [this->_ServerBlockObject[server_Block_Idx]
+                                         ._LocationBlockSize]
                                 ._UploadPass != "") {
                             continue;
                         }
                         ss >> token;
                         token.erase(token.size() - 1, 1);
-                        this->server_Block[server_Block_Idx]
-                            ._Location[this->server_Block[server_Block_Idx]
-                                      ._LocationBlockSize]
+                        this->_ServerBlockObject[server_Block_Idx]
+                            ._Location
+                                [this->_ServerBlockObject[server_Block_Idx]
+                                     ._LocationBlockSize]
                             ._UploadPass = token;
                         continue;
                     }
@@ -255,12 +242,12 @@ Config::Config(std::string filename) {
                 while (ss >> token) {
                     if (token[token.size() - 1] == ';') {
                         token.erase(token.size() - 1, 1);
-                        this->server_Block[server_Block_Idx]
+                        this->_ServerBlockObject[server_Block_Idx]
                             ._ServerName.push_back(token);
                         break;
                     }
-                    this->server_Block[server_Block_Idx]._ServerName.push_back(
-                        token);
+                    this->_ServerBlockObject[server_Block_Idx]
+                        ._ServerName.push_back(token);
                 }
                 continue;
             }
@@ -273,25 +260,25 @@ Config::Config(std::string filename) {
                 }
                 token.erase(token.size() - 1, 1);
                 for (size_t i = 0; i < temp.size(); i++) {
-                    this->server_Block[server_Block_Idx]
+                    this->_ServerBlockObject[server_Block_Idx]
                         ._ErrorPage[atoi(temp[i].c_str())] = token;
                 }
                 continue;
             }
             if (token == "client_max_body_size") {
                 ss >> token;
-                if (this->server_Block[server_Block_Idx]._ClientMaxBodySize ==
-                    1024) {
-                    this->server_Block[server_Block_Idx]._ClientMaxBodySize =
-                        atoi(token.c_str());
+                if (this->_ServerBlockObject[server_Block_Idx]
+                        ._ClientMaxBodySize == 1024) {
+                    this->_ServerBlockObject[server_Block_Idx]
+                        ._ClientMaxBodySize = atoi(token.c_str());
                 }
                 continue;
             }
             if (token == "root") {
                 ss >> token;
-                if (this->server_Block[server_Block_Idx]._Root.empty()) {
+                if (this->_ServerBlockObject[server_Block_Idx]._Root.empty()) {
                     token.erase(token.size() - 1, 1);
-                    this->server_Block[server_Block_Idx]._Root = token;
+                    this->_ServerBlockObject[server_Block_Idx]._Root = token;
                 }
                 continue;
             }
@@ -299,64 +286,21 @@ Config::Config(std::string filename) {
                 while (ss >> token) {
                     if (token[token.size() - 1] == ';')
                         break;
-                    this->server_Block[server_Block_Idx]._Index.push_back(token);
+                    this->_ServerBlockObject[server_Block_Idx]._Index.push_back(
+                        token);
                 }
                 token.erase(token.size() - 1, 1);
-                this->server_Block[server_Block_Idx]._Index.push_back(token);
+                this->_ServerBlockObject[server_Block_Idx]._Index.push_back(
+                    token);
                 continue;
             }
-            // if token == "upload"
         }
     }
 
     if (!server_stack.empty()) {
-        // port == -1 에러 처리 listen없는 경우.
         std::cout << "scope err" << std::endl;
     }
-
-    // if (server_stack.empty() && token != "server") {
-    // 	std::cout << "err\n" << std::endl;
-    // 	exit(1);
-
-    // else if(token == "{"){
-    // 	server_stack.push_back("{");
-
-    // }
-    // else
-    // 	continue;
 }
-//
-
-// server 확인
-// 확인 >> server_stack add
-// while(server_stack)
-// std::cout << " " << token;
-// if (token != "server")
-// {
-// 	std::cout << "err1\n" << std::endl;
-// 	exit(1);
-// }
-// }
-// std::cout << std::endl;
-
-/////////
-// while () {
-//     서버클래스 생성 과 동시에 server__Root =
-//         "" server_stack.append("{") while (server_stack)
-//         : if getline_return ==
-//         "}" server_stack.pop() continue server.listen = _Root =
-//             >> server__Root =
-//                 저장 x - _Root = "" location location_stack =
-//                     [] location_stack.append("{") location.dir =
-//                         "/" while (location_stack)
-//         : if getline_return ==
-//           "}" location_stack.pop() continue if getline_return () ==
-//           "_Root" : loaction__Root = 저장 if !loaction__Root : loaction__Root
-//           =
-//                                                                 server__Root;
-//     loaction__Root == "" :: >>> error "
-// }
-//////////
 
 Config::~Config() {}
 
@@ -415,34 +359,3 @@ int nginx_word(std::string line) {
     }
     return 1;
 }
-
-// 26번줄 반복문에서 상태 체크 조건문은 0, 1, 2 만 확인해서 각 상태 함수
-// 호출하면 깔끔? status server - > 그냥 좆 된 듯
-
-// 파일 전체 확인 반복문
-// while (getline(file, line, '\n')) {
-// 	std::stringstream ss(line);
-// 	//한줄 확인 반복문
-// 	while (ss >> token) {
-// 		// none 일 때
-// 		if (status == NONE) {
-// 			if (token == "server")
-// 				status = SERVER;
-// 			else {
-// 				std::cout << "server block이 지정되지 않음" <<
-// std::endl; 				exit(1);
-// 			}
-// 		// server block 일 때
-// 		} else if (status == SERVER || status == SERVER_START) {
-// 			if (token == "location") {
-// 				status = LOCATION;
-// 			}
-// 			else {
-// 				server_Status(ss, status);
-// 			}
-// 		// location block 일 때
-// 		} else if (status == LOCATION || status == LOCATION_START) {
-// 			location_Status(ss);
-// 		}
-// 	}
-// }
