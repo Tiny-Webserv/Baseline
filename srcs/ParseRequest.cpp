@@ -1,6 +1,7 @@
 #include "Request.hpp"
 #include "get_next_line.h"
 #include "utils.hpp"
+#include "StateCode.hpp"
 #include <algorithm>
 #include <map>
 
@@ -23,8 +24,11 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
 			request->SetBody(body.begin());
+		} catch (const Request::ChunkBodySizeError &e) {
+			request->SetErrorCode(PayloadTooLarge);
+			request->SetErrorMessages(e.what());
 		} catch (const std::exception &e) {
-			request->SetErrorCode(413);
+			request->SetErrorCode(BadRequest);
 			request->SetErrorMessages(e.what());
 		}
 	}
