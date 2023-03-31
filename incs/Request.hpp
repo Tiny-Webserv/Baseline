@@ -18,11 +18,11 @@ class ServerBlock {};
 
 class Request {
   private:
-	// static int count; <-
 	Method _method;
 	std::string _target;
 	std::string _body;
 	std::string _contentType;
+	int	_contentLength;
 	std::string _errorMessages;
 	int _errorCode;
 	bool _chunked;
@@ -69,10 +69,11 @@ class Request {
 		const char *what() const throw();
 	};
 
-	class ChunkBodySizeError : public std::exception {
+	class BodySizeError : public std::exception {
 	  public:
 		const char *what() const throw();
 	};
+
 };
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
