@@ -22,7 +22,7 @@ class Request {
 	std::string _target;
 	std::string _body;
 	std::string _contentType;
-	unsigned int	_contentLength;
+	int	_contentLength;
 	std::string _errorMessages;
 	int _errorCode;
 	bool _chunked;

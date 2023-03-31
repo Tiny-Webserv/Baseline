@@ -124,7 +124,7 @@ void Request::setHeader(std::string header) {
         _chunked = true;
 	iter = find(splited.begin(), splited.end(), "Content-Length:");
     if (iter != splited.end() && iter + 1 != splited.end())
-        _contentLength = static_cast<unsigned int>(atoi((iter + 1)->c_str()));
+        _contentLength = atoi((iter + 1)->c_str());
 }
 
 void Request::SetBody(std::vector<std::string>::iterator	iter) {
@@ -134,12 +134,16 @@ void Request::SetBody(std::vector<std::string>::iterator	iter) {
         std::stringstream ss;
         ss << std::hex << *iter;
         ss >> x;
-        if ((iter + 1)->length() > x)
+        if ((iter + 1)->length() > x) {
+			GetStream() << (iter + 1)->substr(0, x);
             throw BodySizeError();
+		}
+		else if (x == 0)
+			SetChunked(false);
         else
             GetStream() << *(iter + 1);
     } else {
-		if (_contentLength != -1 && iter->length() > _contentLength) {
+		if (_contentLength != -1 && static_cast<int>(iter->length()) > _contentLength) {
 			GetStream() << iter->substr(0, _contentLength);
                         throw BodySizeError();
         }
