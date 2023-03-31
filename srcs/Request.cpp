@@ -1,13 +1,14 @@
 #include "Request.hpp"
 #include "utils.hpp"
 #include "StateCode.hpp"
+#include <cstdlib>
 #include <algorithm>
 // #include "ServerBlock.hpp" // TODO 이후에 해당 파일 생겼을 때 주석 해제하기
 
 Request::Request(ServerBlock &server) : _chunked(false), _server(server) {}
 
 Request::Request(ServerBlock &server, std::stringstream &stream)
-    : _errorCode(OK), _chunked(false), _server(server) {
+    : _contentLength(-1), _errorCode(OK), _chunked(false), _server(server) {
     std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
     try {
@@ -15,7 +16,7 @@ Request::Request(ServerBlock &server, std::stringstream &stream)
         setHeader(splited[1]);
 		std::vector<std::string>::iterator	iter = splited.begin() + 3;
         SetBody(iter);
-    } catch (const Request::ChunkBodySizeError	&e) {
+    } catch (const Request::BodySizeError	&e) {
 		SetErrorCode(PayloadTooLarge);
 		SetErrorMessages(e.what());
 	} catch (const Request::HTTPVersionError	&e) {
@@ -74,7 +75,7 @@ const char *Request::MethodError::what() const throw() {
     return "Method error : Bad method request";
 }
 
-const char *Request::ChunkBodySizeError::what() const throw() {
+const char *Request::BodySizeError::what() const throw() {
     return "Size error : Request Entity Too Large";
 }
 
@@ -121,6 +122,9 @@ void Request::setHeader(std::string header) {
     if (iter != splited.end() && iter + 1 != splited.end() &&
         !(iter + 1)->compare("chunked"))
         _chunked = true;
+	iter = find(splited.begin(), splited.end(), "Content-Length:");
+    if (iter != splited.end() && iter + 1 != splited.end())
+        _contentLength = static_cast<unsigned int>(atoi((iter + 1)->c_str()));
 }
 
 void Request::SetBody(std::vector<std::string>::iterator	iter) {
@@ -131,9 +135,14 @@ void Request::SetBody(std::vector<std::string>::iterator	iter) {
         ss << std::hex << *iter;
         ss >> x;
         if ((iter + 1)->length() > x)
-            throw ChunkBodySizeError();
+            throw BodySizeError();
         else
             GetStream() << *(iter + 1);
-    } else
+    } else {
+		if (_contentLength != -1 && iter->length() > _contentLength) {
+			GetStream() << iter->substr(0, _contentLength);
+                        throw BodySizeError();
+        }
         GetStream() << *iter;
+	}
 }
