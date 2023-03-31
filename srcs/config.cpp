@@ -69,11 +69,11 @@ Config::Config(std::string filename) {
                 std::string test_len = "";
                 // this->server_Block[server_Block_Idx].port =
                 // atoi(token.c_str());
-                if (this->server_Block[server_Block_Idx].port != -1)
+                if (this->server_Block[server_Block_Idx]._Port != -1)
                     continue;
                 Itos(atoi(token.c_str()), test_len);
                 if ((int)test_len.size() == size)
-                    this->server_Block[server_Block_Idx].port =
+                    this->server_Block[server_Block_Idx]._Port =
                         atoi(token.c_str());
                 else {
                     // std::cout << test_len << std::endl;
@@ -89,10 +89,10 @@ Config::Config(std::string filename) {
             }
             if (token == "location") {
                 (ss >> token); // token 전진
-                this->server_Block[server_Block_Idx].loca.push_back(
+                this->server_Block[server_Block_Idx]._Location.push_back(
                     location_block());
                 this->server_Block[server_Block_Idx]
-                    .loca[this->server_Block[server_Block_Idx].loca_block_cnt]
+                    ._Location[this->server_Block[server_Block_Idx]._LocationBlockSize]
                     ._LocationTarget = token;
                 (ss >> token); // token 전진
                 if (token != "{") {
@@ -107,52 +107,52 @@ Config::Config(std::string filename) {
                     if (token == "}") {
                         location_stack.pop_back();
                         if (this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
                                 ._Root == "")
                             this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
                                 ._Root =
                                 this->server_Block[server_Block_Idx]._Root;
                         /////
                         if (this->server_Block[server_Block_Idx] ////
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .index.empty()) {
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._Index.empty()) {
                             this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .index =
-                                this->server_Block[server_Block_Idx].index;
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._Index =
+                                this->server_Block[server_Block_Idx]._Index;
                             // std::cout <<
-                            // this->server_Block[server_Block_Idx].index[0];
+                            // this->server_Block[server_Block_Idx]._Index[0];
                         }
                         /////
                         if (this->server_Block[server_Block_Idx]
-                                    .loca[this->server_Block[server_Block_Idx]
-                                              .loca_block_cnt]._Root == "" ||
+                                    ._Location[this->server_Block[server_Block_Idx]
+                                              ._LocationBlockSize]._Root == "" ||
                             this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .index.empty()) { //////
-                            std::cout << "err serroot, location root or index"
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._Index.empty()) { //////
+                            std::cout << "err serroot, location root or _Index"
                                       << std::endl;
                             exit(1);
                         }
-                        this->server_Block[server_Block_Idx].loca_block_cnt++;
+                        this->server_Block[server_Block_Idx]._LocationBlockSize++;
                         continue;
                     }
                     if (token == "root") {
                         (ss >> token);
                         if (this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
                                 ._Root.empty()) {
                             token.erase(token.size() - 1, 1);
                             this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
                                 ._Root = token;
                         }
                         continue;
@@ -162,9 +162,9 @@ Config::Config(std::string filename) {
                             if (token == "{")
                                 break;
                             this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .limit_Except.push_back(token);
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._LimitExcept.push_back(token);
                         }
                         while (token != "}")
                             ss >> token;
@@ -173,19 +173,19 @@ Config::Config(std::string filename) {
                     if (token == "autoindex") {
                         ss >> token;
                         if (this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .autoindex == -1) {
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._AutoIndex == -1) {
                             if (token == "on;") {
                                 this->server_Block[server_Block_Idx]
-                                    .loca[this->server_Block[server_Block_Idx]
-                                              .loca_block_cnt]
-                                    .autoindex = 1;
+                                    ._Location[this->server_Block[server_Block_Idx]
+                                              ._LocationBlockSize]
+                                    ._AutoIndex = 1;
                             } else if (token == "off;") {
                                 this->server_Block[server_Block_Idx]
-                                    .loca[this->server_Block[server_Block_Idx]
-                                              .loca_block_cnt]
-                                    .autoindex = 0;
+                                    ._Location[this->server_Block[server_Block_Idx]
+                                              ._LocationBlockSize]
+                                    ._AutoIndex = 0;
                             } else {
                                 std::cout << "autoindex err" << std::endl;
                                 exit(1);
@@ -198,34 +198,34 @@ Config::Config(std::string filename) {
                             if (token[token.size() - 1] == ';')
                                 break;
                             this->server_Block[server_Block_Idx]
-                                .loca[server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .index.push_back(token);
+                                ._Location[server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._Index.push_back(token);
                         }
                         token.erase(token.size() - 1, 1);
                         this->server_Block[server_Block_Idx]
-                            .loca[server_Block[server_Block_Idx].loca_block_cnt]
-                            .index.push_back(token);
+                            ._Location[server_Block[server_Block_Idx]._LocationBlockSize]
+                            ._Index.push_back(token);
                         continue;
                     }
                     if (token == "return") {
                         int LocaIdx =
-                            this->server_Block[server_Block_Idx].loca_block_cnt;
+                            this->server_Block[server_Block_Idx]._LocationBlockSize;
                         if (this->server_Block[server_Block_Idx]
-                                    .loca[LocaIdx]
-                                    .Return.first == 0 &&
+                                    ._Location[LocaIdx]
+                                    ._Return.first == 0 &&
                             this->server_Block[server_Block_Idx]
-                                    .loca[LocaIdx]
-                                    .Return.second == "") {
+                                    ._Location[LocaIdx]
+                                    ._Return.second == "") {
                             ss >> token;
                             this->server_Block[server_Block_Idx]
-                                .loca[LocaIdx]
-                                .Return.first = atoi(token.c_str());
+                                ._Location[LocaIdx]
+                                ._Return.first = atoi(token.c_str());
                             ss >> token;
                             token.erase(token.size() - 1, 1);
                             this->server_Block[server_Block_Idx]
-                                .loca[LocaIdx]
-                                .Return.second = token;
+                                ._Location[LocaIdx]
+                                ._Return.second = token;
                         } else {
                             while (ss >> token) {
                                 if (token[token.size() - 1] == ';')
@@ -236,17 +236,17 @@ Config::Config(std::string filename) {
                     }
                     if (token == "upload_pass") {
                         if (this->server_Block[server_Block_Idx]
-                                .loca[this->server_Block[server_Block_Idx]
-                                          .loca_block_cnt]
-                                .UploadPass != "") {
+                                ._Location[this->server_Block[server_Block_Idx]
+                                          ._LocationBlockSize]
+                                ._UploadPass != "") {
                             continue;
                         }
                         ss >> token;
                         token.erase(token.size() - 1, 1);
                         this->server_Block[server_Block_Idx]
-                            .loca[this->server_Block[server_Block_Idx]
-                                      .loca_block_cnt]
-                            .UploadPass = token;
+                            ._Location[this->server_Block[server_Block_Idx]
+                                      ._LocationBlockSize]
+                            ._UploadPass = token;
                         continue;
                     }
                 }
@@ -256,10 +256,10 @@ Config::Config(std::string filename) {
                     if (token[token.size() - 1] == ';') {
                         token.erase(token.size() - 1, 1);
                         this->server_Block[server_Block_Idx]
-                            .server_Name.push_back(token);
+                            ._ServerName.push_back(token);
                         break;
                     }
-                    this->server_Block[server_Block_Idx].server_Name.push_back(
+                    this->server_Block[server_Block_Idx]._ServerName.push_back(
                         token);
                 }
                 continue;
@@ -274,15 +274,15 @@ Config::Config(std::string filename) {
                 token.erase(token.size() - 1, 1);
                 for (size_t i = 0; i < temp.size(); i++) {
                     this->server_Block[server_Block_Idx]
-                        .error_Page[atoi(temp[i].c_str())] = token;
+                        ._ErrorPage[atoi(temp[i].c_str())] = token;
                 }
                 continue;
             }
             if (token == "client_max_body_size") {
                 ss >> token;
-                if (this->server_Block[server_Block_Idx].client_Max_Body_Size ==
+                if (this->server_Block[server_Block_Idx]._ClientMaxBodySize ==
                     1024) {
-                    this->server_Block[server_Block_Idx].client_Max_Body_Size =
+                    this->server_Block[server_Block_Idx]._ClientMaxBodySize =
                         atoi(token.c_str());
                 }
                 continue;
@@ -299,10 +299,10 @@ Config::Config(std::string filename) {
                 while (ss >> token) {
                     if (token[token.size() - 1] == ';')
                         break;
-                    this->server_Block[server_Block_Idx].index.push_back(token);
+                    this->server_Block[server_Block_Idx]._Index.push_back(token);
                 }
                 token.erase(token.size() - 1, 1);
-                this->server_Block[server_Block_Idx].index.push_back(token);
+                this->server_Block[server_Block_Idx]._Index.push_back(token);
                 continue;
             }
             // if token == "upload"
