@@ -1,5 +1,6 @@
 #include "Config.hpp"
 
+
 int NginxWord(std::string line);
 bool test(std::string line);
 
