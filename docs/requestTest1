@@ -1,0 +1,6 @@
+POST /upload HTTP/1.1\r
+Host: example.com Content-Type: text/plain Transfer-Encoding: chunked\r
+\r
+20\r
+<html>
+</html>\r

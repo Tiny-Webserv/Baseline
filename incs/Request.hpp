@@ -1,69 +1,82 @@
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
+
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
+// test를 위해 crlf를 아래와 같이 정의했습니다. 이후에 "\r\n"으로 수정 바랍니다.
+#ifndef CRLF
+#define CRLF "\\r\n"
+#endif
 
 enum Method { GET = 1, POST = 2, DELETE = 3 };
-
-class ServerBlock {
-};
-
-/* TODO 목표 : 파싱
-        - 리퀘스트문 예시 4-5개 만들기class "std::__1::basic_stringstream<char, std::__1::char_traits<char>, std::__1::allocator<char>>" has no member "to_string"C/C++(135)
-			- get, delete, post
-			- chunked
-			- errors?
-					- http version error
-					- method error
-						- ex. get, delete, post 아닌 것들
-*/
+class ServerBlock {};
 
 class Request {
-private :
-// static int count; <-
-	int _method;
+  private:
+	Method _method;
 	std::string _target;
+	std::string _body;
 	std::string _contentType;
-	// FIX : chunked 변수 필요한지 고민해봐야함
+	int	_contentLength;
+	std::string _errorMessages;
+	int _errorCode;
 	bool _chunked;
 	std::stringstream _stream;
 	ServerBlock &_server;
-public :
+
+  public:
 	Request(ServerBlock &server);
+	Request(ServerBlock &server, std::stringstream &stream);
 	Request(const Request &request);
-	Request  &operator=(const Request &request);
+	Request &operator=(const Request &request);
 	virtual ~Request();
 
 	// Setter
-	void	SetMethod(int	method);
-	void	SetTarget(std::string	target);
-	void	SetContentType(std::string contentType);
-	void	SetChunked(bool	chunked);
-	void	SetStream(std::string	stream);
+	void SetTarget(std::string target);
+	void SetMethod(Method method);
+	void SetContentType(std::string contentType);
+	void SetChunked(bool chunked);
+	void SetStream(std::stringstream &stream);
+	void SetErrorCode(int _errorCode);
+	void SetErrorMessages(std::string _errorMessages);
 
 	// Getter
-	int					GetMethod();
-	std::string			GetTarget();
-	std::string			GetContentType();
-	bool				GetChunked();
-	std::stringstream	&GetStream();
-	ServerBlock			&GetServer();
+	int GetMethod();
+	std::string GetTarget();
+	std::string GetContentType();
+	bool GetChunked();
+	std::stringstream &GetStream();
+	ServerBlock &GetServer();
+	int GetErrorCode();
+	std::string GetErrorMessages();
 
-	bool	operator > (const Request	&compare);
-	bool	operator < (const Request	&compare);
-	bool	operator >= (const Request	&compare);
-	bool	operator <= (const Request	&compare);
-	bool	operator == (const Request	&compare);
-	bool	operator != (const Request	&compare);
+	void setStartLine(std::string startLine);
+	void setHeader(std::string header);
+	void SetBody(std::vector<std::string>::iterator iter);
 
 	class HTTPVersionError : public std::exception {
-	public:
-    const char *what() const throw();
+	  public:
+		const char *what() const throw();
 	};
 
 	class MethodError : public std::exception {
-	public:
-    const char *what() const throw();
+	  public:
+		const char *what() const throw();
 	};
+
+	class BodySizeError : public std::exception {
+	  public:
+		const char *what() const throw();
+	};
+
 };
+
+Request *ParseRequest(int fd, std::map<int, Request *> &clients,
+					  ServerBlock &server);
+
+#endif
