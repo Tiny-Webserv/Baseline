@@ -11,7 +11,6 @@ class ServerBlock {
     std::map<int, std::string> _ErrorPage;
     unsigned long _ClientMaxBodySize;
     std::string _Root;
-    int _LocationBlockSize;
     std::vector<std::string> _ServerName;
     std::vector<std::string> _Index;
     std::vector<LocationBlock> _Location;
@@ -19,6 +18,7 @@ class ServerBlock {
   public:
     ServerBlock();
     ~ServerBlock();
+    void ServerBlockClear();
     ///////////Setter///////////
     void SetPort(int port);
     void SetErrorPage(std::map<int, std::string> errorpage);
@@ -32,7 +32,6 @@ class ServerBlock {
     void AddServerName(std::string servername);
     void AddServerIndex(std::string index);
     void AddLocationBlock(LocationBlock locationblock);
-    void AddLocationBlockSize();
     void AddErrorPage(int key, std::string value);
 
     ///////////Getter///////////
@@ -43,8 +42,6 @@ class ServerBlock {
     std::vector<std::string> GetServerName();
     std::vector<std::string> GetIndex();
     std::vector<LocationBlock> &GetLocation();
-    int GetLocationBlockSize();
-
     // ServerBlock &operator=(const ServerBlock &ref);
 };
 

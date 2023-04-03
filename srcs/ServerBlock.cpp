@@ -4,10 +4,19 @@ ServerBlock::ServerBlock() {
     this->_Port = -1;
     this->_ClientMaxBodySize = 1024;
     this->_Root = "";
-    this->_LocationBlockSize = 0;
 }
 
 ServerBlock::~ServerBlock() {}
+
+void ServerBlock::ServerBlockClear() {
+    this->_Port = -1;
+    this->_ClientMaxBodySize = 1024;
+    this->_Root = "";
+    this->_ErrorPage.clear();
+    this->_ServerName.clear();
+    this->_Index.clear();
+    this->_Location.clear();
+}
 
 void ServerBlock::SetPort(int port) { this->_Port = port; }
 void ServerBlock::SetErrorPage(std::map<int, std::string> errorpage) {
@@ -38,8 +47,6 @@ void ServerBlock::AddLocationBlock(LocationBlock locationblock) {
     this->_Location.push_back(locationblock);
 }
 
-void ServerBlock::AddLocationBlockSize() { this->_LocationBlockSize++; }
-
 void ServerBlock::AddErrorPage(int key, std::string value) {
     this->_ErrorPage[key] = value;
 }
@@ -62,5 +69,3 @@ std::vector<std::string> ServerBlock::GetIndex() { return this->_Index; }
 std::vector<LocationBlock> &ServerBlock::GetLocation() {
     return this->_Location;
 }
-
-int ServerBlock::GetLocationBlockSize() { return this->_LocationBlockSize; }

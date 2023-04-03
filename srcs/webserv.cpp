@@ -52,7 +52,7 @@ int main(int ac, char **av) {
                   << std::endl;
 
         // location 블록 체크
-        for (int j = 0; j < con._ServerBlockObject[i].GetLocationBlockSize();
+        for (unsigned int j = 0; j < con._ServerBlockObject[i].GetLocation().size();
              j++) {
             std::cout << "========= " << j + 1
                       << " 번째 location block=============" << std::endl;
