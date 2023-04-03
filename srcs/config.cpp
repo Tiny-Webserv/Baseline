@@ -1,6 +1,6 @@
 #include "Config.hpp"
 
-int nginx_word(std::string line);
+int NginxWord(std::string line);
 bool test(std::string line);
 
 Config::Config() {}
@@ -16,10 +16,10 @@ void Itos(int num, std::string &ret) {
 Config::Config(std::string filename) {
 	// 파일 열어서 파싱하기
 	std::string ConfigFile;
-	ConfigFile = open_File(filename);
+	ConfigFile = OpenFile(filename);
 	std::string token;
-	std::vector<std::string> server_stack;
-	std::vector<std::string> location_stack;
+	std::vector<std::string> serverStack;
+	std::vector<std::string> locationStack;
 	ServerBlock curServerBlockObject;
 
 	// ServerBlock CurrServerBlock; /////////
@@ -29,7 +29,7 @@ Config::Config(std::string filename) {
 		if (token == "server") {
 			ss >> token;
 			if (token == "{") {
-				server_stack.push_back("{");
+				serverStack.push_back("{");
 				curServerBlockObject.ServerBlockClear();
 			} else {
 				std::cout << "server { 필수" << std::endl;
@@ -38,10 +38,10 @@ Config::Config(std::string filename) {
 			std::cout << " or must \"server\" first" << std::endl;
 			exit(1);
 		}
-		while (!server_stack.empty()) {
+		while (!serverStack.empty()) {
 			(ss >> token);
 			if (token == "}") {
-				server_stack.pop_back();
+				serverStack.pop_back();
 				_ServerBlockObject.push_back(curServerBlockObject);
 				continue;
 			}
@@ -69,12 +69,12 @@ Config::Config(std::string filename) {
 					std::cout << "err3\n" << std::endl;
 					exit(1);
 				}
-				location_stack.push_back("{");
+				locationStack.push_back("{");
 
-				while (!location_stack.empty()) {
+				while (!locationStack.empty()) {
 					(ss >> token);
 					if (token == "}") {
-						location_stack.pop_back();
+						locationStack.pop_back();
 						if (curLocationBlock.GetRoot() == "")
 							curLocationBlock.SetRoot(
 								curServerBlockObject.GetRoot());
@@ -134,13 +134,9 @@ Config::Config(std::string filename) {
 						continue;
 					}
 					if (token == "return") {
-						int LocaIdx =
-							curServerBlockObject.GetLocation().size();
-						if (curServerBlockObject.GetLocation()[LocaIdx]
-									.GetReturn()
+						if (curLocationBlock.GetReturn()
 									.first == 0 &&
-							curServerBlockObject.GetLocation()[LocaIdx]
-									.GetReturn()
+							curLocationBlock.GetReturn()
 									.second == "") {
 							ss >> token;
 							std::pair<int, std::string> temp;
@@ -148,7 +144,7 @@ Config::Config(std::string filename) {
 							ss >> token;
 							token.erase(token.size() - 1, 1);
 							temp.second = token;
-							curServerBlockObject.GetLocation()[LocaIdx]
+							curLocationBlock
 								.SetReturn(temp);
 						} else {
 							while (ss >> token) {
@@ -223,14 +219,14 @@ Config::Config(std::string filename) {
 		}
 	}
 
-	if (!server_stack.empty()) {
+	if (!serverStack.empty()) {
 		std::cout << "scope err" << std::endl;
 	}
 }
 
 Config::~Config() {}
 
-std::string Config::open_File(std::string filename) {
+std::string Config::OpenFile(std::string filename) {
 	// 파일 open
 	std::ifstream file(filename);
 	std::string file_Save = "";
@@ -240,7 +236,7 @@ std::string Config::open_File(std::string filename) {
 		exit(1);
 	}
 	while (getline(file, line, '\n')) {
-		if (nginx_word(line) == 0) {
+		if (NginxWord(line) == 0) {
 			std::cout << "; err" << std::endl;
 			exit(1);
 		}
@@ -263,7 +259,7 @@ bool test(std::string line) {
 	return true;
 }
 // 실제 지시어 체크하는 부분
-int nginx_word(std::string line) {
+int NginxWord(std::string line) {
 	std::stringstream ss(line);
 	std::string FirstToken;
 	ss >> FirstToken;

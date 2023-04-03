@@ -35,7 +35,7 @@ class Config {
     Config();
     Config(std::string filename);
     ~Config();
-    std::string open_File(std::string filename);
+    std::string OpenFile(std::string filename);
     // int		nginx_word(std::string word);
 };
 
