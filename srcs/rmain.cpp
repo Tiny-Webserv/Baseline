@@ -18,6 +18,7 @@ int  main() {
 	fd = open("./docs/requestTest2", O_RDONLY, 0666);
 	ParseRequest(fd, clients, serverBlock);
 	close(fd);
+	std::cout << clients[fd]->GetErrorCode() << std::endl;
 	fd = open("./docs/requestTest3", O_RDONLY, 0666);
 	ParseRequest(fd, clients, serverBlock);
 	close(fd);

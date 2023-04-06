@@ -15,12 +15,12 @@ error_page
 max body size : 1024
 ========= 1 번째 location block=============
 index: abc
-upload_pass : 
+upload_pass :
 target : /test2
 root : html
-limit_except 목록 : GET POST 
+limit_except 목록 : GET POST
 autoindex : true
-return : code = 0 uri  = 
+return : code = 0 uri  =
 
 
 ========= 2 번째 location block=============
@@ -30,7 +30,7 @@ target : /upload
 root : html
 
 autoindex : false
-return : code = 0 uri  = 
+return : code = 0 uri  =
 
 
 
@@ -44,21 +44,21 @@ index: index.php
 max body size : 100
 ========= 1 번째 location block=============
 index: 22222locationindex
-upload_pass : 
+upload_pass :
 target : /target.html
 root : /var/www/virtual/big.server.com/test2
-limit_except 목록 : GET POST 
+limit_except 목록 : GET POST
 autoindex : true
-return : code = 0 uri  = 
+return : code = 0 uri  =
 
 
 ========= 2 번째 location block=============
 index: index.html
 index: index.php
-upload_pass : 
+upload_pass :
 target : /target2.html
 root : /var/www/virtual/big.server.com/test3
-limit_except 목록 : GET POST 
+limit_except 목록 : GET POST
 autoindex : false
 return : code = 302 uri  = www.test.com
 
@@ -66,7 +66,7 @@ return : code = 302 uri  = www.test.com
 ========= 3 번째 location block=============
 index: index.html
 index: index.php
-upload_pass : 
+upload_pass :
 target : /return_dir1
 root : /var/www/virtual/big.server.com/htdocs
 
@@ -77,7 +77,7 @@ return : code = 302 uri  = /return_dir2
 ========= 4 번째 location block=============
 index: index.html
 index: index.php
-upload_pass : 
+upload_pass :
 target : /return_dir2
 root : /var/www/virtual/big.server.com/htdocs
 
@@ -88,7 +88,7 @@ return : code = 302 uri  = /return_dir1
 ========= 5 번째 location block=============
 index: index.html
 index: index.php
-upload_pass : 
+upload_pass :
 target : .php
 root : /var/www/virtual/big.server.com/htdocs
 
