@@ -6,4 +6,6 @@
 
 // TODO request part
 - [ ] request header HOST 포트 번호 받기
+  - 보류
 - [ ] vector로 서버블록 받아서 필요한 서버블록 저장하기
+  - 보류

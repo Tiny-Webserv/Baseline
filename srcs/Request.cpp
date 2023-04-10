@@ -1,9 +1,9 @@
 #include "Request.hpp"
 #include "utils.hpp"
 #include "StateCode.hpp"
+#include "ServerBlock.hpp"
 #include <cstdlib>
 #include <algorithm>
-// #include "ServerBlock.hpp" // TODO 이후에 해당 파일 생겼을 때 주석 해제하기
 
 Request::Request(ServerBlock &server) : _chunked(false), _server(server) {}
 

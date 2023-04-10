@@ -14,7 +14,8 @@
 #endif
 
 enum Method { GET = 1, POST = 2, DELETE = 3 };
-class ServerBlock {};
+
+class ServerBlock;
 
 class Request {
   private:
