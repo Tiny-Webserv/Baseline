@@ -28,11 +28,13 @@ class Request {
 	int _errorCode;
 	bool _chunked;
 	std::stringstream _stream;
-	ServerBlock &_server;
+	ServerBlock *_server;
+	std::string	_hostName;
+	int			_hostPort;
 
   public:
-	Request(ServerBlock &server);
-	Request(ServerBlock &server, std::stringstream &stream);
+	Request();
+	Request(std::stringstream &stream);
 	Request(const Request &request);
 	Request &operator=(const Request &request);
 	virtual ~Request();
@@ -45,6 +47,9 @@ class Request {
 	void SetStream(std::stringstream &stream);
 	void SetErrorCode(int _errorCode);
 	void SetErrorMessages(std::string _errorMessages);
+	void SetServer(ServerBlock	*serverBlock);
+	void	SetHostName(std::string	hostName);
+	void	SetHostPort(int	hostPort);
 
 	// Getter
 	int GetMethod();
@@ -55,17 +60,20 @@ class Request {
 	ServerBlock &GetServer();
 	int GetErrorCode();
 	std::string GetErrorMessages();
+	std::string	GetHostName();
+	int	GetHostPort();
 
 	void setStartLine(std::string startLine);
 	void setHeader(std::string header);
 	void SetBody(std::vector<std::string>::iterator iter);
+    void splitHost();
 
-	class HTTPVersionError : public std::exception {
-	  public:
+        class HTTPVersionError : public std::exception {
+          public:
 		const char *what() const throw();
-	};
+        };
 
-	class MethodError : public std::exception {
+        class MethodError : public std::exception {
 	  public:
 		const char *what() const throw();
 	};
@@ -78,6 +86,6 @@ class Request {
 };
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
-					  ServerBlock &server);
+					  std::vector<ServerBlock> &servers);
 
 #endif

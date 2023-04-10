@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <algorithm>
 
-Request::Request(ServerBlock &server) : _chunked(false), _server(server) {}
+Request::Request() : _chunked(false) {}
 
-Request::Request(ServerBlock &server, std::stringstream &stream)
-    : _contentLength(-1), _errorCode(OK), _chunked(false), _server(server) {
+Request::Request(std::stringstream &stream)
+    : _contentLength(-1), _errorCode(OK), _chunked(false) {
     std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
     try {
@@ -16,6 +16,7 @@ Request::Request(ServerBlock &server, std::stringstream &stream)
         setHeader(splited[1]);
 		std::vector<std::string>::iterator	iter = splited.begin() + 3;
         SetBody(iter);
+        splitHost();
     } catch (const Request::BodySizeError	&e) {
 		SetErrorCode(PayloadTooLarge);
 		SetErrorMessages(e.what());
@@ -55,7 +56,7 @@ void Request::SetStream(std::stringstream &stream) {
 
 std::stringstream &Request::GetStream() { return _stream; }
 
-ServerBlock &Request::GetServer() { return _server; }
+ServerBlock &Request::GetServer() { return *_server; }
 
 void Request::SetErrorCode(int errorCode) { _errorCode = errorCode; }
 
@@ -66,6 +67,15 @@ void Request::SetErrorMessages(std::string errorMessages) {
 }
 
 std::string Request::GetErrorMessages() { return _errorMessages; }
+
+void Request::SetServer(ServerBlock *serverBlock) {
+		_server = serverBlock;
+}
+
+ServerBlock &Request::GetServer() {
+	return *_server;
+}
+
 
 const char *Request::HTTPVersionError::what() const throw() {
     return "HTTP Version error : The version must be HTTP 1.1";
@@ -118,6 +128,9 @@ void Request::setHeader(std::string header) {
     iter = find(splited.begin(), splited.end(), "Content-Type:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _contentType = *(iter + 1);
+    iter = find(splited.begin(), splited.end(), "Host:");
+    if (iter != splited.end() && iter + 1 != splited.end())
+        _hostName = *(iter + 1); // example.com:8080
     iter = find(splited.begin(), splited.end(), "Transfer-Encoding:");
     if (iter != splited.end() && iter + 1 != splited.end() &&
         !(iter + 1)->compare("chunked"))
@@ -149,4 +162,11 @@ void Request::SetBody(std::vector<std::string>::iterator	iter) {
         }
         GetStream() << *iter;
 	}
+}
+
+void Request::splitHost()
+{
+	std::vector<std::string> splited = Split2(_hostName, ":");
+        _hostName = splited[0];    // name
+        _hostPort = atoi(splited[1].c_str());
 }
