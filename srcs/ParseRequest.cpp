@@ -10,16 +10,30 @@ ServerBlock	*FindServer(std::vector<ServerBlock> &servers, Request	*request) {
 	int	idx = -1;
     std::vector<std::string>::iterator iter;
 
-	for (int i = 0; i < servers.size(); i++) {
-		if (servers[i].GetPort() == request->GetHostPort()) {
-			if (idx == -1)
-				idx = i;
-			iter = std::find(servers[i].GetServerName().begin(), servers[i].GetServerName().end(), request->GetHostName());
-			if (iter != servers[i].GetServerName().end())
-				return &servers[i];
-		}
-	}
-	return &servers[idx];
+
+    // request 포인터가 NULL인 경우 예외 처리
+    if (request == NULL) {
+        //throw std::runtime_error("Error : Invalid request pointer");
+        return NULL;
+    }
+	// port가 같은 객체가 있는지 확인
+    for (size_t i = 0; i < servers.size(); i++) {
+        if (servers[i].GetPort() == request->GetHostPort()) {
+            if (idx == -1)
+                idx = static_cast<int>(i);
+            // std::find 대신 for 루프와 문자열 비교를 통해 조건 검사
+            for (size_t j = 0; j < servers[i].GetServerName().size(); j++) {
+                if (servers[i].GetServerName()[j] == request->GetHostName()) {
+					return &servers[i];
+                }
+            }
+        }
+    }
+    if (idx == -1) {
+        //throw std::runtime_error("Error : No matching server found");
+        return NULL;
+    }
+    return &servers[idx];
 }
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
@@ -48,7 +62,11 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		} catch (const std::exception &e) {
 			request->SetErrorCode(BadRequest);
 			request->SetErrorMessages(e.what());
-		}
+		}catch (const std::runtime_error& e)
+		{
+            request->SetErrorCode(NotImplemented);
+            request->SetErrorMessages(e.what());
+        }
 	}
 	return clients[fd];
 }

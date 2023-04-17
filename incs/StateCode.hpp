@@ -15,6 +15,7 @@ enum StateCode {
     PayloadTooLarge = 413,
 
     // 500 ~
+	InternalServerError = 500,
     NotImplemented = 501,
     BadGateway = 502,
     GatewayTimeout = 504,
