@@ -2,7 +2,7 @@
 
 
 int NginxWord(std::string line);
-bool test(std::string line);
+bool CheckSemicolon(std::string line);	//
 
 Config::Config() {}
 
@@ -247,7 +247,7 @@ std::string Config::OpenFile(std::string filename) {
 	return file_Save;
 }
 
-bool test(std::string line) {
+bool CheckSemicolon(std::string line) {
 	size_t len = line.size() - 1;
 	size_t idx = 0;
 	while (line[idx] != ';') {
@@ -269,7 +269,7 @@ int NginxWord(std::string line) {
 		"return", "root",        "autoindex",  "index"};
 	for (int i = 0; i < 8; i++) {
 		if (words[i] == FirstToken) {
-			if (test(line))
+			if (CheckSemicolon(line))
 				return 1;
 			else {
 				std::cout << "=====semicolon test======" << std::endl;

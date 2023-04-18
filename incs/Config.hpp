@@ -40,4 +40,6 @@ class Config {
     // int		nginx_word(std::string word);
 };
 
+void	Itos(int num, std::string &ret);
+
 #endif

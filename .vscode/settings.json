@@ -68,6 +68,10 @@
 		"vector": "cpp",
 		"algorithm": "cpp",
 		"iterator": "cpp",
-		"memory_resource": "cpp"
+		"memory_resource": "cpp",
+		"__functional_base": "cpp",
+		"bit": "cpp",
+		"functional": "cpp",
+		"utility": "cpp"
 	}
 }
