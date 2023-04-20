@@ -13,6 +13,10 @@
 #define CRLF "\\r\n"
 #endif
 
+#ifndef CRLF_SIZE
+# define CRLF_SIZE 3
+#endif
+
 enum Method { GET = 1, POST = 2, DELETE = 3 };
 
 class ServerBlock;
@@ -31,10 +35,10 @@ class Request {
 	ServerBlock *_server;
 	std::string	_hostName;
 	int			_hostPort;
-
+	bool	_isEnd;
   public:
 	Request();
-	Request(std::stringstream &stream);
+	Request(int fd, std::stringstream &stream);
 	Request(const Request &request);
 	Request &operator=(const Request &request);
 	virtual ~Request();
@@ -50,8 +54,9 @@ class Request {
 	void SetServer(ServerBlock	*serverBlock);
 	void	SetHostName(std::string	hostName);
 	void	SetHostPort(int	hostPort);
+    void SetIsEnd(bool isEnd);
 
-	// Getter
+    // Getter
 	int GetMethod();
 	std::string GetTarget();
 	std::string GetContentType();
@@ -62,20 +67,22 @@ class Request {
 	std::string GetErrorMessages();
 	std::string	GetHostName();
 	int	GetHostPort();
+    bool GetIsEnd();
 
-	void setStartLine(std::string startLine);
+    void setStartLine(std::string startLine);
 	void setHeader(std::string header);
-	void SetBody(std::vector<std::string>::iterator iter);
+	//void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();
+	void readBody(int fd);
 
-        class HTTPVersionError : public std::exception {
-          public:
-		const char *what() const throw();
-        };
+	class HTTPVersionError : public std::exception {
+		public:
+	const char *what() const throw();
+	};
 
-        class MethodError : public std::exception {
-	  public:
-		const char *what() const throw();
+	class MethodError : public std::exception {
+	public:
+	const char *what() const throw();
 	};
 
 	class BodySizeError : public std::exception {
