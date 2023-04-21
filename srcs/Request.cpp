@@ -10,9 +10,7 @@ Request::Request() : _chunked(false) {}
 
 Request::Request(int fd, std::stringstream &stream)
 	: _contentLength(-1), _errorCode(OK), _chunked(false), _isEnd(false) {
-	std::string	crlf(CRLF);
-	crlf.append(CRLF);
-	std::vector<std::string> splited = Split2(stream.str(), crlf);
+	std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
 	try {
 		setStartLine(splited[0]);

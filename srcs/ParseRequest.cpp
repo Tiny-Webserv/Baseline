@@ -39,7 +39,6 @@ ServerBlock	*FindServer(std::vector<ServerBlock> &servers, Request	*request) {
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 					  std::vector<ServerBlock> &servers) {
 	std::stringstream ss;
-	int	field = 0;
 
 	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
 	if (clientsIterator == clients.end()) {
@@ -49,13 +48,8 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 			std::cout << line;
 			std::string tmp(line);
 			free(line);
-			if (tmp == CRLF) {
-				if (field) {
-					ss << '\0';
-					break;
-				}
-				field++;
-			}
+			if (tmp == CRLF)
+				break;
 			line = get_next_line(fd);
 		}
 		Request *request = new Request(fd, ss);
