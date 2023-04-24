@@ -80,11 +80,14 @@ int main(int argc, char const *argv[])
 		ParseRequest(new_socket, clnts, con._ServerBlockObject);
 		Request *req = clnts[new_socket];
 
-		int j = 0;
-		for (size_t	i = 0; i < req->getBinary().size(); i++) {
-			_file.write(&req->getBinary()[0], req->getBinary().size());
-			std::cout << "rmain : " << j++ << std::endl;
-		}
+		//int j = 0;
+		std::cout << "error code : " << req->GetErrorCode() << std::endl;
+		std::cout << "req->getBinary().size() : " << req->getBinary().size() << std::endl;
+		//for (size_t	i = 0; i < req->getBinary().size(); i++) {
+
+			_file.write(reinterpret_cast<const char *>(&req->getBinary()[0]), req->getBinary().size());
+			//std::cout << "rmain : " << j++ << std::endl;
+		//}
 
                 //char *buff =
                 //    new char[req->getBinary().size()]; // 동적 메모리 할당

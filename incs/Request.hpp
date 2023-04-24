@@ -1,6 +1,7 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include "ServerBlock.hpp"
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -17,13 +18,11 @@
 # define CRLF_SIZE 2
 #endif
 
-enum Method { GET = 1, POST = 2, DELETE = 3 };
-
 class ServerBlock;
 
 class Request {
   private:
-	Method _method;
+	std::string _method;
 	std::string _target;
 	std::string _body;
 	std::string _contentType;
@@ -46,7 +45,7 @@ class Request {
 
 	// Setter
 	void SetTarget(std::string target);
-	void SetMethod(Method method);
+	void SetMethod(std::string method);
 	void SetContentType(std::string contentType);
 	void SetChunked(bool chunked);
 	void SetStream(std::stringstream &stream);
@@ -57,9 +56,9 @@ class Request {
 	void	SetHostPort(int	hostPort);
     void SetIsEnd(bool isEnd);
     void SetBinary(std::vector<char> &binary);
-    
+
 	// Getter
-        int GetMethod();
+    std::string	GetMethod();
     std::string GetTarget();
     std::string GetContentType();
     bool GetChunked();

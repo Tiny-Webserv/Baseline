@@ -52,6 +52,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 				break;
 			line = get_next_line(fd);
 		}
+		std::cout << ss.str() << std::endl;
 		Request *request = new Request(fd, ss);
 		clients.insert(std::pair<int, Request *>(fd, request));
 		request->SetServer(FindServer(servers, request));
