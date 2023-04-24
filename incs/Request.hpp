@@ -10,11 +10,11 @@
 
 // test를 위해 crlf를 아래와 같이 정의했습니다. 이후에 "\r\n"으로 수정 바랍니다.
 #ifndef CRLF
-#define CRLF "\\r\n"
+#define CRLF "\r\n"
 #endif
 
 #ifndef CRLF_SIZE
-# define CRLF_SIZE 3
+# define CRLF_SIZE 2
 #endif
 
 enum Method { GET = 1, POST = 2, DELETE = 3 };
@@ -36,6 +36,7 @@ class Request {
 	std::string	_hostName;
 	int			_hostPort;
 	bool	_isEnd;
+	std::vector<char>	_binary;
   public:
 	Request();
 	Request(int fd, std::stringstream &stream);

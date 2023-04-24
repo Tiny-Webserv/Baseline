@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include "get_next_line.h"
+#include <sys/socket.h>
 
 Request::Request() : _chunked(false) {}
 
@@ -187,11 +188,10 @@ void Request::readBody(int fd) {
 	char	*buffer = NULL;
 	char	crlf[CRLF_SIZE * 2 + 1];
 
-	if (_contentType == "img/png")
-		_stream << std::ios::binary;
+	//if (_contentType == "img/png")
+	//	_stream << std::ios::binary;
 	if (_chunked) {
 		line = get_next_line(fd);
-		std::cout << "line : " << line << std::endl;
 		line = line.substr(0, line.size() - CRLF_SIZE);
 		ss << std::hex << line;
 		ss >> x;
@@ -207,14 +207,13 @@ void Request::readBody(int fd) {
 	line = CRLF;
 	line.append(CRLF);
 	memset(buffer, 0, _contentLength + 1);
-	valRead = read(fd, buffer, _contentLength);
+	valRead = recv(fd, buffer, _contentLength, 0);
 	buffer[valRead] = 0;
-	std::cout << "\n~~~~~\n" << std::string(buffer) << "\n~~~~~\n" << std::endl;
 	for (int i = 0; i < valRead; i++)
-		_stream << buffer[i];
+		_binary.push_back(buffer[i]);
 	if (valRead == -1)
 		_isEnd = false ;
-	memset(buffer, 0, _contentLength + 1);
+	memset(crlf, 0, CRLF_SIZE * 2);
 	valRead = read(fd, crlf, CRLF_SIZE * 2);
 	// CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
 	if (!_chunked && valRead > 0) {
@@ -229,4 +228,27 @@ void Request::readBody(int fd) {
 		_isEnd = false;
 	}
 	free(buffer);
+	if (_contentType != "image/png" && _contentType != "img/png") {
+		for (size_t i = 0; i < _binary.size(); i++)
+			_stream << _binary[i];
+		_binary.clear();
+	}
 }
+
+//int bytes_received;
+
+//while ((bytes_received = recv(client_socktet, buffer, MAX_BUFFER_SIZE, 0)) > 0) {
+//	for (int i = 0; i < bytes_received; i++)
+//	{
+//		_file.push_back(buffer[i]);
+//	}
+//}
+//for (std::vector<char>::size_type i = 0; i < _file.size(); i++)
+//{
+//	char buff[2];
+//	buff[0] = _file[i];
+//	buff[1] = 0;
+//	image_file.write(buff, 1);
+//}
+//image_file.close();
+
