@@ -1,7 +1,7 @@
 NAME = webserv
 CC = c++
 
-CCFLAGS =  -std=c++98 -g3 -fsanitize=address -Wall -Werror -Wextra
+CCFLAGS =  -std=c++98 -g3 -fsanitize=address -fsanitize=undefined -Wall -Werror -Wextra
 INC_LINK = -I./incs
 
 SRCS_PATH = ./srcs

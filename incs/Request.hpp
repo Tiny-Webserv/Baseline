@@ -56,19 +56,21 @@ class Request {
 	void	SetHostName(std::string	hostName);
 	void	SetHostPort(int	hostPort);
     void SetIsEnd(bool isEnd);
-
-    // Getter
-	int GetMethod();
-	std::string GetTarget();
-	std::string GetContentType();
-	bool GetChunked();
-	std::stringstream &GetStream();
-	ServerBlock &GetServer();
-	int GetErrorCode();
-	std::string GetErrorMessages();
-	std::string	GetHostName();
-	int	GetHostPort();
+    void SetBinary(std::vector<char> &binary);
+    
+	// Getter
+        int GetMethod();
+    std::string GetTarget();
+    std::string GetContentType();
+    bool GetChunked();
+    std::stringstream &GetStream();
+    ServerBlock &GetServer();
+    int GetErrorCode();
+    std::string GetErrorMessages();
+    std::string GetHostName();
+    int GetHostPort();
     bool GetIsEnd();
+    std::vector<char> getBinary();
 
     void setStartLine(std::string startLine);
 	void setHeader(std::string header);

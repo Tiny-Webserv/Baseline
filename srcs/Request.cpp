@@ -11,11 +11,13 @@ Request::Request() : _chunked(false) {}
 
 Request::Request(int fd, std::stringstream &stream)
 	: _contentLength(-1), _errorCode(OK), _chunked(false), _isEnd(false) {
-	std::vector<std::string> splited = Split2(stream.str(), CRLF);
+	//std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
 	try {
-		setStartLine(splited[0]);
-		setHeader(splited[1]);
+		std::string	buff;
+		std::getline(stream, buff, '\n');
+		setStartLine(buff);
+		setHeader(stream.str());
 		// std::vector<std::string>::iterator iter = splited.begin() + 3;
 		// SetBody(iter);
 		readBody(fd);
@@ -81,6 +83,14 @@ void Request::SetIsEnd(bool isEnd){
 	_isEnd = isEnd;
 }
 
+std::vector<char> Request::getBinary() {
+	return _binary;
+}
+
+void Request::SetBinary(std::vector<char> &binary) {
+	_binary = binary;
+}
+
 const char *Request::HTTPVersionError::what() const throw() {
 	return "HTTP Version error : The version must be HTTP 1.1";
 }
@@ -111,7 +121,7 @@ Request::Request(const Request &request)
 }
 
 void Request::setStartLine(std::string startLine) {
-	std::vector<std::string> data = Split2(startLine, std::string(" "));
+	std::vector<std::string> data = Split(startLine, std::string(" "));
 	if (!data[0].compare("GET"))
 		_method = GET;
 	else if (!data[0].compare("POST"))
@@ -126,7 +136,8 @@ void Request::setStartLine(std::string startLine) {
 }
 
 void Request::setHeader(std::string header) {
-	std::vector<std::string> splited = Split2(header, " ");
+	std::cout << header << std::endl;
+	std::vector<std::string> splited = Split(header, " \r\n");
 	std::vector<std::string>::iterator iter;
 
 	iter = find(splited.begin(), splited.end(), "Content-Type:");
@@ -140,8 +151,10 @@ void Request::setHeader(std::string header) {
 		!(iter + 1)->compare("chunked"))
 		_chunked = true;
 	iter = find(splited.begin(), splited.end(), "Content-Length:");
+	std::cout << *iter << *(iter + 1) << std::endl; //
 	if (iter != splited.end() && iter + 1 != splited.end())
 		_contentLength = atoi((iter + 1)->c_str());
+	//std::cout << _contentLength << std::endl;
 }
 
 //void Request::SetBody(std::vector<std::string>::iterator iter) {
@@ -185,8 +198,9 @@ void Request::readBody(int fd) {
 	std::stringstream	ss;
 	std::string	line;
 	int	valRead;
-	char	*buffer = NULL;
-	char	crlf[CRLF_SIZE * 2 + 1];
+	char	buffer[1024];
+	//int		bufferSize = 1024;
+	// char	crlf[CRLF_SIZE * 2 + 1];
 
 	//if (_contentType == "img/png")
 	//	_stream << std::ios::binary;
@@ -201,33 +215,41 @@ void Request::readBody(int fd) {
 		}
 		_contentLength = static_cast<int>(x);
 	}
-	buffer = (char *)malloc(_contentLength + 1);
-	if (buffer == NULL)
-		throw std::runtime_error("malloc failed");
-	line = CRLF;
-	line.append(CRLF);
-	memset(buffer, 0, _contentLength + 1);
-	valRead = recv(fd, buffer, _contentLength, 0);
-	buffer[valRead] = 0;
-	for (int i = 0; i < valRead; i++)
-		_binary.push_back(buffer[i]);
-	if (valRead == -1)
-		_isEnd = false ;
-	memset(crlf, 0, CRLF_SIZE * 2);
-	valRead = read(fd, crlf, CRLF_SIZE * 2);
+	//buffer = (char *)malloc(_contentLength + 1);
+	//if (buffer == NULL)
+	//	throw std::runtime_error("malloc failed");
+	//line = CRLF;
+	//line.append(CRLF);
+	//memset(buffer, 0, _contentLength + 1);
+	//valRead = recv(fd, buffer, _contentLength, 0);
+	//buffer[valRead] = 0;
+	//for (int i = 0; i < valRead; i++)
+	//	_binary.push_back(buffer[i]);
+	//if (valRead == -1)
+	//	_isEnd = false ;
+	//memset(crlf, 0, CRLF_SIZE * 2);
+	//valRead = read(fd, crlf, CRLF_SIZE * 2);
+	int j = 0;
+	while ((valRead = recv(fd, buffer, 1024, 0)) > 0) {
+		for (int i = 0; i < valRead; i++)
+			_binary.push_back(buffer[i]);
+		std::cout << j++ << std::endl;
+	}
 	// CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
-	if (!_chunked && valRead > 0) {
-		if (valRead == CRLF_SIZE * 2 && line.compare(0, valRead, crlf) == 0)
+	if (!_chunked) {
+		size_t end = _binary.size() - 1;
+		if (_binary[end] == '\n' && _binary[end - 1] == '\r' &&
+			_binary[end - 2] == '\n' && _binary[end - 3] == '\r')
 			_isEnd = true;
-		else
-			throw BodySizeError();
+		else if (valRead != -1)
+			throw BodySizeError(); // TODO 얼마나 읽었는지 체크해서 다시 예외 처리
 	}
 	else {
-		if (valRead != CRLF_SIZE * 2 || line.compare(0, valRead, crlf) != 0)
-			throw BodySizeError();
+		//if (valRead != CRLF_SIZE * 2 || line.compare(0, valRead, crlf) != 0)
+		//	throw BodySizeError(); // TODO 얼마나 읽었는지 체크해서 다시 예외 처리
 		_isEnd = false;
 	}
-	free(buffer);
+	//free(buffer);
 	if (_contentType != "image/png" && _contentType != "img/png") {
 		for (size_t i = 0; i < _binary.size(); i++)
 			_stream << _binary[i];
