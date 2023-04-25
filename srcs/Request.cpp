@@ -89,25 +89,11 @@ void Request::SetIsEnd(bool isEnd){
 	_isEnd = isEnd;
 }
 
-std::vector<char> Request::getBinary() {
-	return _binary;
-}
-
-void Request::SetBinary(std::vector<char> &binary) {
-	_binary = binary;
-}
-
 const char *Request::HTTPVersionError::what() const throw() {
 	return "HTTP Version error : The version must be HTTP 1.1";
 }
 
-const char *Request::MethodError::what() const throw() {
-	return "Method error : Bad method request";
-}
 
-const char *Request::BodySizeError::what() const throw() {
-	return "Size error : Request Entity Too Large";
-}
 
 Request &Request::operator=(const Request &request) {
 	_method = request._method;

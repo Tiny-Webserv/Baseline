@@ -1,6 +1,8 @@
 #ifndef STATECODE_HPP
 # define STATECODE_HPP
 
+# include <exception>
+
 enum StateCode {
 
     // 200 ~
@@ -20,6 +22,32 @@ enum StateCode {
     BadGateway = 502,
     GatewayTimeout = 504,
     HTTPVersionNotSupported = 505,
+};
+
+class HTTPVersionError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class MethodError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class BodySizeError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class NotExist : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class PermissionDenied : public std::exception {
+  public:
+    const char *what() const throw();
+    
 };
 
 #endif

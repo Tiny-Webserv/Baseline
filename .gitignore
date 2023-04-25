@@ -1,5 +1,5 @@
 a.out
 webserv
 objs/*.obj
-.vscode/*
 .DS_Store
+.vscode/*

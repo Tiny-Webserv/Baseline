@@ -31,16 +31,6 @@ public:
 	// cgi 처리
 	// http 통신 규약에 맞춘 status line, header, body 처리해서 ss에 넣어주기
 
-	class	NotFound : public std::exception {
-	public :
-		const char *what() const throw();
-	};
-
-	class	Forbidden : public std::exception {
-	public :
-		const char *what() const throw();
-	};
-
 
 };
 

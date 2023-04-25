@@ -1,6 +1,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "ServerBlock.hpp"
+#include "StateCode.hpp"
 
 Response::Response(Request &request) : _request(request) {
     if (request.GetMethod() == "GET")
@@ -27,7 +28,7 @@ LocationBlock	&Response::getLocationBlock() {
         if (!locationTarget.compare(0, locationTarget.size(), target))
 			return _request.GetServer().GetLocation()[i];
     }
-	throw NotFound();
+	throw NotExist();
 }
 
 bool Response::isCGI() {
@@ -57,6 +58,5 @@ bool Response::isAllowed(std::string method) {
 
 void Response::getMethod() {
     if (!isAllowed("GET"))
-		throw Forbidden();
-
+        throw PermissionDenied();
 }
