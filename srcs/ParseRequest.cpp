@@ -38,32 +38,43 @@ ServerBlock	*FindServer(std::vector<ServerBlock> &servers, Request	*request) {
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 					  std::vector<ServerBlock> &servers) {
-	char *line = get_next_line(fd);
 	std::stringstream ss;
+	int	field = 0;
 
-	while (line) {
-		ss << line;
-		free(line);
-		line = get_next_line(fd);
-	}
 	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
 	if (clientsIterator == clients.end()) {
-		Request *request = new Request(ss);
+		char *line = get_next_line(fd);
+		while (line) {
+			ss << line;
+			std::cout << line;
+			std::string tmp(line);
+			free(line);
+			if (tmp == CRLF) {
+				if (field) {
+					ss << '\0';
+					break;
+				}
+				field++;
+			}
+			line = get_next_line(fd);
+		}
+		Request *request = new Request(fd, ss);
 		clients.insert(std::pair<int, Request *>(fd, request));
 		request->SetServer(FindServer(servers, request));
-	} else {
-		Request *request = clients[fd];
+        //request->readBody(fd);
+    } else {
+
+                Request *request = clients[fd];
 		std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
-			request->SetBody(body.begin());
+			request->readBody(fd);
 		} catch (const Request::BodySizeError &e) {
 			request->SetErrorCode(PayloadTooLarge);
 			request->SetErrorMessages(e.what());
 		} catch (const std::exception &e) {
 			request->SetErrorCode(BadRequest);
 			request->SetErrorMessages(e.what());
-		}catch (const std::runtime_error& e)
-		{
+		} catch (const std::runtime_error& e) {
             request->SetErrorCode(NotImplemented);
             request->SetErrorMessages(e.what());
         }

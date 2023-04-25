@@ -28,6 +28,8 @@ int  main(int argc, char *argv[]) {
 	close(fd);
 	std::cout << "================================" << std::endl;
 	std::cout << clients[fd]->GetStream().str() << std::endl;
+	std::cout << clients[fd]->GetErrorMessages() << std::endl;
+	std::cout << clients[fd]->GetIsEnd() << std::endl;
 	return 0;
 
 }
