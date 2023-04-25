@@ -1,6 +1,8 @@
 #ifndef STATECODE_HPP
 # define STATECODE_HPP
 
+# include <exception>
+
 enum StateCode {
 
     // 200 ~
@@ -35,6 +37,17 @@ class MethodError : public std::exception {
 class BodySizeError : public std::exception {
   public:
     const char *what() const throw();
+};
+
+class NotExist : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class PermissionDenied : public std::exception {
+  public:
+    const char *what() const throw();
+    
 };
 
 #endif

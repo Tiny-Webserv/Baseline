@@ -68,7 +68,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
 			request->readBody(fd);
-		} catch (const Request::BodySizeError &e) {
+		} catch (const BodySizeError &e) {
 			request->SetErrorCode(PayloadTooLarge);
 			request->SetErrorMessages(e.what());
 		} catch (const std::exception &e) {

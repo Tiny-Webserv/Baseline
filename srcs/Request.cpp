@@ -4,7 +4,7 @@
 #include "utils.hpp"
 #include <algorithm>
 #include <cstdlib>
-#include "get_next_line.h"
+#include ""
 
 Request::Request() : _chunked(false) {}
 
@@ -71,28 +71,8 @@ void Request::SetErrorMessages(std::string errorMessages) {
 	_errorMessages = errorMessages;
 }
 
-std::string Request::GetErrorMessages() { return _errorMessages; }
 
-void Request::SetServer(ServerBlock *serverBlock) { _server = serverBlock; }
-bool Request::GetIsEnd(){
-	return _isEnd;
-}
 
-void Request::SetIsEnd(bool isEnd){
-	_isEnd = isEnd;
-}
-
-const char *Request::HTTPVersionError::what() const throw() {
-	return "HTTP Version error : The version must be HTTP 1.1";
-}
-
-const char *Request::MethodError::what() const throw() {
-	return "Method error : Bad method request";
-}
-
-const char *Request::BodySizeError::what() const throw() {
-	return "Size error : Request Entity Too Large";
-}
 
 Request &Request::operator=(const Request &request) {
 	_method = request._method;

@@ -10,7 +10,8 @@ SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Request.cpp ParseRequest.cpp \
 	Config.cpp LocationBlock.cpp ServerBlock.cpp\
 	ServerFiles.cpp \
-	rmain.cpp utils.cpp
+	rmain.cpp utils.cpp\
+	StateCode.cpp
 
 
 SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp

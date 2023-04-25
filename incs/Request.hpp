@@ -75,21 +75,6 @@ class Request {
     void splitHost();
 	void readBody(int fd);
 
-        class HTTPVersionError : public std::exception {
-          public:
-		const char *what() const throw();
-        };
-
-        class MethodError : public std::exception {
-	  public:
-		const char *what() const throw();
-	};
-
-	class BodySizeError : public std::exception {
-	  public:
-		const char *what() const throw();
-	};
-
 };
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,

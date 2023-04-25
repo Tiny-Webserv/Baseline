@@ -4,6 +4,7 @@
 #include <map>
 #include <iostream>
 #include <string>
+#include <exception>
 
 class ServerFiles {
 private:
@@ -20,6 +21,11 @@ public:
     std::vector<char> readTextFile(std::string filename);
 
     std::vector<char> readBinaryFile(std::string filename);
+
+    class IsDirectory : public std::exception {
+      public:
+        const char *what() const throw();
+    };
 };
 
 #endif
