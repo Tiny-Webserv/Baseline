@@ -1,6 +1,7 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include "ServerBlock.hpp"
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -10,20 +11,18 @@
 
 // test를 위해 crlf를 아래와 같이 정의했습니다. 이후에 "\r\n"으로 수정 바랍니다.
 #ifndef CRLF
-#define CRLF "\\r\n"
+#define CRLF "\r\n"
 #endif
 
 #ifndef CRLF_SIZE
-# define CRLF_SIZE 3
+# define CRLF_SIZE 2
 #endif
-
-enum Method { GET = 1, POST = 2, DELETE = 3 };
 
 class ServerBlock;
 
 class Request {
   private:
-	Method _method;
+	std::string _method;
 	std::string _target;
 	std::string _body;
 	std::string _contentType;
@@ -36,6 +35,7 @@ class Request {
 	std::string	_hostName;
 	int			_hostPort;
 	bool	_isEnd;
+	std::vector<char>	_binary;
   public:
 	Request();
 	Request(int fd, std::stringstream &stream);
@@ -45,7 +45,7 @@ class Request {
 
 	// Setter
 	void SetTarget(std::string target);
-	void SetMethod(Method method);
+	void SetMethod(std::string method);
 	void SetContentType(std::string contentType);
 	void SetChunked(bool chunked);
 	void SetStream(std::stringstream &stream);
@@ -55,19 +55,21 @@ class Request {
 	void	SetHostName(std::string	hostName);
 	void	SetHostPort(int	hostPort);
     void SetIsEnd(bool isEnd);
+    void SetBinary(std::vector<char> &binary);
 
-    // Getter
-	int GetMethod();
-	std::string GetTarget();
-	std::string GetContentType();
-	bool GetChunked();
-	std::stringstream &GetStream();
-	ServerBlock &GetServer();
-	int GetErrorCode();
-	std::string GetErrorMessages();
-	std::string	GetHostName();
-	int	GetHostPort();
+	// Getter
+    std::string	GetMethod();
+    std::string GetTarget();
+    std::string GetContentType();
+    bool GetChunked();
+    std::stringstream &GetStream();
+    ServerBlock &GetServer();
+    int GetErrorCode();
+    std::string GetErrorMessages();
+    std::string GetHostName();
+    int GetHostPort();
     bool GetIsEnd();
+    std::vector<char> getBinary();
 
     void setStartLine(std::string startLine);
 	void setHeader(std::string header);
