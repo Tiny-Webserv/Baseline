@@ -22,4 +22,19 @@ enum StateCode {
     HTTPVersionNotSupported = 505,
 };
 
+class HTTPVersionError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class MethodError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
+class BodySizeError : public std::exception {
+  public:
+    const char *what() const throw();
+};
+
 #endif

@@ -68,20 +68,7 @@ class Request {
 	void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();
 
-        class HTTPVersionError : public std::exception {
-          public:
-		const char *what() const throw();
-        };
-
-        class MethodError : public std::exception {
-	  public:
-		const char *what() const throw();
-	};
-
-	class BodySizeError : public std::exception {
-	  public:
-		const char *what() const throw();
-	};
+  
 
 };
 

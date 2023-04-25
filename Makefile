@@ -8,7 +8,8 @@ SRCS_PATH = ./srcs
 
 SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Request.cpp ParseRequest.cpp \
-	Config.cpp LocationBlock.cpp ServerBlock.cpp \
+	Config.cpp LocationBlock.cpp ServerBlock.cpp\
+	ServerFiles.cpp \
 	rmain.cpp utils.cpp
 
 
