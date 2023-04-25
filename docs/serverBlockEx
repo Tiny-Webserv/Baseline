@@ -1,0 +1,48 @@
+#이 예에서 요청은 서버에 존재하지 않는 파일에 대한 것입니다.
+#서버는 구성 파일의 "error_page" 지시문(이 경우 "/not_found.html")에 지정된 오류 페이지로 응답합니다.
+GET /not_here.html HTTP/1.1
+Host: domain21.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+
+
+#이 예에서 요청은 nginx 구성 파일의 "location" 블록에 해당하는 "upload" 디렉토리의 "file.txt" 파일에 대한 것입니다.
+#서버는 구성 파일의 "upload_pass" 지시문에 지정된 대로 업로드된 파일을 "tmp/upload" 디렉토리로 전달합니다.
+GET /upload/file.txt HTTP/1.1
+Host: domain3.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+
+
+#이 예에서 요청은 nginx 구성 파일의 "location" 블록에 해당하는 URL 경로 "/test2/"에 대한 것입니다.
+#서버는 구성 파일의 "index" 지시문에 지정된 대로 "abc" 파일을 이 디렉토리의 기본 페이지로 제공하려고 시도합니다.
+GET /test2/ HTTP/1.1
+Host: domain2.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+
+
+#이 예에서 요청은 HTTP/1.1 프로토콜을 사용하여 서버의 루트 디렉토리에 있는 "index.html" 파일에 대한 것입니다.
+#"Host" 헤더는 서버가 응답해야 하는 도메인 이름을 지정하고 "User-Agent" 헤더는 요청을 만드는 브라우저 또는 클라이언트를 식별합니다.
+#다른 헤더는 요청 및 클라이언트의 기본 설정에 대한 추가 정보를 제공합니다.
+
+GET /index.html HTTP/1.1
+Host: domain1.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
