@@ -19,3 +19,14 @@ const char *NotExist::what() const throw() {
 const char *PermissionDenied::what() const throw() {
 	return "Forbidden : Permission denied";
 }
+
+ServerError::ServerError(std::string	condition) {
+	_condition = condition;
+}
+
+const char	*ServerError::what () const throw() {
+	std::string	msg("Internal Server Error : ");
+
+	msg.append(_condition);
+	return msg.c_str();
+}
