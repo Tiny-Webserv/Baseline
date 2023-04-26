@@ -2,11 +2,17 @@
 #include "Request.hpp"
 #include "ServerBlock.hpp"
 #include "StateCode.hpp"
+//#include "ServerFiles.hpp"
+#include "unistd.h"
 
-Response::Response(Request &request) : _request(request) {
-    if (request.GetMethod() == "GET")
-		; // autoindex 처리
-    else if (request.GetMethod() == "DELETE")
+Response::Response(Request *request) : _request(request) {
+	//_serverFiles = ServerFiles();
+	if (request->GetMethod() == "GET")
+	{
+		std::cout << "get time ~~~~" << std::endl;
+        getMethod(); // autoindex 처리
+    }
+    else if (request->GetMethod() == "DELETE")
         ; // delete method;
     else
         ; // post method;
@@ -14,20 +20,21 @@ Response::Response(Request &request) : _request(request) {
 
 Response::~Response() {}
 
-void Response::SetResponseMessage(std::string responseMessage) {
-	_responseMessage.clear();
-    _responseMessage << responseMessage;
-}
+//void Response::SetResponseMessage(std::string responseMessage) {
+//	_responseMessage.clear();
+//    _responseMessage << responseMessage;
+//}
 
-std::stringstream Response::GetResponseMessage() { return _responseMessage; }
+//std::stringstream Response::GetResponseMessage() { return _responseMessage; }
 
 
 LocationBlock	&Response::getLocationBlock() {
-	std::string	target = _request.GetTarget();
-	for (size_t i = 0; i < _request.GetServer().GetLocation().size(); i++) {
-		std::string	locationTarget = _request.GetServer().GetLocation()[i].GetLocationTarget();
-        if (!locationTarget.compare(0, locationTarget.size(), target))
-			return _request.GetServer().GetLocation()[i];
+	std::string	target = _request->GetTarget();
+	std::cout << "target : " << target << std::endl;
+	for (size_t i = 0; i < _request->GetServer().GetLocation().size(); i++) {
+		std::string	locationTarget = _request->GetServer().GetLocation()[i].GetLocationTarget();
+        if (!strncmp(locationTarget.c_str(), target.c_str(), locationTarget.size()))
+			return _request->GetServer().GetLocation()[i];
     }
 	throw NotExist();
 }
@@ -64,7 +71,16 @@ bool Response::isAllowed(std::string method) {
 */
 
 void Response::getMethod() {
-    if (!isAllowed("GET"))
-        throw PermissionDenied();
-
+	std::string fileToRead;
+     if (!isAllowed("GET"))
+	 	throw PermissionDenied();
+	_request->SetTarget("/test2"); // target 포트가 붙어오는 경우 처리 해야함
+	fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
+	if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
+		fileToRead.append("/") ;
+		fileToRead.append(getLocationBlock().GetIndex()[0]) ;
+	}
+	std::cout << "file to read : " << fileToRead << std::endl;
+	_bodyMessage = _serverFiles.getFile(fileToRead);
+	write(1, &_bodyMessage[0], _bodyMessage.size());
 }

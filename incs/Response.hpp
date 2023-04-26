@@ -2,6 +2,8 @@
 # define RESPONSE_HPP
 
 #include <string>
+#include <vector>
+#include "ServerFiles.hpp"
 
 class Request;
 
@@ -9,14 +11,17 @@ class LocationBlock;
 
 class Response {
 private:
-	std::stringstream	_responseMessage;
-	Request	&_request;
-public:
-	Response(Request	&request);
+	//std::stringstream	_responseMessage;
+	Request	*_request;
+	ServerFiles _serverFiles;
+    std::vector<char> _bodyMessage;
+
+      public:
+	Response(Request	*request);
 	~Response();
 
-	void	SetResponseMessage(std::string	responseMessage);
-	std::string	GetResponseMessage();
+	//void	SetResponseMessage(std::string	responseMessage);
+	//std::string	GetResponseMessage();
 
 	LocationBlock	&getLocationBlock();
 

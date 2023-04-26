@@ -43,6 +43,8 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
 	if (clientsIterator == clients.end()) {
 		char *line = get_next_line(fd);
+		if (line == NULL)
+			return nullptr;
 		while (line) {
 			ss << line;
 			std::cout << line;
@@ -52,6 +54,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 				break;
 			line = get_next_line(fd);
 		}
+
 		std::cout << ss.str() << std::endl;
 		Request *request = new Request(fd, ss);
 		clients.insert(std::pair<int, Request *>(fd, request));
@@ -59,8 +62,8 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
         //request->readBody(fd);
     } else {
 
-                Request *request = clients[fd];
-		std::vector<std::string> body = Split2(ss.str(), CRLF);
+        Request *request = clients[fd];
+		//std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
 			request->readBody(fd);
 		} catch (const BodySizeError &e) {
