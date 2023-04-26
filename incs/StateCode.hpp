@@ -2,6 +2,7 @@
 # define STATECODE_HPP
 
 # include <exception>
+#include <string>
 
 enum StateCode {
 
@@ -47,7 +48,14 @@ class NotExist : public std::exception {
 class PermissionDenied : public std::exception {
   public:
     const char *what() const throw();
-    
+};
+
+class ServerError : public std::exception {
+  private :
+	std::string	_condition;
+  public:
+	ServerError(std::string	condition);
+    const char *what() const throw();
 };
 
 #endif

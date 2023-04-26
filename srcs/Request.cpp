@@ -28,11 +28,11 @@ Request::Request(int fd, std::stringstream &stream)
 		readBody(fd);
 		std::cout << i++ << std::endl;
 		splitHost();
-	} catch (const Request::BodySizeError &e) {
+	} catch (const BodySizeError &e) {
 		std::cout << "payloadTooLarge" << std::endl;
 		SetErrorCode(PayloadTooLarge);
 		SetErrorMessages(e.what());
-	} catch (const Request::HTTPVersionError &e) {
+	} catch (const HTTPVersionError &e) {
 		SetErrorCode(HTTPVersionNotSupported);
 		SetErrorMessages(e.what());
 	} catch (const std::exception &e) {
@@ -88,11 +88,6 @@ bool Request::GetIsEnd(){
 void Request::SetIsEnd(bool isEnd){
 	_isEnd = isEnd;
 }
-
-const char *Request::HTTPVersionError::what() const throw() {
-	return "HTTP Version error : The version must be HTTP 1.1";
-}
-
 
 
 Request &Request::operator=(const Request &request) {
