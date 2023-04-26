@@ -20,13 +20,13 @@ const char *PermissionDenied::what() const throw() {
 	return "Forbidden : Permission denied";
 }
 
-ServerError::ServerError(std::string	condition) {
-	_condition = condition;
+ServerError::ServerError(const char * condition) {
+	char * msg = new char[std::strlen(condition) + 25];
+	strncpy(msg, "Internal Server Error : ", 25);
+	strncat(msg, condition, std::strlen(condition));
+	_condition = msg;
 }
 
 const char	*ServerError::what () const throw() {
-	std::string	msg("Internal Server Error : ");
-
-	msg.append(_condition);
-	return msg.c_str();
+	return _condition;
 }
