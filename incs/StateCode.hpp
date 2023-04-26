@@ -52,10 +52,12 @@ class PermissionDenied : public std::exception {
 
 class ServerError : public std::exception {
   private :
-	std::string	_condition;
+	const char *	_condition;
+
   public:
-	ServerError(std::string	condition);
-    const char *what() const throw();
+	ServerError(const char * condition);
+
+	virtual const char *what() const throw();
 };
 
 #endif
