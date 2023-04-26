@@ -9,7 +9,7 @@ class LocationBlock;
 
 class Response {
 private:
-	std::string	_responseMessage;
+	std::stringstream	_responseMessage;
 	Request	&_request;
 public:
 	Response(Request	&request);

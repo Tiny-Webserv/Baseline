@@ -15,10 +15,11 @@ Response::Response(Request &request) : _request(request) {
 Response::~Response() {}
 
 void Response::SetResponseMessage(std::string responseMessage) {
-    _responseMessage = responseMessage;
+	_responseMessage.clear();
+    _responseMessage << responseMessage;
 }
 
-std::string Response::GetResponseMessage() { return _responseMessage; }
+std::stringstream Response::GetResponseMessage() { return _responseMessage; }
 
 
 LocationBlock	&Response::getLocationBlock() {
@@ -59,11 +60,11 @@ bool Response::isAllowed(std::string method) {
 /*
 	1. 허용된 메서드인지 확인하기 O
 	2. autoindex <- 404처리나 디렉토리 일 때 처리하면 됨
-	3. 타겟 파일 읽어와서 바디에 실어주기 
+	3. 타겟 파일 읽어와서 바디에 실어주기
 */
 
 void Response::getMethod() {
     if (!isAllowed("GET"))
         throw PermissionDenied();
-	
+
 }
