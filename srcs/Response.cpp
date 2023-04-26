@@ -56,7 +56,14 @@ bool Response::isAllowed(std::string method) {
 		return true ;
 }
 
+/*
+	1. 허용된 메서드인지 확인하기 O
+	2. autoindex <- 404처리나 디렉토리 일 때 처리하면 됨
+	3. 타겟 파일 읽어와서 바디에 실어주기 
+*/
+
 void Response::getMethod() {
     if (!isAllowed("GET"))
         throw PermissionDenied();
+	
 }
