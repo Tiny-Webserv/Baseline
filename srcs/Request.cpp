@@ -10,7 +10,7 @@
 Request::Request() : _chunked(false) {}
 
 Request::Request(int fd, std::stringstream &stream)
-    : _contentLength(-1), _errorCode(OK), _chunked(false), _hostPort(80), _isEnd(false) {
+    : _contentLength(-1), _errorMessages("OK"), _errorCode(OK), _chunked(false), _hostPort(80), _isEnd(false) {
     // std::vector<std::string> splited = Split2(stream.str(), CRLF);
 
     try {
@@ -110,7 +110,7 @@ void Request::setStartLine(std::string startLine) {
         _method = data[0];
     else
         throw MethodError();
-    _target = data[1];
+    _target = Split(data[1], std::string(":"))[0]; //[0]은 vector 0번째 인덱스 접근을 위함
     std::cout << data[2] << std::endl;
     // std::cout << std::isstring(data[2]) << std::endl;
 

@@ -4,6 +4,7 @@
 #include "StateCode.hpp"
 //#include "ServerFiles.hpp"
 #include "unistd.h"
+#include "utils.hpp"
 
 Response::Response(Request *request) : _request(request) {
 	//_serverFiles = ServerFiles();
@@ -19,6 +20,8 @@ Response::Response(Request *request) : _request(request) {
 }
 
 Response::~Response() {}
+
+ServerFiles Response::_serverFiles = ServerFiles();
 
 //void Response::SetResponseMessage(std::string responseMessage) {
 //	_responseMessage.clear();
@@ -64,6 +67,30 @@ bool Response::isAllowed(std::string method) {
 		return true ;
 }
 
+void	Response::generateStatusLine() {
+	std::stringstream ss;
+
+	ss << "HTTP/1.1 " << _request->GetErrorCode() << ' '
+		<< _request->GetErrorMessages().substr(0, _request->GetErrorMessages().find(" : "))
+		<< CRLF;
+	std::string	line = ss.str();
+	std::copy(line.begin(), line.end(), std::back_inserter(_statusHeaderMessage));
+}
+
+void	Response::generateHeader() {
+	std::stringstream	ss;
+
+	ss << "Server: Webserv" << CRLF;
+	if (_bodyMessage.size()) {
+		ss << "Content-Type: " << _contentType << CRLF;
+		ss << "Content-Length: " << _bodyMessage.size() << CRLF;
+	}
+	ss << CRLF;
+	std::string	line = ss.str();
+	std::copy(line.begin(), line.end(), std::back_inserter(_statusHeaderMessage));
+
+}
+
 /*
 	1. 허용된 메서드인지 확인하기 O
 	2. autoindex <- 404처리나 디렉토리 일 때 처리하면 됨
@@ -74,7 +101,6 @@ void Response::getMethod() {
 	std::string fileToRead;
      if (!isAllowed("GET"))
 	 	throw PermissionDenied();
-	_request->SetTarget("/test2"); // target 포트가 붙어오는 경우 처리 해야함
 	fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
 	if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
 		fileToRead.append("/") ;
@@ -83,4 +109,41 @@ void Response::getMethod() {
 	std::cout << "file to read : " << fileToRead << std::endl;
 	_bodyMessage = _serverFiles.getFile(fileToRead);
 	write(1, &_bodyMessage[0], _bodyMessage.size());
+	// 확장자가 .로 끝날경우 text/plain
+	if (fileToRead.find(".") == std::string::npos || fileToRead.find(".") == fileToRead.size() - 1)
+		_contentType = "text/plain";
+	else {
+		std::string	extention = fileToRead.substr((fileToRead.rfind(".") + 1 <= fileToRead.size() ?
+			fileToRead.rfind(".") + 1 : -1));
+		if (!extention.compare(".png")) // png 확장자 확인
+			_contentType = "image/png";
+		else if (!extention.compare("txt"))
+			_contentType = "text/plain";
+		else
+			_contentType = "text/" + extention; //그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
+	}
+	generateStatusLine();
+	generateHeader();
+	write(1, &_statusHeaderMessage[0], _statusHeaderMessage.size());
+}
+
+std::vector<char> Response::getResponseMessage(){
+	return _responseMessage;
+}
+std::vector<char> Response::getStatusHeaderMessage(){
+	return _statusHeaderMessage;
+}
+std::vector<char> Response::getBodyMessage(){
+	return _bodyMessage;
+}
+
+// setter
+void Response::setResponseMessage(std::vector<char> &responseMessage){
+	_responseMessage = responseMessage;
+}
+void Response::setStatusHeaderMessage(std::vector<char> &statusHeaderMessage){
+	_statusHeaderMessage = statusHeaderMessage;
+}
+void Response::setBodyMessage(std::vector<char> &bodyMessage){
+	_bodyMessage = bodyMessage;
 }

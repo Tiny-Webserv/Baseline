@@ -66,7 +66,7 @@ std::vector<char> &ServerFiles::getFile(std::string filename) {
 
 	if (iter != _file.end())
 		return iter->second;
-	if (!filename.substr(filename.size() - 4).compare(".png"))
+	if (!filename.substr(static_cast<int>(filename.size()) - 4 >= -1 ? filename.size() - 4 : -1).compare(".png"))
 		_file.insert(std::pair<std::string, std::vector<char> >(
 			filename, readBinaryFile(filename)));
 	else

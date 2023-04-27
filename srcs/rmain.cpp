@@ -18,7 +18,7 @@
 #define PORT 80
 
 int main(int argc, char const *argv[])
-{
+      {
 	(void) argc;
     Config con(static_cast<std::string>(argv[1]));
 	int server_fd, new_socket;
@@ -32,9 +32,9 @@ int main(int argc, char const *argv[])
 	std::stringstream response_body;
 	response_body << file.rdbuf();
 	std::string response_body_str = response_body.str();
-	std::string response_message = "HTTP/1.1 200 OK\n"
-									"Content-Type: text/html\n"
-									"Content-Length: " + std::to_string(response_body_str.length()) + "\n\n"
+	std::string response_message = "HTTP/1.1 200 OK\r\n"
+									"Content-Type: text/html\r\n"
+									"Content-Length: " + std::to_string(response_body_str.length()) + "\r\n\r\n"
 									+ response_body_str;
 	hello = response_message.c_str();
 	// Creating socket file descriptor
@@ -83,8 +83,10 @@ int main(int argc, char const *argv[])
 
 		//int j = 0;
 		std::cout << "error code : " << req->GetErrorCode() << std::endl;
-		//std::cout << "req->getBinary().size() : " << req->getBinary().size() << std::endl;
+		//std::cout  << "req->getBinary().size() : " << req->getBinary().size() << std::endl;
+		std::cout << "test" << std::endl;
 		Response res(req);
+
 		//for (size_t	i = 0; i < req->getBinary().size(); i++) {
 
 			//_file.write(reinterpret_cast<const char *>(&req->getBinary()[0]), req->getBinary().size());
