@@ -19,6 +19,7 @@ private:
 	std::string	_contentType;
     public:
 	Response(Request	*request);
+	Response( Response &response);
 	~Response();
 
 

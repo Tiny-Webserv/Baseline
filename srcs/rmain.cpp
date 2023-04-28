@@ -19,6 +19,8 @@
 
 int main(int argc, char const *argv[])
       {
+	std::map<int, Response> ins;
+
 	(void) argc;
     Config con(static_cast<std::string>(argv[1]));
 	int server_fd, new_socket;
@@ -85,8 +87,8 @@ int main(int argc, char const *argv[])
 		std::cout << "error code : " << req->GetErrorCode() << std::endl;
 		//std::cout  << "req->getBinary().size() : " << req->getBinary().size() << std::endl;
 		std::cout << "test" << std::endl;
-		Response res(req);
-
+		Response res(req) = ==;
+		ins[1] = res;
 		//for (size_t	i = 0; i < req->getBinary().size(); i++) {
 
 			//_file.write(reinterpret_cast<const char *>(&req->getBinary()[0]), req->getBinary().size());

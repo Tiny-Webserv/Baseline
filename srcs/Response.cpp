@@ -21,6 +21,10 @@ Response::Response(Request *request) : _request(request) {
 
 Response::~Response() {}
 
+Response::Response( Response &response){
+	this->_responseMessage = response.getResponseMessage();
+}
+
 ServerFiles Response::_serverFiles = ServerFiles();
 
 //void Response::SetResponseMessage(std::string responseMessage) {
