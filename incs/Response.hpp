@@ -11,7 +11,7 @@ class LocationBlock;
 
 class Response {
 private:
-	std::vector<char>	_responseMessage;
+	std::vector<char>  _responseMessage;
     std::vector<char> _statusHeaderMessage;
 	std::vector<char> _bodyMessage;
 	Request	*_request;
@@ -21,8 +21,6 @@ private:
 	Response(Request	*request);
 	~Response();
 
-	//void	SetResponseMessage(std::string	responseMessage);
-	//std::string	GetResponseMessage();
 
 	LocationBlock	&getLocationBlock();
 
@@ -31,8 +29,10 @@ private:
 	std::vector<char> getResponseMessage();
     std::vector<char> getStatusHeaderMessage();
 	std::vector<char> getBodyMessage();
+	// std::vector<char> getResponseMessage();
 
 	// setter
+	void SetResponseMessage(std::string	responseMessage);
 	void setResponseMessage(std::vector<char> &getResponseMessage);
     void setStatusHeaderMessage(std::vector<char> &getStatusHeaderMessage);
 	void setBodyMessage(std::vector<char> &getBodyMessage);
@@ -46,7 +46,6 @@ private:
 
 	void	generateStatusLine();
 	void	generateHeader();
-
 	void	joinResponseMessage();
 
 	// auto index 처리 함수

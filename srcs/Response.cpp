@@ -90,7 +90,10 @@ void	Response::generateHeader() {
 	std::copy(line.begin(), line.end(), std::back_inserter(_statusHeaderMessage));
 
 }
-
+void	Response::joinResponseMessage(){
+	_responseMessage.insert(_responseMessage.end(), _statusHeaderMessage.begin(), _statusHeaderMessage.end());
+	_responseMessage.insert(_responseMessage.end(), _bodyMessage.begin(), _bodyMessage.end());
+}
 /*
 	1. 허용된 메서드인지 확인하기 O
 	2. autoindex <- 404처리나 디렉토리 일 때 처리하면 됨
@@ -122,9 +125,12 @@ void Response::getMethod() {
 		else
 			_contentType = "text/" + extention; //그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
 	}
+	std::cout << "befor =====>" << std::endl;
 	generateStatusLine();
 	generateHeader();
-	write(1, &_statusHeaderMessage[0], _statusHeaderMessage.size());
+	joinResponseMessage();
+	write(1, &_responseMessage[0], _responseMessage.size());
+
 }
 
 std::vector<char> Response::getResponseMessage(){
