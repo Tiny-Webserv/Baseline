@@ -8,7 +8,7 @@
 
 class ServerFiles {
 private:
-	std::map<std::string, std::vector<char> >	_file;
+	 std::map<std::string, std::vector<char> >	_file;
 public:
 	ServerFiles();
 	~ServerFiles();

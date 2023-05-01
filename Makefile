@@ -11,7 +11,8 @@ SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Config.cpp LocationBlock.cpp ServerBlock.cpp \
 	rmain.cpp utils.cpp\
 	StateCode.cpp \
-	ServerFiles.cpp
+	ServerFiles.cpp \
+	Response.cpp
 
 
 SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp
