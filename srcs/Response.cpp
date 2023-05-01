@@ -22,8 +22,11 @@ Response::Response(Request *request) : _request(request) {
         std::cout << "Not Exist 발생" << std::endl;
         std::map<int, std::string>::iterator it =
             _request->GetServer().GetErrorPage().find(404);
-        if (it != _request->GetServer().GetErrorPage().end()) {
-            _bodyMessage = _serverFiles.getFile("./docs/error.html");
+        if (it !=  _request->GetServer().GetErrorPage().end()) {
+            std::cout << "root : " <<_request->GetServer().GetRoot() << std::endl;
+            std::string filename = "./" + _request->GetServer().GetRoot() + it->second;
+            std::cout << filename << std::endl;
+            _bodyMessage = _serverFiles.getFile(filename);
             std::cout << "익셉션 바디메시지" << std::endl;
             write(1, &_bodyMessage[0], _bodyMessage.size());
             std::cout << std::endl;
@@ -154,7 +157,7 @@ void Response::joinResponseMessage() {
 void Response::getMethod() {
     std::string fileToRead;
     if (!isAllowed("GET")) throw PermissionDenied();
-    fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
+    fileToRead = "./" + getLocationBlock().GetRoot() + _request->GetTarget();
     if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
         fileToRead.append("/");
         fileToRead.append(getLocationBlock().GetIndex()[0]);
