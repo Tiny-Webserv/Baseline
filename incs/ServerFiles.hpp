@@ -22,10 +22,6 @@ public:
 
     std::vector<char> readBinaryFile(std::string filename);
 
-    class IsDirectory : public std::exception {
-      public:
-        const char *what() const throw();
-    };
 };
 
 #endif

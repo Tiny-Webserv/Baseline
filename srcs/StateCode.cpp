@@ -50,6 +50,6 @@ ServerError::ServerError(const char *condition) {
 
 const char *ServerError::what() const throw() { return _condition; }
 
-ServerError::~ServerError() {
+ServerError::~ServerError() throw() {
 	delete [] _condition;
 }

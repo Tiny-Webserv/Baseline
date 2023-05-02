@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include "ServerFiles.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 class Request;
 
@@ -42,6 +44,7 @@ private:
 	bool	isAllowed(std::string	method);
 	bool	isAutoIndex();
     bool 	isCGI();
+	bool	isDirectory(const char *directory);
 
 	void	getMethod();
 

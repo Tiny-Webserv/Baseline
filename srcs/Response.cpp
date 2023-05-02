@@ -103,29 +103,26 @@ bool Response::isAllowed(std::string method) {
 }
 
 void Response::generateAutoindex(const std::string &directory) {
-    std::string dir_path = directory;          // 디렉토리 경로
-    DIR *dir = opendir(dir_path.c_str()); // 디렉토리 열기
-    struct dirent *entry; // 파일/디렉토리 정보 구조체
+    std::string dir_path = directory;
+    DIR *dir = opendir(dir_path.c_str());
+    struct dirent *entry;
 	std::stringstream ss;
     std::string tmp;
-    // autoindex 페이지 헤더 생성
     ss << "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " << dir_path
               << "</title>\n</head>\n<body>\n<h1>Index of " << dir_path
               << "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last "
                  "Modified</th><th>Size</th></tr>\n";
 
-    // 디렉토리 내부 파일/디렉토리 정보 읽어오기
     while ((entry = readdir(dir)) != nullptr) {
         std::string name = entry->d_name; // 파일/디렉토리 이름
         ss << "<tr><td><a href=\"" << name << "\">" << name
                   << "</a></td><td></td><td></td></tr>\n";
     }
 
-    // autoindex 페이지 푸터 생성
     ss << "</table>\n<hr>\n</body>\n</html>\n";
     tmp = ss.str();
 
-    closedir(dir); // 디렉토리 닫기
+    closedir(dir);
 	_bodyMessage.clear();
 	std::copy(tmp.begin(), tmp.end(),
               std::back_inserter(_bodyMessage));
@@ -211,6 +208,15 @@ void Response::joinResponseMessage() {
     std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
 }
 
+bool	Response::isDirectory(const char *directory) {
+	struct stat	buffer;
+
+	if (stat(directory, &buffer) != 0) {
+        return false;
+    }
+    return S_ISDIR(buffer.st_mode);
+}
+
 void Response::getMethod() {
     std::string fileToRead;
     if (!isAllowed("GET"))
@@ -221,16 +227,13 @@ void Response::getMethod() {
         fileToRead.append(getLocationBlock().GetIndex()[0]);
     }
     std::cout << "file to read : " << fileToRead << std::endl;
-	try {
-		_bodyMessage = _serverFiles.getFile(fileToRead);
-	}
-	catch(ServerFiles::IsDirectory& e) {
+	if (isDirectory(fileToRead.c_str())) {
 		if (!isAutoIndex())
 			throw PermissionDenied();
 		generateAutoindex(fileToRead);
 		return ;
 	}
-    write(1, &_bodyMessage[0], _bodyMessage.size());
+	_bodyMessage = _serverFiles.getFile(fileToRead);
     // 확장자가 .로 끝날경우 text/plain
     if (fileToRead.find(".") == std::string::npos ||
         fileToRead.find(".") == fileToRead.size() - 1)
