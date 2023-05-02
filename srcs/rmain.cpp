@@ -99,8 +99,8 @@
             // delete[] buff; // 동적 메모리 해제
 
             _file.close();
-            write(new_socket, &res.getResponseMessage()[0],
-                response_message.size());
+			std::vector<char> msg = res.getResponseMessage();
+            write(new_socket, &msg[0], msg.size());
             std::cout << "========= hello ========= " << std::endl << hello << std::endl;
             std::cout << "------------------Hello message sent-------------------"
                     << std::endl;

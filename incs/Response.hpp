@@ -48,7 +48,9 @@ private:
 	void	generateStatusLine();
 	void	generateHeader();
 	void	joinResponseMessage();
-
+	void	generateAutoindex(const std::string& directory);
+	void	generateErrorBody();
+	void	generateDefaultErrorPage();
 	// auto index 처리 함수
 	// serverBlock 참고해서 특정 파일이 있는지 확인
 	// 특정 파일 읽어와 body에 실어주기
@@ -64,3 +66,5 @@ private:
 };
 
 #endif
+
+// 1. 에러 페이지 만드는 거 함수 따로 만들기

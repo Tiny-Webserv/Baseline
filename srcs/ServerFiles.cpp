@@ -33,7 +33,7 @@ std::vector<char> ServerFiles::readTextFile(std::string filename) {
 
 	// vector로 파일 읽기
 	if (!tmp.read(&file[0], tmpSize))
-		throw ServerError("reading file failed");
+		throw ServerError("reading file failed\0");
 	return file;
 }
 

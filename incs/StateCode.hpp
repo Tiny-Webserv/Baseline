@@ -68,6 +68,7 @@ private :
 
 public:
 	ServerError(const char * condition);
+	~ServerError();
 	virtual const char *what() const throw();
 };
 

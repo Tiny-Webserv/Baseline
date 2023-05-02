@@ -4,54 +4,41 @@
 #include "ServerBlock.hpp"
 #include "StateCode.hpp"
 // #include "ServerFiles.hpp"
+#include "dirent.h"
 #include "unistd.h"
 #include "utils.hpp"
 
 Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
     try {
-        if (request->GetMethod() == "GET") {
-            getMethod();  // autoindex 처리
+        if (request->GetErrorCode() != 200)
+            generateErrorBody();
+        else if (request->GetMethod() == "GET") {
+            getMethod(); // autoindex 처리
         } else if (request->GetMethod() == "DELETE")
-            ;  // delete method;
+            ; // delete method;
         else
-            ;  // post method;
+            ; // post method;
     } catch (NotExist &e) {
-        _request->SetErrorCode(404);
-        _request->SetErrorMessages(e.what());
-        std::cout << "Not Exist 발생" << std::endl;
-        std::map<int, std::string>::iterator it =
-            _request->GetServer().GetErrorPage().find(404);
-        if (it !=  _request->GetServer().GetErrorPage().end()) {
-            std::cout << "root : " <<_request->GetServer().GetRoot() << std::endl;
-            std::string filename = "./" + _request->GetServer().GetRoot() + it->second;
-            std::cout << filename << std::endl;
-            _bodyMessage = _serverFiles.getFile(filename);
-            std::cout << "익셉션 바디메시지" << std::endl;
-            write(1, &_bodyMessage[0], _bodyMessage.size());
-            std::cout << std::endl;
-        }
+        if (isAutoIndex())
+            generateAutoindex(request->GetServer().GetRoot()); // autoindex 처리
+		else {
+			_request->SetErrorCode(e._errorCode);
+			_request->SetErrorMessages(e.what());
+			generateErrorBody();
+		}
         _contentType = "text/html";
-        // 서버 블록에서 지정된 에러 페이지가 있는지 보기
-
-        // 있으면 그거를 바디에 저장
-        // 없으면 default errorpage 가져오기
-        // errorCode <=> response.getRequest().getErrorcode()
-        // errorMessageShort <=>r
-        // response.getRequest().getErrorMessge().substring " : "
-        // errorMessage <=>
-        // response.getRequest().getErrorMessge().substring " : "
-        // std::string crlf(CRLF);
-        // std::copy(crlf.begin(), crlf.end(),
-        // std::back_inserter(_bodyMessage)); std::copy(crlf.begin(),
-        // crlf.end(), std::back_inserter(_bodyMessage));
-        generateStatusLine();
-        generateHeader();
-        joinResponseMessage();
-        std::cout << "_responseMessage" << std::endl << std::endl;
-        write(1, &_responseMessage[0], _responseMessage.size());
-        std::cout << std::endl;
+    } catch (StateCode &e) {
+        _request->SetErrorCode(e._errorCode);
+        _request->SetErrorMessages(e.what());
+        generateErrorBody();
+        _contentType = "text/html";
     }
+    generateStatusLine();
+    generateHeader();
+    joinResponseMessage();
+    std::cout << "_responseMessage" << std::endl << std::endl;
+    write(1, &_responseMessage[0], _responseMessage.size());
 }
 
 Response::~Response() {}
@@ -91,13 +78,15 @@ LocationBlock &Response::getLocationBlock() {
 
 bool Response::isCGI() {
     LocationBlock block = getLocationBlock();
-    if (block.GetLocationTarget().find(".cgi")) return true;
+    if (block.GetLocationTarget().find(".cgi"))
+        return true;
     return false;
 }
 
 bool Response::isAutoIndex() {
     LocationBlock block = getLocationBlock();
-    if (block.GetAutoIndex()) return true;
+    if (block.GetAutoIndex())
+        return true;
     return false;
 }
 
@@ -111,6 +100,36 @@ bool Response::isAllowed(std::string method) {
         return false;
     else
         return true;
+}
+
+void Response::generateAutoindex(const std::string &directory) {
+    std::string dir_path = directory;          // 디렉토리 경로
+    DIR *dir = opendir(dir_path.c_str()); // 디렉토리 열기
+    struct dirent *entry; // 파일/디렉토리 정보 구조체
+	std::stringstream ss;
+    std::string tmp;
+    // autoindex 페이지 헤더 생성
+    ss << "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " << dir_path
+              << "</title>\n</head>\n<body>\n<h1>Index of " << dir_path
+              << "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last "
+                 "Modified</th><th>Size</th></tr>\n";
+
+    // 디렉토리 내부 파일/디렉토리 정보 읽어오기
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string name = entry->d_name; // 파일/디렉토리 이름
+        ss << "<tr><td><a href=\"" << name << "\">" << name
+                  << "</a></td><td></td><td></td></tr>\n";
+    }
+
+    // autoindex 페이지 푸터 생성
+    ss << "</table>\n<hr>\n</body>\n</html>\n";
+    tmp = ss.str();
+
+    closedir(dir); // 디렉토리 닫기
+	_bodyMessage.clear();
+	std::copy(tmp.begin(), tmp.end(),
+              std::back_inserter(_bodyMessage));
+
 }
 
 void Response::generateStatusLine() {
@@ -138,6 +157,49 @@ void Response::generateHeader() {
     std::copy(line.begin(), line.end(),
               std::back_inserter(_statusHeaderMessage));
 }
+
+void Response::generateDefaultErrorPage() {
+    std::vector<char> vec = _serverFiles.getFile("./docs/error.html");
+    std::string str(vec.begin(), vec.end());
+    str.push_back('\0');
+    std::stringstream ss;
+    ss << _request->GetErrorCode();
+    size_t header = str.find("errorCode");
+
+    if (header != std::string::npos) {
+        str.replace(header, std::string("errorCode").length(), ss.str());
+    }
+    size_t body = str.find("errorMessageShort");
+    if (body != std::string::npos) {
+        str.replace(body, std::string("errorMessageShort").length(),
+                    _request->GetErrorMessages().substr(
+                        0, _request->GetErrorMessages().find(" : ")));
+    }
+    size_t pos = str.find("errorMessage");
+    if (pos != std::string::npos) {
+        str.replace(pos, std::string("errorMessage").length(),
+                    _request->GetErrorMessages().substr(
+                        _request->GetErrorMessages().find(" : ") + 3));
+    }
+    _bodyMessage.clear();
+    std::copy(str.begin(), str.end(), std::back_inserter(_bodyMessage));
+}
+
+void Response::generateErrorBody() {
+    std::map<int, std::string>::iterator it =
+        _request->GetServer().GetErrorPage().find(_request->GetErrorCode());
+    try {
+        if (it != _request->GetServer().GetErrorPage().end()) {
+            std::string filename = _request->GetServer().GetRoot() + it->second;
+            _bodyMessage = _serverFiles.getFile(filename);
+        } else
+            generateDefaultErrorPage();
+    } catch (const StateCode &e) {
+        generateDefaultErrorPage();
+    }
+    _contentType = "text/html";
+}
+
 void Response::joinResponseMessage() {
     _responseMessage.insert(_responseMessage.end(),
                             _statusHeaderMessage.begin(),
@@ -148,22 +210,26 @@ void Response::joinResponseMessage() {
     std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
     std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
 }
-/*
-        1. 허용된 메서드인지 확인하기 O
-        2. autoindex <- 404처리나 디렉토리 일 때 처리하면 됨
-        3. 타겟 파일 읽어와서 바디에 실어주기
-*/
 
 void Response::getMethod() {
     std::string fileToRead;
-    if (!isAllowed("GET")) throw PermissionDenied();
+    if (!isAllowed("GET"))
+        throw PermissionDenied();
     fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
     if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
         fileToRead.append("/");
         fileToRead.append(getLocationBlock().GetIndex()[0]);
     }
     std::cout << "file to read : " << fileToRead << std::endl;
-    _bodyMessage = _serverFiles.getFile(fileToRead);
+	try {
+		_bodyMessage = _serverFiles.getFile(fileToRead);
+	}
+	catch(ServerFiles::IsDirectory& e) {
+		if (!isAutoIndex())
+			throw PermissionDenied();
+		generateAutoindex(fileToRead);
+		return ;
+	}
     write(1, &_bodyMessage[0], _bodyMessage.size());
     // 확장자가 .로 끝날경우 text/plain
     if (fileToRead.find(".") == std::string::npos ||
@@ -174,20 +240,15 @@ void Response::getMethod() {
             fileToRead.substr((fileToRead.rfind(".") + 1 <= fileToRead.size()
                                    ? fileToRead.rfind(".") + 1
                                    : -1));
-        if (!extention.compare(".png"))  // png 확장자 확인
+        if (!extention.compare(".png")) // png 확장자 확인
             _contentType = "image/png";
         else if (!extention.compare("txt"))
             _contentType = "text/plain";
         else
             _contentType =
                 "text/" +
-                extention;  // 그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
+                extention; // 그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
     }
-    generateStatusLine();
-    generateHeader();
-    joinResponseMessage();
-    write(1, &_responseMessage[0], _responseMessage.size());
-    std::cout << "befor =====>" << std::endl;
 }
 
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
