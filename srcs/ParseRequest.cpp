@@ -66,16 +66,10 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		//std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
 			request->readBody(fd);
-		} catch (const BodySizeError &e) {
-			request->SetErrorCode(PayloadTooLarge);
+		} catch (const StateCode &e) {
+			request->SetErrorCode(e._errorCode);
 			request->SetErrorMessages(e.what());
-		} catch (const std::exception &e) {
-			request->SetErrorCode(BadRequest);
-			request->SetErrorMessages(e.what());
-		} catch (const std::runtime_error& e) {
-            request->SetErrorCode(NotImplemented);
-            request->SetErrorMessages(e.what());
-        }
+		}
 	}
 	return clients[fd];
 }

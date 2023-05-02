@@ -2,9 +2,9 @@
 # define STATECODE_HPP
 
 # include <exception>
-#include <string>
+# include <string>
 
-enum StateCode {
+enum ErrorCode {
 
     // 200 ~
     OK = 200,
@@ -25,39 +25,52 @@ enum StateCode {
     HTTPVersionNotSupported = 505,
 };
 
-class HTTPVersionError : public std::exception {
-  public:
-    const char *what() const throw();
+class StateCode : public std::exception {
+
+public:
+	int	_errorCode;
+	const char	*what() const throw() = 0;
 };
 
-class MethodError : public std::exception {
-  public:
-    const char *what() const throw();
+class HTTPVersionError : public StateCode {
+public:
+	HTTPVersionError();
+	const char *what() const throw();
 };
 
-class BodySizeError : public std::exception {
-  public:
-    const char *what() const throw();
+class MethodError : public StateCode {
+public:
+	MethodError();
+	const char *what() const throw();
 };
 
-class NotExist : public std::exception {
-  public:
-    const char *what() const throw();
+class BodySizeError : public StateCode {
+public:
+	BodySizeError();
+	const char *what() const throw();
 };
 
-class PermissionDenied : public std::exception {
-  public:
-    const char *what() const throw();
+class NotExist : public StateCode {
+public:
+	NotExist();
+	const char *what() const throw();
 };
 
-class ServerError : public std::exception {
-  private :
+class PermissionDenied : public StateCode {
+public:
+	PermissionDenied();
+	const char *what() const throw();
+};
+
+class ServerError : public StateCode {
+private :
 	const char *	_condition;
 
-  public:
+public:
 	ServerError(const char * condition);
-
 	virtual const char *what() const throw();
 };
+
+
 
 #endif

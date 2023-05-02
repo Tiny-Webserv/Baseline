@@ -157,7 +157,7 @@ void Response::joinResponseMessage() {
 void Response::getMethod() {
     std::string fileToRead;
     if (!isAllowed("GET")) throw PermissionDenied();
-    fileToRead = "./" + getLocationBlock().GetRoot() + _request->GetTarget();
+    fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
     if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
         fileToRead.append("/");
         fileToRead.append(getLocationBlock().GetIndex()[0]);

@@ -28,15 +28,8 @@ Request::Request(int fd, std::stringstream &stream)
         readBody(fd);
         std::cout << i++ << std::endl;
         splitHost();
-    } catch (const BodySizeError &e) {
-        std::cout << "payloadTooLarge" << std::endl;
-        SetErrorCode(PayloadTooLarge);
-        SetErrorMessages(e.what());
-    } catch (const HTTPVersionError &e) {
-        SetErrorCode(HTTPVersionNotSupported);
-        SetErrorMessages(e.what());
-    } catch (const std::exception &e) {
-        SetErrorCode(BadRequest);
+    } catch (const StateCode &e) {
+        SetErrorCode(_errorCode);
         SetErrorMessages(e.what());
     }
 }
