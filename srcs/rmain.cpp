@@ -69,8 +69,8 @@
                 exit(EXIT_FAILURE);
             }
             fcntl(new_socket, F_SETFL, fcntl(new_socket, F_GETFL) | O_NONBLOCK);
-            std::ofstream _file("./img.png", std::ios::binary);
-            if (!_file) return (1);
+            //std::ofstream _file("./img.png", std::ios::binary);
+            //if (!_file) return (1);
             Request *req = ParseRequest(new_socket, clnts, con._ServerBlockObject);
             if (req == nullptr) {
                 close(new_socket);
@@ -98,13 +98,16 @@
             //_file.write(buff, req->getBinary().size());
             // delete[] buff; // 동적 메모리 해제
 
-            _file.close();
+            //_file.close();
 			std::vector<char> msg = res.getResponseMessage();
             write(new_socket, &msg[0], msg.size());
-            std::cout << "========= hello ========= " << std::endl << hello << std::endl;
+            //write(new_socket, hello, std::string(hello).size());
+            //std::cout << "========= hello ========= " << std::endl << hello << std::endl;
             std::cout << "------------------Hello message sent-------------------"
                     << std::endl;
             close(new_socket);
+			clnts.erase(new_socket);
+			delete req;
         }
         return 0;
     }

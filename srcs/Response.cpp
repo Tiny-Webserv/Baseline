@@ -15,7 +15,11 @@ Response::Response(Request *request) : _request(request) {
             generateErrorBody();
         else if (request->GetMethod() == "GET") {
             getMethod(); // autoindex 처리
-        } else if (request->GetMethod() == "DELETE")
+        }
+        else if (request->GetMethod() == "POST") {
+            getMethod(); // autoindex 처리
+        } 
+        else if (request->GetMethod() == "DELETE")
             ; // delete method;
         else
             ; // post method;
@@ -48,13 +52,6 @@ Response::Response(Response &response) {
 }
 
 ServerFiles Response::_serverFiles = ServerFiles();
-
-// void Response::SetResponseMessage(std::string responseMessage) {
-//	_responseMessage.clear();
-//     _responseMessage << responseMessage;
-// }
-
-// std::stringstream Response::GetResponseMessage() { return _responseMessage; }
 
 LocationBlock &Response::getLocationBlock() {
     ServerBlock Block;
