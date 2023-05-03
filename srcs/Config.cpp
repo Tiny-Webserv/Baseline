@@ -1,8 +1,7 @@
 #include "Config.hpp"
 
-
 int NginxWord(std::string line);
-bool CheckSemicolon(std::string line);	//
+bool test(std::string line);
 
 Config::Config() {}
 
@@ -23,204 +22,65 @@ Config::Config(std::string filename) {
 	std::vector<std::string> locationStack;
 	ServerBlock curServerBlockObject;
 
-	// ServerBlock CurrServerBlock; /////////
-	/////////
+	std::string ServerBlockWords[6] = {"listen",     "server_name",
+									   "error_page", "client_max_body_size",
+									   "root",       "index"};
+	std::string LocationBlockWords[6] = {
+		"root", "limit_except", "autoindex", "index", "return", "upload_pass"};
+	void (Config::*ServerFunc[6])(ServerBlock &, std::stringstream &) = {
+		&Config::ServerListen,    &Config::ServerServerName,
+		&Config::ServerErrorPage, &Config::ServerClineMaxBodySize,
+		&Config::ServerRoot,      &Config::ServerIndex};
+	void (Config::*LocationFunc[6])(LocationBlock &, std::stringstream &) = {
+		&Config::LocationRoot,      &Config::LocationLimitExcept,
+		&Config::LocationAutoIndex, &Config::LocationIndex,
+		&Config::LocationReturn,    &Config::LocationUploadPass};
+
+	///// ServerBlock CurrServerBlock; /////////
 	std::stringstream ss(ConfigFile);
 	while (ss >> token) {
-		if (token == "server") {
-			ss >> token;
-			if (token == "{") {
-				serverStack.push_back("{");
-				curServerBlockObject.ServerBlockClear();
-			} else {
-				std::cout << "server { 필수" << std::endl;
+		ServerWordCheck(ss, token);
+		serverStack.push_back("{");
+		curServerBlockObject.ServerBlockClear();
+		while (!serverStack.empty() && ss >> token) {
+			for (int i = 0; i < 6; i++) {
+				if (token == ServerBlockWords[i]) {
+					(this->*(ServerFunc[i]))(curServerBlockObject, ss);
+					break;
+				}
 			}
-		} else {
-			std::cout << " or must \"server\" first" << std::endl;
-			exit(1);
-		}
-		while (!serverStack.empty()) {
-			(ss >> token);
 			if (token == "}") {
+				if (curServerBlockObject.GetLocation().size() == 0)
+				{
+					std::cout << "non 존재 LocationBlock err" << std::endl;
+					exit(1);
+				}
 				serverStack.pop_back();
 				_ServerBlockObject.push_back(curServerBlockObject);
 				continue;
 			}
-			if (token == "listen") {
-				(ss >> token);
-				int size = token.size() - 1;
-				std::string test_len = "";
-				if (curServerBlockObject.GetPort() != -1)
-					continue;
-				Itos(atoi(token.c_str()), test_len);
-				if ((int)test_len.size() == size)
-					curServerBlockObject.SetPort(atoi(token.c_str()));
-				else {
-					std::cout << "port err" << std::endl;
-					exit(1);
-				}
-				continue;
-			}
 			if (token == "location") {
-				(ss >> token);
 				LocationBlock curLocationBlock;
-				curLocationBlock.SetLocationTarget(token);
-				(ss >> token);
-				if (token != "{") {
-					std::cout << "err3\n" << std::endl;
-					exit(1);
-				}
+				LocationWordCheck(curLocationBlock, ss);
 				locationStack.push_back("{");
-
-				while (!locationStack.empty()) {
-					(ss >> token);
+				while (!locationStack.empty() && ss >> token) {
+					for (int i = 0; i < 6; i++) {
+						if (token == LocationBlockWords[i]) {
+							(this->*(LocationFunc[i]))(curLocationBlock, ss);
+							break;
+						}
+					}
 					if (token == "}") {
+						LocationEssentialCheck(curServerBlockObject,
+											   curLocationBlock);
 						locationStack.pop_back();
-						if (curLocationBlock.GetRoot() == "")
-							curLocationBlock.SetRoot(
-								curServerBlockObject.GetRoot());
-						if (curLocationBlock.GetIndex().empty()) {
-							curLocationBlock.SetIndex(
-								curServerBlockObject.GetIndex());
-						}
-						if (curLocationBlock.GetRoot() == "" ||
-							curLocationBlock.GetIndex().empty()) {
-							std::cout << "err serroot, location root or _Index"
-									  << std::endl;
-							exit(1);
-						}
 						curServerBlockObject.AddLocationBlock(curLocationBlock);
-						continue;
-					}
-					if (token == "root") {
-						(ss >> token);
-						if (curLocationBlock.GetRoot().empty()) {
-							token.erase(token.size() - 1, 1);
-							curLocationBlock.SetRoot(token);
-						}
-						continue;
-					}
-					if (token == "limit_except") {
-						while (ss >> token) {
-							if (token == "{")
-								break;
-							curLocationBlock.AddLimitExcept(token);
-						}
-						while (token != "}")
-							ss >> token;
-						continue;
-					}
-					if (token == "autoindex") {
-						ss >> token;
-						if (curLocationBlock.GetAutoIndex() == -1) {
-							if (token == "on;") {
-								curLocationBlock.SetAutoIndex(1);
-							} else if (token == "off;") {
-								curLocationBlock.SetAutoIndex(0);
-							} else {
-								std::cout << "autoindex err" << std::endl;
-								exit(1);
-							}
-						}
-						continue;
-					}
-					if (token == "index") {
-						while (ss >> token) {
-							if (token[token.size() - 1] == ';')
-								break;
-							curLocationBlock.AddIndex(token);
-						}
-						token.erase(token.size() - 1, 1);
-						curLocationBlock.AddIndex(token);
-						continue;
-					}
-					if (token == "return") {
-						if (curLocationBlock.GetReturn()
-									.first == 0 &&
-							curLocationBlock.GetReturn()
-									.second == "") {
-							ss >> token;
-							std::pair<int, std::string> temp;
-							temp.first = atoi(token.c_str());
-							ss >> token;
-							token.erase(token.size() - 1, 1);
-							temp.second = token;
-							curLocationBlock
-								.SetReturn(temp);
-						} else {
-							while (ss >> token) {
-								if (token[token.size() - 1] == ';')
-									break;
-							}
-						}
-						continue;
-					}
-					if (token == "upload_pass") {
-						if (curLocationBlock.GetUploadPass() != "") {
-							continue;
-						}
-						ss >> token;
-						token.erase(token.size() - 1, 1);
-						curLocationBlock.SetUploadPass(token);
-						continue;
 					}
 				}
-			}
-			if (token == "server_name") {
-				while (ss >> token) {
-					if (token[token.size() - 1] == ';') {
-						token.erase(token.size() - 1, 1);
-						curServerBlockObject.AddServerName(token);
-						break;
-					}
-					curServerBlockObject.AddServerName(token);
-				}
-				continue;
-			}
-			if (token == "error_page") {
-				std::vector<std::string> temp;
-				while (ss >> token) {
-					if (token[0] == '/')
-						break;
-					temp.push_back(token);
-				}
-				token.erase(token.size() - 1, 1);
-				for (size_t i = 0; i < temp.size(); i++) {
-					curServerBlockObject.AddErrorPage(atoi(temp[i].c_str()),
-													  token);
-				}
-				continue;
-			}
-			if (token == "client_max_body_size") {
-				ss >> token;
-				if (curServerBlockObject.GetClientMaxBodySize() == 1024) {
-					curServerBlockObject.SetClientMaxBodySize(
-						atoi(token.c_str()));
-				}
-				continue;
-			}
-			if (token == "root") {
-				ss >> token;
-				if (curServerBlockObject.GetRoot().empty()) {
-					token.erase(token.size() - 1, 1);
-					curServerBlockObject.SetRoot(token);
-				}
-				continue;
-			}
-			if (token == "index") {
-				while (ss >> token) {
-					if (token[token.size() - 1] == ';')
-						break;
-					curServerBlockObject.AddServerIndex(token);
-				}
-				token.erase(token.size() - 1, 1);
-				curServerBlockObject.AddServerIndex(token);
-				continue;
 			}
 		}
 	}
-
-	if (!serverStack.empty()) {
+	if (!serverStack.empty() || !locationStack.empty()) {
 		std::cout << "scope err" << std::endl;
 	}
 }
@@ -247,7 +107,191 @@ std::string Config::OpenFile(std::string filename) {
 	return file_Save;
 }
 
-bool CheckSemicolon(std::string line) {
+// serverBlock setting
+void Config::ServerWordCheck(std::stringstream &ss, std::string token) {
+	if (token != "server") {
+		std::cout << " or must \"server\" first" << std::endl;
+		exit(1);
+	}
+	ss >> token;
+	if (token != "{") {
+		std::cout << "server { 필수" << std::endl;
+	}
+}
+void Config::ServerListen(ServerBlock &curServerBlockObject,
+						  std::stringstream &ss) {
+	std::string token;
+	(ss >> token);
+	int size = token.size() - 1;
+	std::string test_len = "";
+	if (curServerBlockObject.GetPort() != -1)
+		return;
+	Itos(atoi(token.c_str()), test_len);
+	if ((int)test_len.size() == size)
+		curServerBlockObject.SetPort(atoi(token.c_str()));
+	else {
+		std::cout << "port err" << std::endl;
+		exit(1);
+	}
+	return;
+}
+void Config::ServerServerName(ServerBlock &curServerBlockObject,
+							  std::stringstream &ss) {
+	std::string token;
+	while (ss >> token) {
+		if (token[token.size() - 1] == ';') {
+			token.erase(token.size() - 1, 1);
+			curServerBlockObject.AddServerName(token);
+			break;
+		}
+		curServerBlockObject.AddServerName(token);
+	}
+}
+void Config::ServerErrorPage(ServerBlock &curServerBlockObject,
+							 std::stringstream &ss) {
+	std::string token;
+	std::vector<std::string> temp;
+	while (ss >> token) {
+		if (token[0] == '/')
+			break;
+		temp.push_back(token);
+	}
+	token.erase(token.size() - 1, 1);
+	for (size_t i = 0; i < temp.size(); i++) {
+		curServerBlockObject.AddErrorPage(atoi(temp[i].c_str()), token);
+	}
+}
+void Config::ServerClineMaxBodySize(ServerBlock &curServerBlockObject,
+									std::stringstream &ss) {
+	std::string token;
+	ss >> token;
+	if (curServerBlockObject.GetClientMaxBodySize() == 1024) {
+		curServerBlockObject.SetClientMaxBodySize(atoi(token.c_str()));
+	}
+}
+void Config::ServerRoot(ServerBlock &curServerBlockObject,
+						std::stringstream &ss) {
+	std::string token;
+	ss >> token;
+	if (curServerBlockObject.GetRoot().empty()) {
+		token.erase(token.size() - 1, 1);
+		curServerBlockObject.SetRoot(token);
+	}
+}
+void Config::ServerIndex(ServerBlock &curServerBlockObject,
+						 std::stringstream &ss) {
+	std::string token;
+	while (ss >> token) {
+		if (token[token.size() - 1] == ';')
+			break;
+		curServerBlockObject.AddServerIndex(token);
+	}
+	token.erase(token.size() - 1, 1);
+	curServerBlockObject.AddServerIndex(token);
+}
+// locationBlock setting
+void Config::LocationWordCheck(LocationBlock &curLocationBlock,
+							   std::stringstream &ss) {
+	std::string token;
+	ss >> token;
+	curLocationBlock.SetLocationTarget(token);
+	ss >> token;
+	if (token != "{") {
+		std::cout << "\"{\" must appear after location target" << std::endl;
+		exit(1);
+	}
+}
+void Config::LocationRoot(LocationBlock &curLocationBlock,
+						  std::stringstream &ss) {
+	std::string token;
+	(ss >> token);
+	if (curLocationBlock.GetRoot().empty()) {
+		token.erase(token.size() - 1, 1);
+		curLocationBlock.SetRoot(token);
+	}
+}
+void Config::LocationLimitExcept(LocationBlock &curLocationBlock,
+								 std::stringstream &ss) {
+	std::string token;
+	while (ss >> token) {
+		if (token == "{")
+			break;
+		curLocationBlock.AddLimitExcept(token);
+	}
+	while (token != "}")
+		ss >> token;
+}
+void Config::LocationAutoIndex(LocationBlock &curLocationBlock,
+							   std::stringstream &ss) {
+	std::string token;
+	ss >> token;
+	if (curLocationBlock.GetAutoIndex() == -1) {
+		if (token == "on;") {
+			curLocationBlock.SetAutoIndex(1);
+		} else if (token == "off;") {
+			curLocationBlock.SetAutoIndex(0);
+		} else {
+			std::cout << "autoindex err" << std::endl;
+			exit(1);
+		}
+	}
+}
+void Config::LocationIndex(LocationBlock &curLocationBlock,
+						   std::stringstream &ss) {
+	std::string token;
+	while (ss >> token) {
+		if (token[token.size() - 1] == ';')
+			break;
+		curLocationBlock.AddIndex(token);
+	}
+	token.erase(token.size() - 1, 1);
+	curLocationBlock.AddIndex(token);
+}
+void Config::LocationReturn(LocationBlock &curLocationBlock,
+							std::stringstream &ss) {
+	std::string token;
+	if (curLocationBlock.GetReturn().first == 0 &&
+		curLocationBlock.GetReturn().second == "") {
+		ss >> token;
+		std::pair<int, std::string> temp;
+		temp.first = atoi(token.c_str());
+		ss >> token;
+		token.erase(token.size() - 1, 1);
+		temp.second = token;
+		curLocationBlock.SetReturn(temp);
+	} else {
+		while (ss >> token) {
+			if (token[token.size() - 1] == ';')
+				break;
+		}
+	}
+}
+void Config::LocationUploadPass(LocationBlock &curLocationBlock,
+								std::stringstream &ss) {
+	std::string token;
+	if (curLocationBlock.GetUploadPass() != "") {
+		return;
+	}
+	ss >> token;
+	token.erase(token.size() - 1, 1);
+	curLocationBlock.SetUploadPass(token);
+}
+
+void Config::LocationEssentialCheck(ServerBlock &curServerBlockObject,
+									LocationBlock &curLocationBlock) {
+	if (curLocationBlock.GetRoot() == "")
+		curLocationBlock.SetRoot(curServerBlockObject.GetRoot());
+	if (curLocationBlock.GetIndex().empty()) {
+		curLocationBlock.SetIndex(curServerBlockObject.GetIndex());
+	}
+	if (curLocationBlock.GetRoot() == "" ||
+		curLocationBlock.GetIndex().empty()) {
+		std::cout << "err serroot, location root or _Index" << std::endl;
+		exit(1);
+	}
+}
+
+bool test(std::string line) {
 	size_t len = line.size() - 1;
 	size_t idx = 0;
 	while (line[idx] != ';') {
@@ -259,7 +303,6 @@ bool CheckSemicolon(std::string line) {
 		return false;
 	return true;
 }
-// 실제 지시어 체크하는 부분
 int NginxWord(std::string line) {
 	std::stringstream ss(line);
 	std::string FirstToken;
@@ -269,7 +312,7 @@ int NginxWord(std::string line) {
 		"return", "root",        "autoindex",  "index"};
 	for (int i = 0; i < 8; i++) {
 		if (words[i] == FirstToken) {
-			if (CheckSemicolon(line))
+			if (test(line))
 				return 1;
 			else {
 				std::cout << "=====semicolon test======" << std::endl;

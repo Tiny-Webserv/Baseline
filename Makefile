@@ -15,7 +15,7 @@ SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Response.cpp
 
 
-SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp
+SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp
 
 SRCS_NAME = $(SRCS1) $(SRCS2)
 
