@@ -31,15 +31,35 @@
 
 class Config {
   private:
-  public:
-    std::vector<ServerBlock> _ServerBlockObject;
     Config();
+    std::string OpenFile(std::string filename);
+
+    //server
+    std::string _ServerBlockWords[6];
+    void  ServerWordCheck(std::stringstream& ss, std::string token);
+    void  ServerListen(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    void  ServerServerName(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    void  ServerErrorPage(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    void  ServerClineMaxBodySize(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    void  ServerRoot(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    void  ServerIndex(ServerBlock& curServerBlockObject, std::stringstream& ss);
+    //location
+    std::string _LocationBlockWords[6];
+    void  LocationWordCheck(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationRoot(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationLimitExcept(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationAutoIndex(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationIndex(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationReturn(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationUploadPass(LocationBlock& curLocationBlock, std::stringstream& ss);
+    void  LocationEssentialCheck(ServerBlock& curServerBlockObject, LocationBlock& curLocationBlock);
+
+  public:
+    typedef std::vector<ServerBlock>::iterator iterator;
+    std::vector<ServerBlock> _ServerBlockObject;
     Config(std::string filename);
     ~Config();
-    std::string OpenFile(std::string filename);
     // int		nginx_word(std::string word);
 };
-
-void	Itos(int num, std::string &ret);
 
 #endif
