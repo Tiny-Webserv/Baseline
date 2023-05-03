@@ -1,5 +1,5 @@
 #include "Config.hpp"
-// #include "EventLoop.hpp"
+#include "EventLoop.hpp"
 #include "Socket.hpp"
 #include <iostream>
 #include <string>
@@ -24,5 +24,5 @@ int main(int ac, char **av) {
         exit(1);
     }
     Config con(static_cast<std::string>(av[1]));
-    // EventLoop loop(con);
+    EventLoop loop(con);
 }
