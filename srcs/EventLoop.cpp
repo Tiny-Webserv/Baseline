@@ -2,12 +2,11 @@
 
 #include "EventLoop.hpp"
 
-EventLoop::EventLoop(Config &con) {
+EventLoop::EventLoop(Config &con) {`
     Socket sock(con);
     this->_server = con._ServerBlockObject;
     this->_kqFd = kqueue();
     this->_ChangeList = sock.GetChangeList();
-    // MakeHtmlFile(con);
     EventHandler();
 }
 
@@ -49,8 +48,8 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_WRITE) {
                 std::cout << "클라이언트(" << curEvnts->ident
                           << ")에게 Write 이벤트 발생" << std::endl;
-                if (this->_response.find(curEvnts->ident) ==
-                    this->_response.end())
+                if (this->_response2.find(curEvnts->ident) ==
+                    this->_response2.end())
                     MakeResponse(curEvnts);
                 else
                     SendResponse(curEvnts);
@@ -94,42 +93,43 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
-    ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
-    std::string requestPath = reque->GetTarget();
+    this->_response2[curEvnts->ident] = new Response(reque);
+    // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
+    // std::string requestPath = reque->GetTarget();
 
-    if (requestPath == "/")
-        requestPath = serverBlock->GetLocation()[0].GetRoot() + "/" +
-                      serverBlock->GetLocation()[0].GetIndex()[0];
-    else
-        requestPath = serverBlock->GetRoot() + requestPath;
-    if (requestPath.find(".php") == requestPath.size() - 4) {
-        PhStart(curEvnts);
-        EraseMemberMap(curEvnts->ident);
-        // close(curEvnts->ident);
-        return;
-    }
+    // if (requestPath == "/")
+    //     requestPath = serverBlock->GetLocation()[0].GetRoot() + "/" +
+    //                   serverBlock->GetLocation()[0].GetIndex()[0];
+    // else
+    //     requestPath = serverBlock->GetRoot() + requestPath;
+    // if (requestPath.find(".php") == requestPath.size() - 4) {
+    //     PhStart(curEvnts);
+    //     EraseMemberMap(curEvnts->ident);
+    //     // close(curEvnts->ident);
+    //     return;
+    // }
     std::string response_str;
-    std::cout << requestPath << std::endl;
-    if (_html.find(requestPath) == _html.end()) {
-        std::ifstream file(requestPath);
-        if (!file.is_open()) {
-            response_str =
-                "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-            send(curEvnts->ident, response_str.c_str(), response_str.size(), 0);
-        } else {
-            std::ostringstream file_contents;
-            file_contents << file.rdbuf();
-            file.close();
+    // std::cout << requestPath << std::endl;
+    // if (_html.find(requestPath) == _html.end()) {
+    //     std::ifstream file(requestPath);
+    //     if (!file.is_open()) {
+    //         response_str =
+    //             "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+    //         send(curEvnts->ident, response_str.c_str(), response_str.size(), 0);
+    //     } else {
+    //         std::ostringstream file_contents;
+    //         file_contents << file.rdbuf();
+    //         file.close();
 
-            std::string response_body = file_contents.str() + "\r\n\r\n";
-            std::string response_header =
-                "HTTP/1.1 200 OK\r\nContent-Length: " +
-                std::to_string(response_body.size()) + "\r\n\r\n";
-            response_str = response_header + response_body;
-            _html[requestPath] = response_str;
-        }
-    }
-    this->_response[curEvnts->ident] = _html[requestPath];
+    //         std::string response_body = file_contents.str() + "\r\n\r\n";
+    //         std::string response_header =
+    //             "HTTP/1.1 200 OK\r\nContent-Length: " +
+    //             std::to_string(response_body.size()) + "\r\n\r\n";
+    //         response_str = response_header + response_body;
+    //         _html[requestPath] = response_str;
+    //     }
+    // }
+    // this->_response[curEvnts->ident] = _html[requestPath];
     // this->_response[curEvnts->ident] = response_str;
 }
 
@@ -146,13 +146,19 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
         return;
     }
     std::cout << curEvnts->ident << " 에게 응답 msg 전송 " << std::endl;
-    std::string response_str = this->_response[curEvnts->ident];
-    int response_size = response_str.size();
-    int res = send(curEvnts->ident, response_str.c_str(), response_size,
+    //std::vector<char>::iterator it, its;
+    //it = _response2[curEvnts->ident]->getResponseMessage().begin();
+    //its = _response2[curEvnts->ident]->getResponseMessage().end();
+    //std::string response_str(it + _offset[curEvnts->ident], its);
+    // std::string response_str = this->_response[curEvnts->ident];
+    //int response_size = response_str.size();
+    std::vector<char> resMsg = _response2[curEvnts->ident]->getResponseMessage();
+    int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]], resMsg.size() - _offset[curEvnts->ident],
                    MSG_NOSIGNAL);
     if (res > 0) {
         std::cout << curEvnts->ident << "번 다시 보내" << std::endl;
-        this->_response[curEvnts->ident].erase(0, res);
+        _offset[curEvnts->ident] += res;
+        // this->_response[curEvnts->ident].erase(0, res);
         return;
     }
     if (res == -1) {
@@ -248,8 +254,10 @@ void EventLoop::PhStart(struct kevent *curEvnts) {
 
 void EventLoop::EraseMemberMap(int key) {
     delete (this->_cli[key]);
+    delete (this->_response2[key]);
     this->_cli.erase(key);
-    this->_response.erase(key);
+    this->_response2.erase(key);
+    this->_offset.erase(key);
 }
 
 EventLoop::EventLoop() {}

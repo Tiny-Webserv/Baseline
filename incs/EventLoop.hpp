@@ -3,6 +3,7 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "Socket.hpp"
 #include <fcntl.h>
 #include <unistd.h>
@@ -16,6 +17,8 @@ class EventLoop {
 
     std::map<int, Request *> _cli;
     std::map<int, std::string> _request;
+    std::map<int, Response *> _response2;
+    std::map<int, int>        _offset;
     std::map<int, std::string> _response;
     std::map<std::string, std::string> _html;
     std::vector<ServerBlock> _server;
