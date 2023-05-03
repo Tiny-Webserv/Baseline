@@ -1,7 +1,11 @@
 NAME = webserv
 CC = c++
 
-CCFLAGS =  -std=c++98 -g3 -fsanitize=address -fsanitize=undefined -Wall -Werror -Wextra
+# CCFLAGS =  -std=c++98 -g3 -fsanitize=address -fsanitize=undefined -Wall -Werror -Wextra
+
+#리터럴 string 무시 플래그 추가
+CCFLAGS =  -std=c++98 -g3 -fsanitize=address -fsanitize=undefined -Wno-write-strings -Wall -Werror -Wextra
+
 INC_LINK = -I./incs
 
 SRCS_PATH = ./srcs
@@ -15,7 +19,9 @@ SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 	Response.cpp
 
 
-SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp
+SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp EventLoop.cpp \
+		ParseRequest.cpp Request.cpp utils.cpp get_next_line.cpp  get_next_line_utils.cpp \
+		StateCode.cpp ServerFiles.cpp Response.cpp
 
 SRCS_NAME = $(SRCS1) $(SRCS2)
 
