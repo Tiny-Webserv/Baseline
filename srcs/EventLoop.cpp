@@ -66,8 +66,12 @@ void EventLoop::EventHandler() {
 void EventLoop::HandleRequest(struct kevent *curEvnts) {
     // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
     Request *reque = ParseRequest(curEvnts->ident, this->_cli, _server);
-    if (reque == NULL)
+    if (reque == NULL) {
+		std::cout << curEvnts->ident << "로 부터 fin 요청!" << std::endl;
+		EraseMemberMap(curEvnts->ident);
+		close(curEvnts->ident);
         return;
+	}
     struct kevent tmpEvnt;
     EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
            curEvnts->udata);
