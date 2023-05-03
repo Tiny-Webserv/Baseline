@@ -1,5 +1,25 @@
 #include "StateCode.hpp"
 
+HTTPVersionError::HTTPVersionError() {
+	_errorCode = HTTPVersionNotSupported;
+}
+
+MethodError::MethodError() {
+	_errorCode = NotImplemented;
+}
+
+BodySizeError::BodySizeError() {
+	_errorCode = PayloadTooLarge;
+}
+
+NotExist::NotExist() {
+	_errorCode = NotFound;
+}
+
+PermissionDenied::PermissionDenied() {
+	_errorCode = Forbidden;
+}
+
 const char *HTTPVersionError::what() const throw() {
     return "HTTP Version error : The version must be HTTP 1.1";
 }
@@ -21,6 +41,7 @@ const char *PermissionDenied::what() const throw() {
 }
 
 ServerError::ServerError(const char *condition) {
+	_errorCode = InternalServerError;
     char *msg = new char[std::strlen(condition) + 25];
     strncpy(msg, "Internal Server Error : ", 25);
     strncat(msg, condition, std::strlen(condition));
@@ -28,3 +49,7 @@ ServerError::ServerError(const char *condition) {
 }
 
 const char *ServerError::what() const throw() { return _condition; }
+
+ServerError::~ServerError() throw() {
+	delete [] _condition;
+}

@@ -18,7 +18,7 @@ Request::Request(int fd, std::stringstream &stream)
         std::cout << i++ << std::endl;
         std::string buff;
         std::getline(stream, buff, '\n');
-        std::cout << buff << std::endl;
+		std::cout << "=====================\n" << "startline and header : " << stream.str() << std::endl;
         setStartLine(buff);
         std::cout << i++ << std::endl;
         setHeader(stream.str());
@@ -26,17 +26,11 @@ Request::Request(int fd, std::stringstream &stream)
         // std::vector<std::string>::iterator iter = splited.begin() + 3;
         // SetBody(iter);
         readBody(fd);
-        std::cout << i++ << std::endl;
+        //std::cout << i++ << std::endl;
+		std::cout << "body : " << _stream.str() << std::endl;
         splitHost();
-    } catch (const BodySizeError &e) {
-        std::cout << "payloadTooLarge" << std::endl;
-        SetErrorCode(PayloadTooLarge);
-        SetErrorMessages(e.what());
-    } catch (const HTTPVersionError &e) {
-        SetErrorCode(HTTPVersionNotSupported);
-        SetErrorMessages(e.what());
-    } catch (const std::exception &e) {
-        SetErrorCode(BadRequest);
+    } catch (const StateCode &e) {
+        SetErrorCode(_errorCode);
         SetErrorMessages(e.what());
     }
 }

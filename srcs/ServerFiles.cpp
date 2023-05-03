@@ -18,13 +18,11 @@ std::vector<char> ServerFiles::readTextFile(std::string filename) {
 	std::stringstream ss;
 
 	tmp.open(filename);
-	if (tmp.fail()) {
+	if (!tmp.is_open()) {
 		if (errno == EACCES)
 			throw PermissionDenied();
 		else if (errno == ENOENT)
 			throw NotExist();
-		else if (errno == EISDIR)
-			throw IsDirectory();
 	}
 	tmp.seekg(0, std::ios::end);
 	std::streampos tmpSize = tmp.tellg();
@@ -33,7 +31,7 @@ std::vector<char> ServerFiles::readTextFile(std::string filename) {
 
 	// vector로 파일 읽기
 	if (!tmp.read(&file[0], tmpSize))
-		throw ServerError("reading file failed");
+		throw ServerError("reading file failed\0");
 	return file;
 }
 
@@ -47,8 +45,6 @@ std::vector<char> ServerFiles::readBinaryFile(std::string filename) {
 			throw PermissionDenied();
 		else if (errno == ENOENT)
 			throw NotExist();
-		else if (errno == EISDIR)
-			throw IsDirectory();
 	}
 	tmp.seekg(0, std::ios::end);
 	std::streampos tmpSize = tmp.tellg();
@@ -74,8 +70,4 @@ std::vector<char> &ServerFiles::getFile(std::string filename) {
 			filename, readTextFile(filename)));
 	iter = _file.find(filename);
 	return iter->second;
-}
-
-const char *ServerFiles::IsDirectory::what() const throw() {
-	return "is a directory";
 }
