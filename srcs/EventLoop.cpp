@@ -2,7 +2,7 @@
 
 #include "EventLoop.hpp"
 
-EventLoop::EventLoop(Config &con) {`
+EventLoop::EventLoop(Config &con) {
     Socket sock(con);
     this->_server = con._ServerBlockObject;
     this->_kqFd = kqueue();
@@ -93,7 +93,9 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!throw before!!!!" << std::endl;
     this->_response2[curEvnts->ident] = new Response(reque);
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!throw after!!!!" << std::endl;
     // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
     // std::string requestPath = reque->GetTarget();
 

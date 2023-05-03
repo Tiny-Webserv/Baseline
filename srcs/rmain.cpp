@@ -107,6 +107,7 @@
                     << std::endl;
             close(new_socket);
 			clnts.erase(new_socket);
+			(void) hello;
 			delete req;
         }
         return 0;

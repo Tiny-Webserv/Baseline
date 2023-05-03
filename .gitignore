@@ -3,3 +3,4 @@ webserv
 objs/*.obj
 .DS_Store
 .vscode/*
+output.txt

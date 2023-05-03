@@ -19,13 +19,14 @@ private:
 	Request	*_request;
 	static ServerFiles _serverFiles;
 	std::string	_contentType;
-    public:
+
+	LocationBlock	&getLocationBlock();
+public:
 	Response(Request	*request);
 	Response( Response &response);
 	~Response();
 
 
-	LocationBlock	&getLocationBlock();
 
 
 	// getter
