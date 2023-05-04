@@ -23,11 +23,8 @@ private:
 	LocationBlock	&getLocationBlock();
 public:
 	Response(Request	*request);
-	Response( Response &response);
+	Response(Response &response); //
 	~Response();
-
-
-
 
 	// getter
 	std::vector<char> getResponseMessage();
@@ -48,6 +45,7 @@ public:
 	bool	isDirectory(const char *directory);
 
 	void	getMethod();
+	void	postMethod();
 
 	void	generateStatusLine();
 	void	generateHeader();

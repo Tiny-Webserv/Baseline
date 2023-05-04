@@ -23,8 +23,6 @@ Response::Response(Request *request) : _request(request) {
         }
         else if (request->GetMethod() == "DELETE")
             ; // delete method;
-        else
-            ; // post method;
     } catch (NotExist &e) {
         std::cerr << e.what() << std::endl;
 		_request->SetErrorCode(e._errorCode);
@@ -226,7 +224,6 @@ bool	Response::isDirectory(const char *directory) {
 }
 
 void Response::getMethod() {
-	try {
 		std::string fileToRead;
 		std::cerr << "I'm in GET Method" << std::endl;
 		if (!isAllowed("GET"))
@@ -263,23 +260,47 @@ void Response::getMethod() {
 				_contentType =
 					"text/" +
                 extention; // 그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
-    }
-	} catch (NotExist &e) {
-        if (isAutoIndex())
-            generateAutoindex(_request->GetServer().GetRoot()); // autoindex 처리
-		else {
-			_request->SetErrorCode(e._errorCode);
-			_request->SetErrorMessages(e.what());
-			generateErrorBody();
 		}
-        _contentType = "text/html";
-    } catch (StateCode &e) {
-        _request->SetErrorCode(e._errorCode);
-        _request->SetErrorMessages(e.what());
-        generateErrorBody();
-        _contentType = "text/html";
-    }
+}
 
+void	Response::postMethod() {
+        std::string fileToRead;
+		std::cerr << "I'm in POST Method" << std::endl;
+		if (!isAllowed("POST"))
+			throw PermissionDenied();
+		std::cerr << "\033[1;31m" << "Hello, world!" << "\033[0m" << std::endl;
+		std::cout << "\033[1;31m" << _request->GetTarget() << "\033[0m" << std::endl;
+		fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
+		if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
+			fileToRead.append("/");
+			fileToRead.append(getLocationBlock().GetIndex()[0]);
+		}
+		std::cout << "file to read : " << fileToRead << std::endl;
+		if (isDirectory(fileToRead.c_str())) {
+			if (!isAutoIndex())
+				throw PermissionDenied();
+			generateAutoindex(fileToRead);
+			return ;
+		}
+		_bodyMessage = _serverFiles.getFile(fileToRead);
+		// 확장자가 .로 끝날경우 text/plain
+		if (fileToRead.find(".") == std::string::npos ||
+			fileToRead.find(".") == fileToRead.size() - 1)
+			_contentType = "text/plain";
+		else {
+			std::string extention =
+				fileToRead.substr((fileToRead.rfind(".") + 1 <= fileToRead.size()
+									? fileToRead.rfind(".") + 1
+									: -1));
+			if (!extention.compare(".png")) // png 확장자 확인
+				_contentType = "image/png";
+			else if (!extention.compare("txt"))
+				_contentType = "text/plain";
+			else
+				_contentType =
+					"text/" +
+                extention; // 그 외라면 오는 확장자 맞춰서 콘텐츠 타입 설정
+		}
 }
 
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
