@@ -114,7 +114,7 @@ void Request::setStartLine(std::string startLine) {
 
 void Request::setHeader(std::string header) {
     std::cout << "this is header " << header << std::endl;
-    std::vector<std::string> splited = Split(header, " \r\n");
+    std::vector<std::string> splited = Split(header, " \r\n;");
     std::vector<std::string>::iterator iter;
     for (std::vector<std::string>::iterator i = splited.begin();
          i != splited.end(); i++) {
@@ -123,8 +123,11 @@ void Request::setHeader(std::string header) {
     }
 
     iter = find(splited.begin(), splited.end(), "Content-Type:");
-    if (iter != splited.end() && iter + 1 != splited.end())
+    if (iter != splited.end() && iter + 1 != splited.end()) {
         _contentType = *(iter + 1);
+		if (_contentType == "multipart/form-data")
+			_boundary = (*(iter + 2)).substr(9);
+	}
     iter = find(splited.begin(), splited.end(), "Host:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _hostName = *(iter + 1); // example.com:8080
@@ -201,20 +204,6 @@ void Request::readBody(int fd) {
     }
     std::cout << " 2: ==> " << std::endl;
 
-    // buffer = (char *)malloc(_contentLength + 1);
-    // if (buffer == NULL)
-    //	throw std::runtime_error("malloc failed");
-    // line = CRLF;
-    // line.append(CRLF);
-    // memset(buffer, 0, _contentLength + 1);
-    // valRead = recv(fd, buffer, _contentLength, 0);
-    // buffer[valRead] = 0;
-    // for (int i = 0; i < valRead; i++)
-    //	_binary.push_back(buffer[i]);
-    // if (valRead == -1)
-    //	_isEnd = false ;
-    // memset(crlf, 0, CRLF_SIZE * 2);
-    // valRead = read(fd, crlf, CRLF_SIZE * 2);
     int j = 0;
     while ((valRead = recv(fd, buffer, 1024, 0)) > 0) {
         for (int i = 0; i < valRead; i++)
@@ -241,11 +230,14 @@ void Request::readBody(int fd) {
         _isEnd = false;
     }
     // free(buffer);
-    if (_contentType != "image/png" && _contentType != "img/png") {
-        for (size_t i = 0; i < _binary.size(); i++)
-            _stream << _binary[i];
-        _binary.clear();
-    }
+    //if (_contentType != "image/png" && _contentType != "img/png") {
+    //    for (size_t i = 0; i < _binary.size(); i++)
+    //        _stream << _binary[i];
+    //    _binary.clear();
+    //}
+	std::cout << "==========================" << std::endl;
+	write(1, &_binary[0], _binary.size());
+	std::cout << "==========================" << std::endl;
 }
 
 // int bytes_received;

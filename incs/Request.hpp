@@ -36,6 +36,7 @@ class Request {
 	int			_hostPort;
 	bool	_isEnd;
 	std::vector<char>	_binary;
+	std::string	_boundary;
   public:
 	Request();
 	Request(int fd, std::stringstream &stream);

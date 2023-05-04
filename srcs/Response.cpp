@@ -12,7 +12,6 @@
 Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
     try {
-
 		std::cout << "I'm in Request constructor\n";
         if (request->GetErrorCode() != 200)
             generateErrorBody();
