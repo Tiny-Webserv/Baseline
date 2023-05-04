@@ -16,11 +16,11 @@ public:
 	//getter
 	std::map<std::string, std::vector<char> > &getFile();
 
-	std::vector<char>	&getFile(std::string	filename);
+	std::vector<char>	&getFile(std::string filename);
+    void 				deleteFile(std::string filename);
 
-    std::vector<char> readTextFile(std::string filename);
-
-    std::vector<char> readBinaryFile(std::string filename);
+    std::vector<char> 	readTextFile(std::string filename);
+    std::vector<char> 	readBinaryFile(std::string filename);
 
 };
 

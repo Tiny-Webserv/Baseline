@@ -46,6 +46,7 @@ public:
 
 	void	getMethod();
 	void	postMethod();
+	void	deleteMethod();
 
 	void	generateStatusLine();
 	void	generateHeader();

@@ -13,8 +13,9 @@ enum ErrorCode {
 
     // 400 ~
     BadRequest = 400,
-    Forbidden = 403,
+    Forbidden = 403,	// 접근 권한 없음
     NotFound = 404,
+	NotAllowed = 405,	// 해당 메서드 사용 못함
     PayloadTooLarge = 413,
 
     // 500 ~
@@ -59,6 +60,12 @@ public:
 class PermissionDenied : public StateCode {
 public:
 	PermissionDenied();
+	const char *what() const throw();
+};
+
+class MethodNotAllowed : public StateCode {
+public :
+	MethodNotAllowed();
 	const char *what() const throw();
 };
 

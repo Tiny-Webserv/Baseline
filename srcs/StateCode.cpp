@@ -20,6 +20,10 @@ PermissionDenied::PermissionDenied() {
 	_errorCode = Forbidden;
 }
 
+MethodNotAllowed::MethodNotAllowed() {
+	_errorCode = NotAllowed;
+}
+
 const char *HTTPVersionError::what() const throw() {
     return "HTTP Version error : The version must be HTTP 1.1";
 }
@@ -38,6 +42,10 @@ const char *NotExist::what() const throw() {
 
 const char *PermissionDenied::what() const throw() {
     return "Forbidden : Permission denied";
+}
+
+const char *MethodNotAllowed::what() const throw() {
+    return "Not Allowed : Method not allowed";
 }
 
 ServerError::ServerError(const char *condition) {

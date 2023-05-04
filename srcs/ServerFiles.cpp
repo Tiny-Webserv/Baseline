@@ -71,3 +71,7 @@ std::vector<char> &ServerFiles::getFile(std::string filename) {
 	iter = _file.find(filename);
 	return iter->second;
 }
+
+void	ServerFiles::deleteFile(std::string	filename) {
+	_file.erase(filename);
+}

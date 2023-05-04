@@ -1,5 +1,4 @@
 #include "Response.hpp"
-
 #include "Request.hpp"
 #include "ServerBlock.hpp"
 #include "StateCode.hpp"
@@ -7,6 +6,8 @@
 #include "dirent.h"
 #include "unistd.h"
 #include "utils.hpp"
+#include <cstdio>
+#include <iostream>
 
 Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
@@ -19,10 +20,13 @@ Response::Response(Request *request) : _request(request) {
             getMethod(); // autoindex 처리
         }
         else if (request->GetMethod() == "POST") {
-            getMethod(); // autoindex 처리
+            postMethod(); // autoindex 처리
         }
-        else if (request->GetMethod() == "DELETE")
+        else if (request->GetMethod() == "DELETE") {
+           deleteMethod();
             ; // delete method;
+
+            }
     } catch (NotExist &e) {
         std::cerr << e.what() << std::endl;
 		_request->SetErrorCode(e._errorCode);
@@ -82,22 +86,20 @@ LocationBlock &Response::getLocationBlock() {
 
 bool Response::isCGI() {
     LocationBlock block = getLocationBlock();
-    if (block.GetLocationTarget().find(".cgi"))
+    if (block.GetLocationTarget().find(".php"))
         return true;
     return false;
 }
 
 bool Response::isAutoIndex() {
     LocationBlock block = getLocationBlock();
-    if (block.GetAutoIndex())
+    if (block.GetAutoIndex() == 1)
         return true;
     return false;
 }
 
 bool Response::isAllowed(std::string method) {
-    std::cerr << "여기 얼라우드 !" << std::endl;
     std::vector<std::string> limit_except = getLocationBlock().GetLimitExcept();
-    std::cerr << "여기 얼라우드 !" << std::endl;
 
     if (limit_except.size() == 0)
         return true;
@@ -155,6 +157,16 @@ void Response::generateHeader() {
         ss << "Content-Type: " << _contentType << CRLF;
         ss << "Content-Length: " << _bodyMessage.size() << CRLF;
     }
+	if (_request->GetErrorCode() == NotAllowed) {
+		std::vector<std::string> limit_except = getLocationBlock().GetLimitExcept();
+		ss << "Allow: ";
+		for (size_t i = 0; i < limit_except.size(); ++i) {
+			if (i)
+				ss << ", ";
+			ss << limit_except[i];
+		}
+		ss << CRLF;
+	}
     ss << CRLF;
     std::string line = ss.str();
     std::copy(line.begin(), line.end(),
@@ -227,7 +239,7 @@ void Response::getMethod() {
 		std::string fileToRead;
 		std::cerr << "I'm in GET Method" << std::endl;
 		if (!isAllowed("GET"))
-			throw PermissionDenied();
+			throw MethodNotAllowed();
 		std::cerr << "\033[1;31m" << "Hello, world!" << "\033[0m" << std::endl;
 		std::cout << "\033[1;31m" << _request->GetTarget() << "\033[0m" << std::endl;
 		fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
@@ -267,7 +279,7 @@ void	Response::postMethod() {
         std::string fileToRead;
 		std::cerr << "I'm in POST Method" << std::endl;
 		if (!isAllowed("POST"))
-			throw PermissionDenied();
+			throw MethodNotAllowed();
 		std::cerr << "\033[1;31m" << "Hello, world!" << "\033[0m" << std::endl;
 		std::cout << "\033[1;31m" << _request->GetTarget() << "\033[0m" << std::endl;
 		fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
@@ -303,6 +315,21 @@ void	Response::postMethod() {
 		}
 }
 
+void	Response::deleteMethod(){
+    //1. target 삭제가능 200 ok
+    //2. 만약 delete 메소드를 허용하지 않는다면 405 method not allowed
+    //3. 삭제할 타켓을 못찾으면 404 not found
+    std::string fileToRead;
+    if (!isAllowed("DELETE"))
+		throw MethodNotAllowed();
+	fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
+
+    if (remove(fileToRead.c_str()) != 0) {
+        throw NotExist();
+    } else {
+        std::cout << "File " << fileToRead << " successfully deleted" << std::endl;
+    }
+}
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
 std::vector<char> Response::getStatusHeaderMessage() {
     return _statusHeaderMessage;
