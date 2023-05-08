@@ -38,7 +38,32 @@ Request::Request(int fd, std::stringstream &stream)
     }
 }
 
-Request::~Request() { std::cout << "!!!!!!!!!!!!!!!!die" << std::endl; }
+Request::Request(std::vector<char>	&formData, std::string	delimeter){
+	//write(2, &formData[0], formData.size());
+	(void) delimeter;
+	std::string	headerStr(formData.begin(), formData.end());
+	std::string doubleCRLF = CRLF;
+	doubleCRLF.append(CRLF);
+	size_t delimeterPos = headerStr.find(doubleCRLF);
+	if (delimeterPos == std::string::npos)
+		return ;
+    setHeader(headerStr.substr(0, delimeterPos));
+	formData.erase(formData.begin(), formData.begin() + headerStr.find(doubleCRLF));
+    std::copy(formData.begin(), find(formData.begin(), formData.end(), '\r'),
+              std::back_inserter(_binary));
+	std::cerr << std::endl << " ======================================&&&&&&&& start " << std::endl;
+	write(2, &_binary[0], _binary.size());
+	std::cerr << " ======================================&&&&&&&& end " << std::endl;
+	formData.erase(formData.begin(), find(formData.begin(), formData.end(), '\r') + 2);
+}
+
+Request::~Request() {
+	if (_contentType == "multipart/form-data") {
+		for (size_t i = 0; i < _formData.size(); i++)
+			delete _formData[i];
+    }
+	std::cout << "!!!!!!!!!!!!!!!!die" << std::endl;
+}
 
 void Request::SetMethod(std::string method) { _method = method; }
 
@@ -116,7 +141,7 @@ void Request::setStartLine(std::string startLine) {
 }
 
 void Request::setHeader(std::string header) {
-    std::cout << "this is header " << header << std::endl;
+    std::cerr << "this is header " << header << std::endl;
     std::vector<std::string> splited = Split(header, " \r\n;");
     std::vector<std::string>::iterator iter;
     for (std::vector<std::string>::iterator i = splited.begin();
@@ -142,6 +167,18 @@ void Request::setHeader(std::string header) {
     if (iter != splited.end() && iter + 1 != splited.end())
         _contentLength = atoi((iter + 1)->c_str());
     // std::cout << _contentLength << std::endl;
+	iter = find(splited.begin(), splited.end(), "Content-Disposition:");
+	if (iter != splited.end()) {
+		for (int i = 0; iter + i < splited.end(); i++) {
+			if ((iter + i)->find("filename=") != std::string::npos) {
+				_fileName = (iter + i)->substr(std::string("filename=").size());
+				_fileName.erase(0, 1);
+				_fileName.erase(_fileName.size() - 1, 1);
+				std::cerr << "filename : " << _fileName << std::endl;
+				//break ;
+            }
+		}
+	}
 }
 
 void Request::splitHost() {
@@ -210,19 +247,25 @@ void Request::readBody(int fd) {
 }
 
 void Request::parseFormData() {
-	int i = 0;
+	size_t i = 0;
 	write(2, &_binary[0], _binary.size());
 	std::cerr << std::endl;
 	while (_boundary[i] == '-') i++;
 	_boundary.erase(0, i);
 	i = 0;
-	while (_binary[i] == '-') i++;
-	_binary.erase(_binary.begin(), _binary.begin() + i);
-	i = 0;
-	std::cerr << _boundary << std::endl;
-	while (_binary[i] == _boundary[i]) i++;
-	_binary.erase(_binary.begin(), _binary.begin() + i);
-	_binary.erase(_binary.end() - 4 - _boundary.size(), _binary.end() - 1);
-	write(2, &_binary[0], _binary.size());
-
+	while (1) {
+		i = 0;
+		std::cerr << _boundary << std::endl;
+		while (i < _binary.size() && _binary[i] == '-') i++;
+		_binary.erase(_binary.begin(), _binary.begin() + i);
+		i = 0;
+		while (i < _binary.size() && _binary[i] == _boundary[i]) i++;
+		_binary.erase(_binary.begin(), _binary.begin() + i);
+		if (_binary.size() == 0 || _binary[0] == '-')
+			break ;
+		//write(2, &_binary[0], _binary.size());
+		_formData.push_back(new Request(_binary, _boundary));
+	}
+	//_binary.erase(_binary.begin(), _binary.end() - 1);
+	//write(2, &_binary[0], _binary.size());
 }
