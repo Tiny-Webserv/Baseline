@@ -48,11 +48,14 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_WRITE) {
                 std::cout << "클라이언트(" << curEvnts->ident
                           << ")에게 Write 이벤트 발생" << std::endl;
-                if (this->_response2.find(curEvnts->ident) ==
-                    this->_response2.end())
-                    MakeResponse(curEvnts);
-                else
-                    SendResponse(curEvnts);
+                SendResponse(curEvnts);
+                // if (this->_response2.find(curEvnts->ident) ==
+                //     this->_response2.end())
+                //     MakeResponse(curEvnts);
+                // else
+            } else if (curEvnts->filter == EVFILT_PROC) {
+                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝" << std::endl;
+                PhpResult(curEvnts, _ChangeList, _cli, _cgi);
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
@@ -67,29 +70,27 @@ void EventLoop::HandleRequest(struct kevent *curEvnts) {
     // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
     Request *reque = ParseRequest(curEvnts->ident, this->_cli, _server);
     if (reque == NULL) {
-		std::cout << curEvnts->ident << "로 부터 fin 요청!" << std::endl;
-		EraseMemberMap(curEvnts->ident);
-		close(curEvnts->ident);
+        std::cout << curEvnts->ident << "로 부터 fin 요청!" << std::endl;
+        EraseMemberMap(curEvnts->ident);
+        close(curEvnts->ident);
         return;
-	}
-    struct kevent tmpEvnt;
-    EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-           curEvnts->udata);
-    _ChangeList.push_back(tmpEvnt);
+    }
+    MakeResponse(curEvnts);
 }
 
 void EventLoop::MakeResponse(struct kevent *curEvnts) {
-    int error = 0;
-    socklen_t error_len = sizeof(error);
-    int ret =
-        getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error, &error_len);
-    if (ret == -1 || error != 0) {
-        // Socket is dead, close it and return
-        close(curEvnts->ident);
-        EraseMemberMap(curEvnts->ident);
-        std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" << std::endl;
-        return;
-    }
+    // int error = 0;
+    // socklen_t error_len = sizeof(error);
+    // int ret =
+    //     getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error,
+    //     &error_len);
+    // if (ret == -1 || error != 0) {
+    //     // Socket is dead, close it and return
+    //     close(curEvnts->ident);
+    //     EraseMemberMap(curEvnts->ident);
+    //     std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" <<
+    //     std::endl; return;
+    // }
     std::cout << curEvnts->ident << " 에게 보낼 응답 msg 생성 " << std::endl;
     if (_cli.find(curEvnts->ident) == _cli.end()) {
         std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
@@ -97,46 +98,17 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!throw before!!!!" << std::endl;
-    this->_response2[curEvnts->ident] = new Response(reque);
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!throw after!!!!" << std::endl;
-    // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
-    // std::string requestPath = reque->GetTarget();
-
-    // if (requestPath == "/")
-    //     requestPath = serverBlock->GetLocation()[0].GetRoot() + "/" +
-    //                   serverBlock->GetLocation()[0].GetIndex()[0];
-    // else
-    //     requestPath = serverBlock->GetRoot() + requestPath;
-    // if (requestPath.find(".php") == requestPath.size() - 4) {
-    //     PhStart(curEvnts);
-    //     EraseMemberMap(curEvnts->ident);
-    //     // close(curEvnts->ident);
-    //     return;
-    // }
-    std::string response_str;
-    // std::cout << requestPath << std::endl;
-    // if (_html.find(requestPath) == _html.end()) {
-    //     std::ifstream file(requestPath);
-    //     if (!file.is_open()) {
-    //         response_str =
-    //             "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-    //         send(curEvnts->ident, response_str.c_str(), response_str.size(), 0);
-    //     } else {
-    //         std::ostringstream file_contents;
-    //         file_contents << file.rdbuf();
-    //         file.close();
-
-    //         std::string response_body = file_contents.str() + "\r\n\r\n";
-    //         std::string response_header =
-    //             "HTTP/1.1 200 OK\r\nContent-Length: " +
-    //             std::to_string(response_body.size()) + "\r\n\r\n";
-    //         response_str = response_header + response_body;
-    //         _html[requestPath] = response_str;
-    //     }
-    // }
-    // this->_response[curEvnts->ident] = _html[requestPath];
-    // this->_response[curEvnts->ident] = response_str;
+    if (IsPhp(reque)) {
+        PhpStart(curEvnts, _ChangeList);
+        // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
+    } else {
+        this->_response2[curEvnts->ident] = new Response(reque);
+        std::string response_str;
+        struct kevent tmpEvnt;
+        EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
+               0, curEvnts->udata);
+        _ChangeList.push_back(tmpEvnt);
+    }
 }
 
 void EventLoop::SendResponse(struct kevent *curEvnts) {
@@ -152,15 +124,16 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
         return;
     }
     std::cout << curEvnts->ident << " 에게 응답 msg 전송 " << std::endl;
-    //std::vector<char>::iterator it, its;
-    //it = _response2[curEvnts->ident]->getResponseMessage().begin();
-    //its = _response2[curEvnts->ident]->getResponseMessage().end();
-    //std::string response_str(it + _offset[curEvnts->ident], its);
-    // std::string response_str = this->_response[curEvnts->ident];
-    //int response_size = response_str.size();
-    std::vector<char> resMsg = _response2[curEvnts->ident]->getResponseMessage();
-    int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]], resMsg.size() - _offset[curEvnts->ident],
-                   MSG_NOSIGNAL);
+    // std::vector<char>::iterator it, its;
+    // it = _response2[curEvnts->ident]->getResponseMessage().begin();
+    // its = _response2[curEvnts->ident]->getResponseMessage().end();
+    // std::string response_str(it + _offset[curEvnts->ident], its);
+    //  std::string response_str = this->_response[curEvnts->ident];
+    // int response_size = response_str.size();
+    std::vector<char> resMsg =
+        _response2[curEvnts->ident]->getResponseMessage();
+    int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
+                   resMsg.size() - _offset[curEvnts->ident], MSG_NOSIGNAL);
     if (res > 0) {
         std::cout << curEvnts->ident << "번 다시 보내" << std::endl;
         _offset[curEvnts->ident] += res;
@@ -246,10 +219,10 @@ void EventLoop::PhStart(struct kevent *curEvnts) {
         read(childWrite[0], buf, 1024);
         close(childWrite[0]);
     }
-//     X-Powered-By: PHP/8.2.3
-// Content-type: text/html; charset=UTF-8
+    //     X-Powered-By: PHP/8.2.3
+    // Content-type: text/html; charset=UTF-8
 
-// Name: test<br>Age: 123<br>
+    // Name: test<br>Age: 123<br>
     // std::string response_body = file_contents.str() + "\r\n\r\n";
     // std::string response_header = "HTTP/1.1 200 OK\r\nContent-Length: " +
     //                               std::to_string(response_body.size()) +

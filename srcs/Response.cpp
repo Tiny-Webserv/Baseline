@@ -9,6 +9,10 @@
 #include <cstdio>
 #include <iostream>
 
+Response::Response(Request	*request, std::vector<struct kevent>& ChangeList) : _request(request) {
+    
+}
+
 Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
     try {

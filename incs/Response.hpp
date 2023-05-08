@@ -23,6 +23,7 @@ private:
 	LocationBlock	&getLocationBlock();
 public:
 	Response(Request	*request);
+	Response(Request	*request, std::vector<struct kevent>& ChangeList);
 	Response(Response &response); //
 	~Response();
 

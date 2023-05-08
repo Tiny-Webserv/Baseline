@@ -7,7 +7,7 @@
 #include "Socket.hpp"
 #include <fcntl.h>
 #include <unistd.h>
-
+#include "Php.hpp"
 #include <map>
 
 class EventLoop {
@@ -21,6 +21,7 @@ class EventLoop {
     std::map<int, int>        _offset;
     std::map<int, std::string> _response;
     std::map<std::string, std::string> _html;
+    std::map<int, int[2]> _cgi;
     std::vector<ServerBlock> _server;
     EventLoop();
     void OpenHtmlFile(std::string filePath);
