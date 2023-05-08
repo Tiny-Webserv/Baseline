@@ -10,13 +10,13 @@ INC_LINK = -I./incs
 
 SRCS_PATH = ./srcs
 
-SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
-	Request.cpp ParseRequest.cpp \
-	Config.cpp LocationBlock.cpp ServerBlock.cpp \
-	rmain.cpp utils.cpp\
-	StateCode.cpp \
-	ServerFiles.cpp \
-	Response.cpp
+#SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
+#	Request.cpp ParseRequest.cpp \
+#	Config.cpp LocationBlock.cpp ServerBlock.cpp \
+#	rmain.cpp utils.cpp\
+#	StateCode.cpp \
+#	ServerFiles.cpp \
+#	Response.cpp
 
 
 SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp EventLoop.cpp \
@@ -34,38 +34,38 @@ OBJS_PATH = ./objs
 OBJS = $(addprefix $(OBJS_PATH)/, $(OBJS_NAME))
 
 
-# 리퀘스트 파트에서 테스트용으로 만든 변수들입니다
+## 리퀘스트 파트에서 테스트용으로 만든 변수들입니다
 
-PSRCS = $(addprefix $(SRCS_PATH)/, $(SRCS1))
+#PSRCS = $(addprefix $(SRCS_PATH)/, $(SRCS1))
 
-POBJS_NAME = $(SRCS1:.cpp=.obj)
+#POBJS_NAME = $(SRCS1:.cpp=.obj)
 
-POBJS = $(addprefix $(OBJS_PATH)/, $(POBJS_NAME))
+#POBJS = $(addprefix $(OBJS_PATH)/, $(POBJS_NAME))
 
-#
+##
 
 
-# 리퀘스트 파트에서 테스트용으로 만든 변수들입니다
+## 리퀘스트 파트에서 테스트용으로 만든 변수들입니다
 
-CSRCS = $(addprefix $(SRCS_PATH)/, $(SRCS2))
+#CSRCS = $(addprefix $(SRCS_PATH)/, $(SRCS2))
 
-COBJS_NAME = $(SRCS2:.cpp=.obj)
+#COBJS_NAME = $(SRCS2:.cpp=.obj)
 
-COBJS = $(addprefix $(OBJS_PATH)/, $(COBJS_NAME))
+#COBJS = $(addprefix $(OBJS_PATH)/, $(COBJS_NAME))
 
-#
+##
 
 all : $(NAME)
 
 $(NAME) : $(OBJS)
 	$(CC) $(CCFLAGS) -o $(NAME) $(OBJS)
 
-rparse : $(POBJS)
-	$(CC) $(CCFLAGS) -o $(NAME) $(POBJS)
+#rparse : $(POBJS)
+#	$(CC) $(CCFLAGS) -o $(NAME) $(POBJS)
 
 
-cparse : $(COBJS)
-	$(CC) $(CCFLAGS) -o $(NAME) $(COBJS)
+#cparse : $(COBJS)
+#	$(CC) $(CCFLAGS) -o $(NAME) $(COBJS)
 
 
 $(OBJS_PATH)/%.obj : $(SRCS_PATH)/%.cpp

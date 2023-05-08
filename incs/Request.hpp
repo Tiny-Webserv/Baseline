@@ -78,6 +78,7 @@ class Request {
     void splitHost();
 	void readBody(int fd);
 
+	void parseFormData();
 };
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,

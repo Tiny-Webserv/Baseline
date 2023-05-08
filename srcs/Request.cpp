@@ -29,6 +29,9 @@ Request::Request(int fd, std::stringstream &stream)
         //std::cout << i++ << std::endl;
 		std::cout << "body : " << _stream.str() << std::endl;
         splitHost();
+		if (_contentType == "multipart/form-data")
+			parseFormData();
+
     } catch (const StateCode &e) {
         SetErrorCode(_errorCode);
         SetErrorMessages(e.what());
@@ -141,30 +144,6 @@ void Request::setHeader(std::string header) {
     // std::cout << _contentLength << std::endl;
 }
 
-// void Request::SetBody(std::vector<std::string>::iterator iter) {
-//	unsigned int x;
-
-//	if (GetChunked()) {
-//		std::stringstream ss;
-//		ss << std::hex << *iter;
-//		ss >> x;
-//		if ((iter + 1)->length() > x) {
-//			GetStream() << (iter + 1)->substr(0, x);
-//			throw BodySizeError();
-//		} else if (x == 0)
-//			SetChunked(false);
-//		else
-//			GetStream() << *(iter + 1);
-//	} else {
-//		if (_contentLength != -1 &&
-//			static_cast<int>(iter->length()) > _contentLength) {
-//			GetStream() << iter->substr(0, _contentLength);
-//			throw BodySizeError();
-//		}
-//		GetStream() << *iter;
-//	}
-//}
-
 void Request::splitHost() {
     std::vector<std::string> splited = Split(_hostName, ":");
     _hostName = splited[0]; // name
@@ -184,11 +163,7 @@ void Request::readBody(int fd) {
     std::string line;
     int valRead;
     char buffer[1024];
-    // int		bufferSize = 1024;
-    //  char	crlf[CRLF_SIZE * 2 + 1];
 
-    // if (_contentType == "img/png")
-    //	_stream << std::ios::binary;
     std::cout << " 1: ==> " << std::endl;
 
     if (_chunked) {
@@ -229,30 +204,25 @@ void Request::readBody(int fd) {
         //예외 처리
         _isEnd = false;
     }
-    // free(buffer);
-    //if (_contentType != "image/png" && _contentType != "img/png") {
-    //    for (size_t i = 0; i < _binary.size(); i++)
-    //        _stream << _binary[i];
-    //    _binary.clear();
-    //}
 	std::cout << "==========================" << std::endl;
 	write(1, &_binary[0], _binary.size());
 	std::cout << "==========================" << std::endl;
 }
 
-// int bytes_received;
+void Request::parseFormData() {
+	int i = 0;
+	write(2, &_binary[0], _binary.size());
+	std::cerr << std::endl;
+	while (_boundary[i] == '-') i++;
+	_boundary.erase(0, i);
+	i = 0;
+	while (_binary[i] == '-') i++;
+	_binary.erase(_binary.begin(), _binary.begin() + i);
+	i = 0;
+	std::cerr << _boundary << std::endl;
+	while (_binary[i] == _boundary[i]) i++;
+	_binary.erase(_binary.begin(), _binary.begin() + i);
+	_binary.erase(_binary.end() - 4 - _boundary.size(), _binary.end() - 1);
+	write(2, &_binary[0], _binary.size());
 
-// while ((bytes_received = recv(client_socktet, buffer, MAX_BUFFER_SIZE, 0)) >
-// 0) { 	for (int i = 0; i < bytes_received; i++)
-//	{
-//		_file.push_back(buffer[i]);
-//	}
-// }
-// for (std::vector<char>::size_type i = 0; i < _file.size(); i++)
-//{
-//	char buff[2];
-//	buff[0] = _file[i];
-//	buff[1] = 0;
-//	image_file.write(buff, 1);
-// }
-// image_file.close();
+}
