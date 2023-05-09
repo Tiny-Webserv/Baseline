@@ -13,6 +13,13 @@ Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
     try {
 		std::cout << "I'm in Request constructor\n";
+		if (_request->GetContentType() == "multipart/form-data") {
+			std::string	path =  getLocationBlock().GetRoot() + getLocationBlock().GetUploadPass();
+			for (size_t i = 0; i < _request->getFormData().size(); i++) {
+				std::cerr << "getFilename : " << _request->getFormData()[i]->getFileName() << std::endl;
+                _serverFiles.saveFile(path + "/" + _request->getFormData()[i]->getFileName(), _request->getFormData()[i]->getBinary(),  _request->getFormData()[i]->GetContentType());
+            }
+		}
         if (request->GetErrorCode() != 200)
             generateErrorBody();
         else if (request->GetMethod() == "GET") {
@@ -308,11 +315,12 @@ void	Response::postMethod() {
 			return ;
 		}
 		_bodyMessage = _serverFiles.getFile(fileToRead);
-		if (_request->GetContentType() == "multipart/form-data") {
-			for (size_t i = 0; i < _request->getFormData().size(); i++) {
-                
-            }
-		}
+		//if (_request->GetContentType() == "multipart/form-data") {
+		//	std::string	path = getLocationBlock().GetUploadPass();
+		//	for (size_t i = 0; i < _request->getFormData().size(); i++) {
+        //        _serverFiles.saveFile(path + "/" + _request->getFormData()[i]->getFileName(), _request->getFormData()[i]->getBinary());
+        //    }
+		//}
 		// 확장자가 .로 끝날경우 text/plain
 		if (fileToRead.find(".") == std::string::npos ||
 			fileToRead.find(".") == fileToRead.size() - 1)

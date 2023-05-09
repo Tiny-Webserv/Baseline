@@ -62,6 +62,7 @@ class Request {
     void SetBinary(std::vector<char> &binary);
     void setStartLine(std::string startLine);
 	void setHeader(std::string header);
+	void setFileName(std::string fileName);
 
 	// Getter
     std::string	GetMethod();
@@ -77,6 +78,7 @@ class Request {
     bool GetIsEnd();
     std::vector<char> getBinary();
 	std::vector<Request *> getFormData();
+	std::string getFileName();
 
 	//void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();

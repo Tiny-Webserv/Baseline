@@ -93,8 +93,16 @@ bool Request::GetIsEnd() { return _isEnd; }
 
 void Request::SetIsEnd(bool isEnd) { _isEnd = isEnd; }
 
+void Request::setFileName(std::string fileName){ _fileName = fileName; }
+
+std::string Request::getFileName() { return _fileName; }
+
 std::vector<Request *>	Request::getFormData() {
 	return _formData;
+}
+
+std::vector<char> Request::getBinary() {
+    return _binary;
 }
 
 Request &Request::operator=(const Request &request) {
@@ -154,11 +162,13 @@ void Request::setHeader(std::string header) {
     // std::cout << _contentLength << std::endl;
 	iter = find(splited.begin(), splited.end(), "Content-Disposition:");
 	if (iter != splited.end()) {
+		std::cerr << "header : " << header <<  std::endl;
 		for (int i = 0; iter + i < splited.end(); i++) {
 			if ((iter + i)->find("filename=") != std::string::npos) {
 				_fileName = (iter + i)->substr(std::string("filename=").size());
 				_fileName.erase(0, 1);
 				_fileName.erase(_fileName.size() - 1, 1);
+				std::cerr << "header filename : " << _fileName << std::endl;
 				//break ;
             }
 		}
@@ -181,7 +191,7 @@ void Request::readBody(int fd) {
     std::stringstream ss;
     std::string line;
     int valRead;
-    char buffer[1024];
+    std::vector<char> buffer(1024);
 
     if (_chunked) {
         line = get_next_line(fd);
@@ -194,20 +204,25 @@ void Request::readBody(int fd) {
         }
         _contentLength = static_cast<int>(x);
     }
-    int j = 0;
-    while ((valRead = recv(fd, buffer, 1024, 0)) > 0) {
-        for (int i = 0; i < valRead; i++)
-            _binary.push_back(buffer[i]);
-        std::cout << j++ << std::endl;
+	int j = 0;
+    while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
+        std::copy(buffer.begin(), buffer.begin() + valRead, std::back_inserter(_binary));
+		std::cout << j++ << std::endl;
     }
+	j = 0;
+	std::cout << j++ << std::endl;
     // CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
     if (!_chunked && _binary.size()) {
         size_t end = _binary.size() - 1;
         if (end > 3 && _binary[end] == '\n' && _binary[end - 1] == '\r' &&
-            _binary[end - 2] == '\n' && _binary[end - 3] == '\r')
+            _binary[end - 2] == '\n' && _binary[end - 3] == '\r') {
             _isEnd = true;
+			_binary.erase(_binary.end() - 5, _binary.end() - 1);
+			std::cout << j++ << std::endl;
+		}
         else if (valRead != -1)
-            throw BodySizeError(); // TODO 얼마나 읽었는지 체크해서 다시 예외
+            throw BodySizeError();
+		 // TODO 얼마나 읽었는지 체크해서 다시 예외
                                    // 처리
     } else {
         // if (valRead != CRLF_SIZE * 2 || line.compare(0, valRead, crlf) != 0)
@@ -222,6 +237,7 @@ void Request::parseFormData() {
 	while (_boundary[i] == '-') i++;
 	_boundary.erase(0, i);
 	i = 0;
+	int j = 0;
 	while (1) {
 		i = 0;
 		while (i < _binary.size() && _binary[i] == '-') i++;
@@ -229,8 +245,9 @@ void Request::parseFormData() {
 		i = 0;
 		while (i < _binary.size() && _binary[i] == _boundary[i]) i++;
 		_binary.erase(_binary.begin(), _binary.begin() + i) + 2;
-		if (_binary.size() == 0 || _binary[0] == '-')
+		if (_binary.size() == 0 || _binary[0] == '-' || _binary[0] == 26)
 			break ;
+		std::cout << j++ << " : " << static_cast<int>(_binary[0]) << std::endl;
 		_formData.push_back(new Request(_binary, _boundary));
 	}
 }

@@ -57,8 +57,7 @@ std::vector<char> ServerFiles::readBinaryFile(std::string filename) {
 }
 
 std::vector<char> &ServerFiles::getFile(std::string filename) {
-	std::map<std::string, std::vector<char> >::iterator iter =
-		_file.find(filename);
+	std::map<std::string, std::vector<char> >::iterator iter = _file.find(filename);
 
 	if (iter != _file.end())
 		return iter->second;
@@ -70,6 +69,39 @@ std::vector<char> &ServerFiles::getFile(std::string filename) {
 			filename, readTextFile(filename)));
 	iter = _file.find(filename);
 	return iter->second;
+}
+
+void	ServerFiles::saveBinaryFile(std::string	filename, std::vector<char>	fileContent) {
+	std::ofstream filePath(filename.c_str(), std::ios::out | std::ios::binary);
+
+	if (!filePath.is_open()) {
+		std::cerr << "errno : " << errno << std::endl;
+		throw ServerError(strerror(errno));
+	}
+	filePath.write(&fileContent[0], fileContent.size());
+	filePath.close();
+}
+
+void	ServerFiles::saveTextFile(std::string filename, std::vector<char> fileContent) {
+	 std::ofstream filePath(filename);
+
+	if (!filePath.is_open()) {
+		std::cerr << "errno : " << errno << std::endl;
+		throw ServerError(strerror(errno));
+	}
+	filePath.write(&fileContent[0], fileContent.size());
+	filePath.close();
+}
+
+void ServerFiles::saveFile(std::string filename, std::vector<char> fileContent, std::string	contentType) {
+	std::cerr << "filename : " << filename << std::endl;
+
+	if (!filename.substr(static_cast<int>(filename.size()) - 4 >= -1 ? filename.size() - 4 : -1).compare(".png"))
+		saveBinaryFile(filename, fileContent);
+	else if (contentType == "image/png")
+		saveBinaryFile(filename + ".png", fileContent);
+	else
+		saveTextFile(filename, fileContent);
 }
 
 void	ServerFiles::deleteFile(std::string	filename) {
