@@ -21,7 +21,7 @@ SRCS1 = get_next_line.cpp  get_next_line_utils.cpp \
 
 SRCS2 = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp EventLoop.cpp \
 		ParseRequest.cpp Request.cpp utils.cpp get_next_line.cpp  get_next_line_utils.cpp \
-		StateCode.cpp ServerFiles.cpp Response.cpp
+		StateCode.cpp ServerFiles.cpp Response.cpp Php.cpp
 
 SRCS_NAME = $(SRCS1) $(SRCS2)
 

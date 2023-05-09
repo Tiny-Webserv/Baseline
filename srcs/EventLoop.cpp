@@ -54,9 +54,9 @@ void EventLoop::EventHandler() {
                 //     MakeResponse(curEvnts);
                 // else
             } else if (curEvnts->filter == EVFILT_PROC) {
-                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
-                          << std::endl;
-                PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+                // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
+                //           << std::endl;
+                PhpResult(curEvnts, _ChangeList, _cli);
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
@@ -100,7 +100,7 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     }
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
-        PhpStart(curEvnts, _ChangeList);
+        PhpStart(curEvnts, _ChangeList, this->_cli);
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
         this->_response2[curEvnts->ident] = new Response(reque);
@@ -134,7 +134,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     std::vector<char> resMsg =
         _response2[curEvnts->ident]->getResponseMessage();
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
-                   resMsg.size() - _offset[curEvnts->ident], MSG_NOSIGNAL);
+                   resMsg.size() - _offset[curEvnts->ident], 0);
     if (res > 0) {
         std::cout << curEvnts->ident << "번 다시 보내" << std::endl;
         _offset[curEvnts->ident] += res;

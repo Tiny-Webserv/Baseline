@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "Php.hpp"
 #include <map>
+#include <array>
 
 class EventLoop {
   private:
@@ -21,7 +22,7 @@ class EventLoop {
     std::map<int, int>        _offset;
     std::map<int, std::string> _response;
     std::map<std::string, std::string> _html;
-    std::map<int, int[2]> _cgi;
+    std::map<int, std::array<int, 2> > _cgi;
     std::vector<ServerBlock> _server;
     EventLoop();
     void OpenHtmlFile(std::string filePath);
@@ -35,7 +36,6 @@ class EventLoop {
     void MakeResponse(struct kevent *curEvnts);
     void SendResponse(struct kevent *curEvnts);
     void EraseMemberMap(int key);
-    void PhStart(struct kevent *curEvnts);
 };
 
 #endif
