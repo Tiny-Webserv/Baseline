@@ -12,7 +12,6 @@
 Response::Response(Request *request) : _request(request) {
     //_serverFiles = ServerFiles();
     try {
-
 		std::cout << "I'm in Request constructor\n";
         if (request->GetErrorCode() != 200)
             generateErrorBody();
@@ -62,25 +61,49 @@ Response::Response(Response &response) {
 
 ServerFiles Response::_serverFiles = ServerFiles();
 
+std::string	Response::fetchFilePath() {
+	std::string	location = getLocationBlock().GetLocationTarget();
+	std::string	target = _request->GetTarget().substr(location.size());
+
+	if (target.size())
+		target.insert(0, getLocationBlock().GetRoot());
+	else {
+		struct stat	buffer;
+		std::vector<std::string> index = getLocationBlock().GetIndex();
+
+        for (size_t i = 0; i < index.size(); i++) {
+			target = getLocationBlock().GetRoot() + "/" + index[i];
+			if (stat(target.c_str(), &buffer) != 0)
+				continue ;
+            else
+                return target;
+		}
+		std::cerr << "from fetchFilePath (" << target << ")" << std::endl;
+		throw NotExist();
+    }
+	return target;
+}
+
 LocationBlock &Response::getLocationBlock() {
     ServerBlock Block;
+	int rootLocationIndex = -1;
 
     std::string target = _request->GetTarget();
-    std::cout << "target : " << target << std::endl;
     for (size_t i = 0; i < _request->GetServer().GetLocation().size(); i++) {
         std::string locationTarget =
             _request->GetServer().GetLocation()[i].GetLocationTarget();
-		std::cout << "==============&&&&&\n" << "locationTarget : " << locationTarget << std::endl;
         if (!strncmp(locationTarget.c_str(), target.c_str(),
                      locationTarget.size())) {
-            std::cout << "헤이2 "
-                      << _request->GetServer().GetErrorPage().begin()->first
-                      << _request->GetServer().GetErrorPage().begin()->second
-                      << std::endl;
+			if (locationTarget == "/") {
+				rootLocationIndex = static_cast<int>(i);
+				continue ;
+			}
             return _request->GetServer().GetLocation()[i];
         }
     }
-	std::cerr << "getLocationBlock" << std::endl;
+	if (rootLocationIndex != -1)
+		return _request->GetServer().GetLocation()[rootLocationIndex];
+	std::cerr << "from getLocationBlock()" << std::endl;
     throw NotExist();
 }
 
@@ -237,24 +260,21 @@ bool	Response::isDirectory(const char *directory) {
 
 void Response::getMethod() {
 		std::string fileToRead;
-		std::cerr << "I'm in GET Method" << std::endl;
 		if (!isAllowed("GET"))
 			throw MethodNotAllowed();
-		std::cerr << "\033[1;31m" << "Hello, world!" << "\033[0m" << std::endl;
-		std::cout << "\033[1;31m" << _request->GetTarget() << "\033[0m" << std::endl;
-		fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
-		if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
-			fileToRead.append("/");
-			fileToRead.append(getLocationBlock().GetIndex()[0]);
-		}
-		std::cout << "file to read : " << fileToRead << std::endl;
+		// 파일 경로 가져오기
+		fileToRead = fetchFilePath();
+		std::cerr << "file to read : " << fileToRead << std::endl;
+		// 디렉토리인지 체크
 		if (isDirectory(fileToRead.c_str())) {
 			if (!isAutoIndex())
 				throw PermissionDenied();
 			generateAutoindex(fileToRead);
 			return ;
 		}
+		// 파일 가져오는 부분
 		_bodyMessage = _serverFiles.getFile(fileToRead);
+		// Content-Type 설정하는 부분
 		// 확장자가 .로 끝날경우 text/plain
 		if (fileToRead.find(".") == std::string::npos ||
 			fileToRead.find(".") == fileToRead.size() - 1)
@@ -280,13 +300,7 @@ void	Response::postMethod() {
 		std::cerr << "I'm in POST Method" << std::endl;
 		if (!isAllowed("POST"))
 			throw MethodNotAllowed();
-		std::cerr << "\033[1;31m" << "Hello, world!" << "\033[0m" << std::endl;
-		std::cout << "\033[1;31m" << _request->GetTarget() << "\033[0m" << std::endl;
-		fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
-		if (_request->GetTarget() == getLocationBlock().GetLocationTarget()) {
-			fileToRead.append("/");
-			fileToRead.append(getLocationBlock().GetIndex()[0]);
-		}
+		fileToRead = fetchFilePath();
 		std::cout << "file to read : " << fileToRead << std::endl;
 		if (isDirectory(fileToRead.c_str())) {
 			if (!isAutoIndex())
@@ -330,6 +344,8 @@ void	Response::deleteMethod(){
         std::cout << "File " << fileToRead << " successfully deleted" << std::endl;
     }
 }
+
+
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
 std::vector<char> Response::getStatusHeaderMessage() {
     return _statusHeaderMessage;

@@ -24,9 +24,10 @@ class Request {
   private:
 	std::string _method;
 	std::string _target;
-	std::string _body;
 	std::string _contentType;
+	std::string _contentDisposition;
 	int	_contentLength;
+	std::string _fileName;
 	std::string _errorMessages;
 	int _errorCode;
 	bool _chunked;
@@ -36,14 +37,17 @@ class Request {
 	int			_hostPort;
 	bool	_isEnd;
 	std::vector<char>	_binary;
+	std::string	_boundary;
+	std::vector<Request *> _formData;
   public:
 	Request();
 	Request(int fd, std::stringstream &stream);
+	Request(std::vector<char>	&body, std::string	delimeter); // body에서 저장한 값을 지워주기
 	Request(const Request &request);
 	Request &operator=(const Request &request);
 	virtual ~Request();
 
-	// Setter
+	// Sette기
 	void SetTarget(std::string target);
 	void SetMethod(std::string method);
 	void SetContentType(std::string contentType);
@@ -56,6 +60,8 @@ class Request {
 	void	SetHostPort(int	hostPort);
     void SetIsEnd(bool isEnd);
     void SetBinary(std::vector<char> &binary);
+    void setStartLine(std::string startLine);
+	void setHeader(std::string header);
 
 	// Getter
     std::string	GetMethod();
@@ -71,12 +77,11 @@ class Request {
     bool GetIsEnd();
     std::vector<char> getBinary();
 
-    void setStartLine(std::string startLine);
-	void setHeader(std::string header);
 	//void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();
 	void readBody(int fd);
 
+	void parseFormData();
 };
 
 Request *ParseRequest(int fd, std::map<int, Request *> &clients,
