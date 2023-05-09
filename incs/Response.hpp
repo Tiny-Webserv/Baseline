@@ -54,6 +54,8 @@ public:
 	void	generateAutoindex(const std::string& directory);
 	void	generateErrorBody();
 	void	generateDefaultErrorPage();
+
+	std::string	fetchFilePath();
 	// auto index 처리 함수
 	// serverBlock 참고해서 특정 파일이 있는지 확인
 	// 특정 파일 읽어와 body에 실어주기
