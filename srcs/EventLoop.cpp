@@ -54,7 +54,8 @@ void EventLoop::EventHandler() {
                 //     MakeResponse(curEvnts);
                 // else
             } else if (curEvnts->filter == EVFILT_PROC) {
-                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝" << std::endl;
+                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
+                          << std::endl;
                 PhpResult(curEvnts, _ChangeList, _cli, _cgi);
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
@@ -157,78 +158,6 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
            curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
     EraseMemberMap(curEvnts->ident);
-}
-
-void EventLoop::PhStart(struct kevent *curEvnts) {
-    (void)curEvnts;
-    int parentWrite[2];
-    int childWrite[2];
-    char buf[1024];
-    int pid;
-
-    if (pipe(parentWrite) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-
-    std::string msg = "Name=test&Age=123";
-    pid = fork(); // dup2를 할 경우엔 부모단에서 parentWrite[1]로 리퀘스트
-                  // 전체를 넘겨야함.
-    /// 오히려 파싱하기 전에 전체 문장을 받아오는 부분에서 파싱전에 이 부분을
-    /// 실행하는 게 합리적일 것 같음.
-    //
-    // char query[] = "QUERY_STRING=Name=test&Age=123"; //GET 전용
-
-    char *const env[] = {
-        "REQUEST_METHOD=POST", "CONTENT_LENGTH=17",
-        "CONTENT_TYPE=application/x-www-form-urlencoded",
-        "SCRIPT_FILENAME=/Users/jang-insu/42seoul/webserv/html/post/index.php",
-        "REDIRECT_STATUS=200",
-        // "PHP_SELF=/Users/jang-insu/webservTest/html/index.php",
-        "GATEWAY_INTERFACE=CGI/1.1", "SERVER_PROTOCOL=HTTP/1.1",
-        "SCRIPT_NAME=/Users/jang-insu/42seoul/webserv/html/post/index.php",
-        "REQUEST_URI=/index.php",
-        "DOCUMENT_ROOT=/Users/jang-insu/42seoul/webserv/html/post",
-        // "SERVER_ADDR=127.0.0.1",
-        // "SERVER_PORT=80",
-        // "SERVER_NAME=localhost",
-        NULL};
-    if (pid == 0) // child
-    {
-        close(parentWrite[1]);
-        close(childWrite[0]);
-        dup2(parentWrite[0], 0);
-        close(parentWrite[0]);
-        dup2(childWrite[1], 1);
-        close(childWrite[1]);
-        chdir("/Users/jang-insu/webservTest/html"); ////
-        char *arg[] = {"/opt/homebrew/bin/php-cgi", "index.php", NULL};
-
-        // std::cout << "=======in child!!!!!======" << std::endl;
-        execve(arg[0], arg, env);
-        std::cout << "exe err" << std::endl;
-        exit(-1);
-
-    } else // Parant
-    {
-        close(parentWrite[0]);
-        close(childWrite[1]);
-        write(parentWrite[1], msg.c_str(), msg.length());
-        close(parentWrite[1]);
-        waitpid(pid, 0, 0);
-        read(childWrite[0], buf, 1024);
-        close(childWrite[0]);
-    }
-    //     X-Powered-By: PHP/8.2.3
-    // Content-type: text/html; charset=UTF-8
-
-    // Name: test<br>Age: 123<br>
-    // std::string response_body = file_contents.str() + "\r\n\r\n";
-    // std::string response_header = "HTTP/1.1 200 OK\r\nContent-Length: " +
-    //                               std::to_string(response_body.size()) +
-    //                               "\r\n\r\n";
-    // response_str = response_header + response_body;
-    // _html[requestPath] = response_str;
 }
 
 void EventLoop::EraseMemberMap(int key) {
