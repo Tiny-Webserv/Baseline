@@ -62,11 +62,12 @@ Response::Response(Response &response) {
 ServerFiles Response::_serverFiles = ServerFiles();
 
 std::string	Response::fetchFilePath() {
+	std::cerr << _request->GetTarget() << std::endl;
 	std::string	location = getLocationBlock().GetLocationTarget();
 	std::string	target = _request->GetTarget().substr(location.size());
 
 	if (target.size())
-		target.insert(0, getLocationBlock().GetRoot());
+		target.insert(0, getLocationBlock().GetRoot() + "/");
 	else {
 		struct stat	buffer;
 		std::vector<std::string> index = getLocationBlock().GetIndex();
@@ -78,9 +79,9 @@ std::string	Response::fetchFilePath() {
             else
                 return target;
 		}
-		std::cerr << "from fetchFilePath (" << target << ")" << std::endl;
 		throw NotExist();
     }
+	std::cerr << "from fetchFilePath (" << target << ")" << std::endl;
 	return target;
 }
 
@@ -297,11 +298,9 @@ void Response::getMethod() {
 
 void	Response::postMethod() {
         std::string fileToRead;
-		std::cerr << "I'm in POST Method" << std::endl;
 		if (!isAllowed("POST"))
 			throw MethodNotAllowed();
 		fileToRead = fetchFilePath();
-		std::cout << "file to read : " << fileToRead << std::endl;
 		if (isDirectory(fileToRead.c_str())) {
 			if (!isAutoIndex())
 				throw PermissionDenied();
@@ -309,6 +308,11 @@ void	Response::postMethod() {
 			return ;
 		}
 		_bodyMessage = _serverFiles.getFile(fileToRead);
+		if (_request->GetContentType() == "multipart/form-data") {
+			for (size_t i = 0; i < _request->getFormData().size(); i++) {
+                
+            }
+		}
 		// 확장자가 .로 끝날경우 text/plain
 		if (fileToRead.find(".") == std::string::npos ||
 			fileToRead.find(".") == fileToRead.size() - 1)

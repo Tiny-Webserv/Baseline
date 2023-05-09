@@ -93,6 +93,10 @@ bool Request::GetIsEnd() { return _isEnd; }
 
 void Request::SetIsEnd(bool isEnd) { _isEnd = isEnd; }
 
+std::vector<Request *>	Request::getFormData() {
+	return _formData;
+}
+
 Request &Request::operator=(const Request &request) {
     _method = request._method;
     _target = request._target;

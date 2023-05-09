@@ -47,7 +47,7 @@ class Request {
 	Request &operator=(const Request &request);
 	virtual ~Request();
 
-	// Sette기
+	// Setter
 	void SetTarget(std::string target);
 	void SetMethod(std::string method);
 	void SetContentType(std::string contentType);
@@ -76,6 +76,7 @@ class Request {
     int GetHostPort();
     bool GetIsEnd();
     std::vector<char> getBinary();
+	std::vector<Request *> getFormData();
 
 	//void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();
