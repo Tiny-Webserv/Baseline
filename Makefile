@@ -8,9 +8,15 @@ INC_LINK = -I./incs
 
 SRCS_PATH = ./srcs
 
-SRCS_NAME = webserv.cpp Config.cpp LocationBlock.cpp ServerBlock.cpp Socket.cpp EventLoop.cpp \
-		ParseRequest.cpp Request.cpp utils.cpp get_next_line.cpp  get_next_line_utils.cpp \
-		StateCode.cpp ServerFiles.cpp Response.cpp
+SRCS_DIRS =  utils http server socket
+
+DIRS = $(addprefix $(OBJS_PATH)/, $(SRCS_DIRS))
+
+SRCS_NAME = webserv.cpp \
+		server/Config.cpp server/LocationBlock.cpp server/ServerBlock.cpp \
+		socket/Socket.cpp socket/EventLoop.cpp \
+		http/ParseRequest.cpp http/Request.cpp http/Response.cpp \
+		utils/utils.cpp utils/get_next_line.cpp utils/get_next_line_utils.cpp utils/StateCode.cpp utils/ServerFiles.cpp \
 
 
 SRCS = $(addprefix $(SRCS_PATH)/, $(SRCS_NAME))
@@ -23,15 +29,18 @@ OBJS = $(addprefix $(OBJS_PATH)/, $(OBJS_NAME))
 
 all : $(NAME)
 
-$(NAME) : $(OBJS)
+$(NAME) : $(DIRS) $(OBJS)
 	$(CC) $(CCFLAGS) -o $(NAME) $(OBJS)
 
+$(DIRS) :
+	@mkdir $(OBJS_PATH) 2> /dev/null || true
+	@mkdir $(DIRS) 2> /dev/null || true
+
 $(OBJS_PATH)/%.obj : $(SRCS_PATH)/%.cpp
-	mkdir -p ./objs
 	$(CC) $(INC_LINK) $(CCFLAGS) -c $< -o $@
 
 clean :
-	rm -rf $(OBJS)
+	rm -rf $(OBJS_PATH)
 
 fclean : clean
 	rm -rf $(NAME)
