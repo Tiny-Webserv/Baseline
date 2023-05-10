@@ -28,20 +28,28 @@ Request::Request(int fd, std::stringstream &stream)
     }
 }
 
+// formData를 위한 생성자
 Request::Request(std::vector<char>	&formData, std::string	delimeter){
-	std::string	headerStr(formData.begin(), formData.end());
+	//boundary, header, body 모두 복사
+    std::string	headerStr(formData.begin(), formData.end());
 	std::string doubleCRLF = CRLF;
 	doubleCRLF.append(CRLF);
+	size_t crlfPos = headerStr.find("\r\n-");
 	size_t delimeterPos = headerStr.find(delimeter);
+
 	if (delimeterPos == std::string::npos)
 		return ;
     setHeader(headerStr.substr(0, delimeterPos));
 	if (headerStr.find(doubleCRLF) == std::string::npos)
 		return ;
+	delimeterPos = headerStr.find(doubleCRLF) + doubleCRLF.size();
+	crlfPos -= delimeterPos;
 	formData.erase(formData.begin(), formData.begin() + headerStr.find(doubleCRLF) + doubleCRLF.size());
-    std::copy(formData.begin(), find(formData.begin(), formData.end(), '\r'),
+    std::copy(formData.begin(), formData.begin() + crlfPos,
               std::back_inserter(_binary));
-	formData.erase(formData.begin(), find(formData.begin(), formData.end(), '\r') + 2);
+	formData.erase(formData.begin(), formData.begin() + crlfPos);
+	if (formData.size() >= 2 && formData[0] == '\r' && formData[1] == '\n')
+		formData.erase(formData.begin(), formData.begin() + 2);
 }
 
 Request::~Request() {
@@ -162,7 +170,7 @@ void Request::setHeader(std::string header) {
     // std::cout << _contentLength << std::endl;
 	iter = find(splited.begin(), splited.end(), "Content-Disposition:");
 	if (iter != splited.end()) {
-		std::cerr << "header : " << header <<  std::endl;
+		//std::cerr << "header : " << header <<  std::endl;
 		for (int i = 0; iter + i < splited.end(); i++) {
 			if ((iter + i)->find("filename=") != std::string::npos) {
 				_fileName = (iter + i)->substr(std::string("filename=").size());
@@ -231,7 +239,7 @@ void Request::readBody(int fd) {
         _isEnd = false;
     }
 }
-
+// || _binary[0] == 26
 void Request::parseFormData() {
 	size_t i = 0;
 	while (_boundary[i] == '-') i++;
@@ -244,8 +252,11 @@ void Request::parseFormData() {
 		_binary.erase(_binary.begin(), _binary.begin() + i);
 		i = 0;
 		while (i < _binary.size() && _binary[i] == _boundary[i]) i++;
-		_binary.erase(_binary.begin(), _binary.begin() + i) + 2;
-		if (_binary.size() == 0 || _binary[0] == '-' || _binary[0] == 26)
+		_binary.erase(_binary.begin(), _binary.begin() + i);
+		i = 0;
+		if (_binary.size() >= 2 && _binary[i] == '\r' && _binary[i + 1] == '\n')
+			_binary.erase(_binary.begin(), _binary.begin() + 2);
+		if (_binary.size() == 0 || _binary[0] == '-')
 			break ;
 		std::cout << j++ << " : " << static_cast<int>(_binary[0]) << std::endl;
 		_formData.push_back(new Request(_binary, _boundary));

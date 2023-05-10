@@ -16,8 +16,13 @@ Response::Response(Request *request) : _request(request) {
 		if (_request->GetContentType() == "multipart/form-data") {
 			std::string	path =  getLocationBlock().GetRoot() + getLocationBlock().GetUploadPass();
 			for (size_t i = 0; i < _request->getFormData().size(); i++) {
-				std::cerr << "getFilename : " << _request->getFormData()[i]->getFileName() << std::endl;
-                _serverFiles.saveFile(path + "/" + _request->getFormData()[i]->getFileName(), _request->getFormData()[i]->getBinary(),  _request->getFormData()[i]->GetContentType());
+				std::cerr << "getFilename[" << i << "] : " << _request->getFormData()[i]->getFileName() << std::endl;
+				std::string	filename;
+				if (_request->getFormData()[i]->getFileName().size())
+					filename = path + "/" + _request->getFormData()[i]->getFileName();
+				else
+					filename = path + "/" + _request->getFormData()[i]->GetContentType();
+                _serverFiles.saveFile(filename, _request->getFormData()[i]->getBinary(),  _request->getFormData()[i]->GetContentType());
             }
 		}
         if (request->GetErrorCode() != 200)
