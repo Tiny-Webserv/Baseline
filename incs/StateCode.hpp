@@ -74,7 +74,6 @@ public :
 class ServerError : public StateCode {
 private :
 	const char *	_condition;
-
 public:
 	ServerError(const char * condition);
 	~ServerError() throw();

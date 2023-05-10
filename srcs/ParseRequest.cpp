@@ -13,7 +13,6 @@ ServerBlock	*FindServer(std::vector<ServerBlock> &servers, Request	*request) {
 
     // request 포인터가 NULL인 경우 예외 처리
     if (request == NULL) {
-        //throw std::runtime_error("Error : Invalid request pointer");
         return NULL;
     }
 	// port가 같은 객체가 있는지 확인
@@ -30,7 +29,6 @@ ServerBlock	*FindServer(std::vector<ServerBlock> &servers, Request	*request) {
         }
     }
     if (idx == -1) {
-        //throw std::runtime_error("Error : No matching server found");
         return NULL;
     }
     return &servers[idx];
@@ -47,23 +45,18 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 			return nullptr;
 		while (line) {
 			ss << line;
-			std::cout << line;
 			std::string tmp(line);
 			free(line);
 			if (tmp == CRLF)
 				break;
 			line = get_next_line(fd);
 		}
-
-		std::cout << ss.str() << std::endl;
 		Request *request = new Request(fd, ss);
 		clients.insert(std::pair<int, Request *>(fd, request));
 		request->SetServer(FindServer(servers, request));
-        //request->readBody(fd);
     } else {
 
         Request *request = clients[fd];
-		//std::vector<std::string> body = Split2(ss.str(), CRLF);
 		try {
 			request->readBody(fd);
 		} catch (const StateCode &e) {

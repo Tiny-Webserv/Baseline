@@ -75,7 +75,6 @@ void	ServerFiles::saveBinaryFile(std::string	filename, std::vector<char>	fileCon
 	std::ofstream filePath(filename.c_str(), std::ios::out | std::ios::binary);
 
 	if (!filePath.is_open()) {
-		std::cerr << "errno : " << errno << std::endl;
 		throw ServerError(strerror(errno));
 	}
 	filePath.write(&fileContent[0], fileContent.size());
@@ -86,7 +85,6 @@ void	ServerFiles::saveTextFile(std::string filename, std::vector<char> fileConte
 	 std::ofstream filePath(filename);
 
 	if (!filePath.is_open()) {
-		std::cerr << "errno : " << errno << std::endl;
 		throw ServerError(strerror(errno));
 	}
 	filePath.write(&fileContent[0], fileContent.size());
@@ -94,7 +92,6 @@ void	ServerFiles::saveTextFile(std::string filename, std::vector<char> fileConte
 }
 
 void ServerFiles::saveFile(std::string filename, std::vector<char> fileContent, std::string	contentType) {
-	std::cerr << "filename : " << filename << std::endl;
 
 	if (!filename.substr(static_cast<int>(filename.size()) - 4 >= -1 ? filename.size() - 4 : -1).compare(".png"))
 		saveBinaryFile(filename, fileContent);

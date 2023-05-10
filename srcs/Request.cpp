@@ -138,8 +138,6 @@ void Request::setStartLine(std::string startLine) {
     else
         throw MethodError();
     _target = Split(data[1], std::string(":"))[0]; //[0]은 vector 0번째 인덱스 접근을 위함
-    std::cout << data[2] << std::endl;
-    // std::cout << std::isstring(data[2]) << std::endl;
     if (data[2].compare("HTTP/1.1\r"))
         throw HTTPVersionError();
 }
@@ -167,17 +165,13 @@ void Request::setHeader(std::string header) {
     iter = find(splited.begin(), splited.end(), "Content-Length:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _contentLength = atoi((iter + 1)->c_str());
-    // std::cout << _contentLength << std::endl;
 	iter = find(splited.begin(), splited.end(), "Content-Disposition:");
 	if (iter != splited.end()) {
-		//std::cerr << "header : " << header <<  std::endl;
 		for (int i = 0; iter + i < splited.end(); i++) {
 			if ((iter + i)->find("filename=") != std::string::npos) {
 				_fileName = (iter + i)->substr(std::string("filename=").size());
 				_fileName.erase(0, 1);
 				_fileName.erase(_fileName.size() - 1, 1);
-				std::cerr << "header filename : " << _fileName << std::endl;
-				//break ;
             }
 		}
 	}
@@ -212,13 +206,9 @@ void Request::readBody(int fd) {
         }
         _contentLength = static_cast<int>(x);
     }
-	int j = 0;
     while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
         std::copy(buffer.begin(), buffer.begin() + valRead, std::back_inserter(_binary));
-		std::cout << j++ << std::endl;
     }
-	j = 0;
-	std::cout << j++ << std::endl;
     // CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
     if (!_chunked && _binary.size()) {
         size_t end = _binary.size() - 1;
@@ -226,7 +216,6 @@ void Request::readBody(int fd) {
             _binary[end - 2] == '\n' && _binary[end - 3] == '\r') {
             _isEnd = true;
 			_binary.erase(_binary.end() - 5, _binary.end() - 1);
-			std::cout << j++ << std::endl;
 		}
         else if (valRead != -1)
             throw BodySizeError();
@@ -239,13 +228,12 @@ void Request::readBody(int fd) {
         _isEnd = false;
     }
 }
-// || _binary[0] == 26
+
 void Request::parseFormData() {
 	size_t i = 0;
 	while (_boundary[i] == '-') i++;
 	_boundary.erase(0, i);
 	i = 0;
-	int j = 0;
 	while (1) {
 		i = 0;
 		while (i < _binary.size() && _binary[i] == '-') i++;
@@ -258,7 +246,6 @@ void Request::parseFormData() {
 			_binary.erase(_binary.begin(), _binary.begin() + 2);
 		if (_binary.size() == 0 || _binary[0] == '-')
 			break ;
-		std::cout << j++ << " : " << static_cast<int>(_binary[0]) << std::endl;
 		_formData.push_back(new Request(_binary, _boundary));
 	}
 }
