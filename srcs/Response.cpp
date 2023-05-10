@@ -24,8 +24,9 @@ Response::Response(Request *request) : _request(request) {
 					filename = path + "/" + _request->getFormData()[i]->GetContentType();
                 _serverFiles.saveFile(filename, _request->getFormData()[i]->getBinary(),  _request->getFormData()[i]->GetContentType());
             }
+			_request->SetErrorCode(Created);
 		}
-        if (request->GetErrorCode() != 200)
+        if (request->GetErrorCode() / 100 != 2)
             generateErrorBody();
         else if (request->GetMethod() == "GET") {
             getMethod(); // autoindex 처리
@@ -353,13 +354,13 @@ void	Response::deleteMethod(){
     std::string fileToRead;
     if (!isAllowed("DELETE"))
 		throw MethodNotAllowed();
-	fileToRead = getLocationBlock().GetRoot() + _request->GetTarget();
-
+	fileToRead = fetchFilePath();
     if (remove(fileToRead.c_str()) != 0) {
         throw NotExist();
     } else {
         std::cout << "File " << fileToRead << " successfully deleted" << std::endl;
     }
+	_request->SetErrorCode(NoContent);
 }
 
 

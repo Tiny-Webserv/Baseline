@@ -8,6 +8,8 @@ enum ErrorCode {
 
     // 200 ~
     OK = 200,
+    Created = 201,
+	NoContent = 204,
 
     // 300 ~
 
