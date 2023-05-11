@@ -18,6 +18,7 @@ void sigint_handler(int signum) {
 // void leaks() { system("leaks webserv"); }
 int main(int ac, char **av) {
     // atexit(leaks);
+
     signal(SIGINT, sigint_handler);
     if (ac != 2) {
         std::cout << "Usage ./webserv [Configuration]" << std::endl;
