@@ -48,7 +48,9 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_WRITE) {
                 std::cout << "클라이언트(" << curEvnts->ident
                           << ")에게 Write 이벤트 발생" << std::endl;
+
                 SendResponse(curEvnts);
+
                 // if (this->_response2.find(curEvnts->ident) ==
                 //     this->_response2.end())
                 //     MakeResponse(curEvnts);
@@ -56,7 +58,8 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
-                PhpResult(curEvnts, _ChangeList, _cli);
+                _cgiResponse[_cgi[curEvnts->ident].first] =
+                    PhpResult(curEvnts, _ChangeList, _cli, _cgi);
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
@@ -100,7 +103,8 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     }
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
-        PhpStart(curEvnts, _ChangeList, this->_cli);
+        PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        std::cout << "start end" << std::endl;
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
         this->_response2[curEvnts->ident] = new Response(reque);
@@ -131,8 +135,11 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     // std::string response_str(it + _offset[curEvnts->ident], its);
     //  std::string response_str = this->_response[curEvnts->ident];
     // int response_size = response_str.size();
-    std::vector<char> resMsg =
-        _response2[curEvnts->ident]->getResponseMessage();
+    std::vector<char> resMsg;
+    if (IsPhp(_cli[curEvnts->ident]))
+        resMsg = _cgiResponse[curEvnts->ident];
+    else
+        resMsg = _response2[curEvnts->ident]->getResponseMessage();
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
                    resMsg.size() - _offset[curEvnts->ident], 0);
     if (res > 0) {
@@ -166,6 +173,7 @@ void EventLoop::EraseMemberMap(int key) {
     this->_cli.erase(key);
     this->_response2.erase(key);
     this->_offset.erase(key);
+    this->_cgiResponse.erase(key);
 }
 
 EventLoop::EventLoop() {}

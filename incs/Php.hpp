@@ -10,9 +10,14 @@
 #include <unistd.h>
 
 void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
-              std::map<int, Request *> &_cli);
+              std::map<int, Request *> &_cli,
+              std::map<int, std::pair<int, int> > &_cgi);
 bool IsPhp(Request *reque);
-void PhpResult(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
-               std::map<int, Request *> &_cli);
-void PhpEnvSet(struct kevent *curEvnts, std::map<std::string, char*> &_envMap, std::map<int, Request *> &_cli);
+std::vector<char> PhpResult(struct kevent *curEvnts,
+                            std::vector<struct kevent> &_ChangeList,
+                            std::map<int, Request *> &_cli,
+                            std::map<int, std::pair<int, int> > &_cgi);
+std::map<std::string, std::string> PhpEnvSet(struct kevent *curEvnts,
+               std::map<int, Request *> &_cli,
+               std::map<int, std::pair<int, int> > &_cgi);
 #endif
