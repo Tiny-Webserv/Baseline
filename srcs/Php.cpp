@@ -3,6 +3,8 @@
 #include "get_next_line.h"
 // #include <sstream>
 
+// php 작동시키기 전에 errorCode == OK 인지 확인할 것!!!!!!!!
+
 void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
               std::map<int, Request *> &_cli,
               std::map<int, std::pair<int, int> > &_cgi) {
@@ -17,18 +19,30 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
         return;
     }
     std::string method = _cli[curEvnts->ident]->GetMethod();
-    std::string body;
-    if (method == "GET" || body.find('?') != std::string::npos) {
-        body = _cli[curEvnts->ident]->GetTarget();
-        body.erase(0, body.find("?") + 1);
+    std::string *body;
+	//?Name=
+    if (method == "GET") { //_cli[curEvnts->ident]->GetTarget()
+		std::string	tmp = _cli[curEvnts->ident]->GetTarget();
+        body = &tmp;
+        body->erase(0, body->find("?") + 1);
         // "REQUEST_METHOD=GET"
     } else if (method == "POST") {
-        body = _cli[curEvnts->ident]->GetStream().str();
+		std::vector<char> bodyVec = _cli[curEvnts->ident]->getBinary();
+		body = new std::string(bodyVec.begin(), bodyVec.end()); //>>> delete ㅍㅣㄹㅇㅛ
+        //body = _cli[curEvnts->ident]->GetStream().str(); // getBinary();
         // "REQUEST_METHOD=POST"
-    }
+	}
+	else {
+		body = new std::string(); // delete 필요함
+		std::cout << "??????" << std::endl;
+	}
     // else {} //"DELETE" 안쓰일듯?
 
-    body += "\r\n\r\n"; // event_Loop
+    *body += "\r\n\r\n"; // event_Loop
+
+	std::cout << "============body? ============" << std::endl;
+	std::cout << *body << std::endl;
+	std::cout << "============body? ============" << std::endl;
 
     //////////////////nhwang memo 5.9//////////////////
     // 아래의 msg는 body로 바꿔준다.
@@ -91,21 +105,25 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
         dup2(childWrite[1], 1);
         close(childWrite[1]);
         // chdir("/Users/jang-insu/webservTest/html"); ////
-        char *arg[] = {"/opt/homebrew/bin/php-cgi", "./html/post/index.php",
+        char *arg[] = {"/goinfre/hyna/webserv/html/php-cgi", "./html/post/index.php",
                        NULL};
 
         // std::cout << "=======in child!!!!!======" << std::endl;
         execve(arg[0], arg, env);
         std::cerr << "========이까지 오냐?===========" << std::endl;
         std::cerr << "exe err" << std::endl;
+		//std::cerr << strerror(errno) << std::endl;
         exit(-1);
 
     } else // Parant
     {
         close(parentWrite[0]);
         close(childWrite[1]);
-        write(parentWrite[1], body.c_str(),
-              body.length()); // msg를 body로 바꿨음
+        write(parentWrite[1], body->c_str(),
+              body->length()); // msg를 body로 바꿨음
+		//std::cout << "=======body in P======" << std::endl;
+		//write(2, body->c_str(), body->length());
+		//std::cout << "=======body in P======" << std::endl;
 
         close(parentWrite[1]);
         struct kevent tmpEvnt;
@@ -137,31 +155,39 @@ std::string generatephpStatusLine(Request *_request) {
 
 void generatePhpBody(std::string result, std::string &_header,
                      std::string &body) {
-    size_t len = result.find("/r/n/r/n");
+    size_t len = result.find("\r\n\r\n");
+
     if (len == std::string::npos) {
         std::cout << "npos result" << std::endl;
         return;
     }
-    size_t i = 0;
-    while (i + 1 < len) {
-        _header += result[i];
-        i++;
-    }
-    _header += "\r\n\r\n";
-    i += 4;
-    while (result[i]) {
-        body += result[i];
-        i++;
-    }
+
+    //size_t i = 0;
+	_header += result.substr(0, len + 4);
+    //while (i < len) {
+    //    _header += result[i];
+    //    i++;
+    //}
+    //_header += "\r\n\r\n";
+    len += 4;
+	body = result.substr(len);
+    //while (result[i]) {
+    //    body += result[i];
+    //    i++;
+    //}
     body += "\r\n\r\n";
+
 }
 
 void generatePhpHeader(std::string &header, std::string &body) {
-    std::cout << "==============bodyphp===========" << std::endl;
+	//std::cout << "===========header in F=======" << std::endl;
+	//std::cout << header << std::endl;
+	//std::cout << "===========header in F=======" << std::endl;
+    //std::cout << "==============bodyphp===========" << std::endl;
     std::stringstream ss;
     ss << "Server: Webserv" << CRLF;
-    std::cout << body << std::endl;
-    std::cout << "==============bodyphp===========" << std::endl;
+    //std::cout << body << std::endl;
+    //std::cout << "==============bodyphp===========" << std::endl;
 
     if (body.size()) {
         ss << "Content-Type: "
@@ -179,6 +205,10 @@ void generatePhpHeader(std::string &header, std::string &body) {
         // ss << CRLF;
     }
     header = ss.str() + header;
+	//std::cout << "===========header in F=======" << std::endl;
+	//std::cout << header << std::endl;
+	//std::cout << "===========header in F=======" << std::endl;
+
 }
 std::vector<char> PhpResult(struct kevent *curEvnts,
                             std::vector<struct kevent> &_ChangeList,
@@ -212,21 +242,37 @@ std::vector<char> PhpResult(struct kevent *curEvnts,
     }
 
     std::string result = ss.str();
-    std::cout << "rererererere" << std::endl;
-    std::cout << result << std::endl;
-    std::cout << "rererererere" << std::endl;
+    //std::cout << "rererererere" << std::endl;
+    //std::cout << result << std::endl;
+    //std::cout << "rererererere" << std::endl;
 
-    std::string body = "";
-    std::string header = "";
+    std::string body;
+    std::string header;
 
-    std::cout << "test2?" << std::endl;
     generatePhpBody(result, header, body);
-    std::cout << "test3?" << std::endl;
-
     generatePhpHeader(header, body);
 
+	std::cout << "========all HTTP==========" << std::endl;
+	std::cout << startLine << header << body << std::endl;
+	std::cout << "========all HTTP==========" << std::endl;
+
+
+
+
+
     std::string responMsg = startLine + header + body;
-    std::vector<char> res(responMsg.begin(), responMsg.end());
+	std::vector<char> res;
+
+	int j = 0;
+	while(responMsg[j])
+	{
+		res.push_back(responMsg[j]);
+		j++;
+	}
+	//std::cout << "======res=======" << std::endl;
+	//write(1,&(res[0]),res.size());
+	//std::cout << "======res=======" << std::endl;
+
     close(_cgi[curEvnts->ident].second);
 
     EV_SET(&tmpEvnt, _cgi[curEvnts->ident].first, EVFILT_WRITE, EV_ADD, 0, 0,
@@ -272,7 +318,7 @@ PhpEnvSet(struct kevent *curEvnts, std::map<int, Request *> &_cli,
     std::string request_method = "REQUEST_METHOD=";
 
     std::ostringstream os;
-    os << _cli[sock]->GetStream().str().size();
+    os << _cli[sock]->getBinary().size();
     content_length += os.str();
     // content_type += _cli[sock]->GetContentType();
     request_method += _method;
