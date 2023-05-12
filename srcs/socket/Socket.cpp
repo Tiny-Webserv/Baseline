@@ -47,7 +47,7 @@ void Socket::ServerInit(Config::iterator it, Config &con)
 		else
 			std::cout << "bind err" << std::endl;
 	}
-	if (listen(servSock, 5) < 0)
+	if (listen(servSock, 1000) < 0)
 		std::cout << "listen err" << std::endl;
 	AddSocketEvent(servSock, *it);
 }
