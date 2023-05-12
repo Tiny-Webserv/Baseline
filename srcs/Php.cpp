@@ -136,6 +136,9 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
     //     X-Powered-By: PHP/8.2.3
     // Content-type: text/html; charset=UTF-8
     // Name: test<br>Age: 123<br>
+	if (method != "GET") {
+		delete body;
+	}
 }
 
 //////////////////////////////caution!!!!!!!//////////////////////////////

@@ -58,8 +58,6 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
-				std::cout<< "&_cgi[curEvnts->ident]: " << &(_cgi[curEvnts->ident]) << std::endl;
-				std::cout<< "_cgi[curEvnts->ident].size(): " << _cgi[curEvnts->ident].size() << std::endl;
 				if (_cgi[curEvnts->ident].size()) {
 					int tmp = _cgi[curEvnts->ident][0];
 					_cgiResponse[tmp] =
