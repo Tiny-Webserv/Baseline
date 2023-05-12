@@ -8,6 +8,8 @@ enum ErrorCode {
 
     // 200 ~
     OK = 200,
+    Created = 201,
+	NoContent = 204,
 
     // 300 ~
 
@@ -72,7 +74,6 @@ public :
 class ServerError : public StateCode {
 private :
 	const char *	_condition;
-
 public:
 	ServerError(const char * condition);
 	~ServerError() throw();
