@@ -58,9 +58,13 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
-                _cgiResponse[_cgi[curEvnts->ident][0]] =
-                    PhpResult(curEvnts, _ChangeList, _cli, _cgi);
-				_cgi.erase(curEvnts->ident);
+				std::cout<< "&_cgi[curEvnts->ident]: " << &(_cgi[curEvnts->ident]) << std::endl;
+				std::cout<< "_cgi[curEvnts->ident].size(): " << _cgi[curEvnts->ident].size() << std::endl;
+				if (_cgi[curEvnts->ident].size()) {
+					int tmp = _cgi[curEvnts->ident][0];
+					_cgiResponse[tmp] =
+						PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+				}
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;

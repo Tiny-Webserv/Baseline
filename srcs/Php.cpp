@@ -278,6 +278,7 @@ std::vector<char> PhpResult(struct kevent *curEvnts,
     EV_SET(&tmpEvnt, _cgi[curEvnts->ident][0], EVFILT_WRITE, EV_ADD, 0, 0,
            curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
+	_cgi.erase(curEvnts->ident);
     return (res);
 }
 
