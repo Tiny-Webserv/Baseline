@@ -11,13 +11,13 @@
 
 void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
               std::map<int, Request *> &_cli,
-              std::map<int, std::pair<int, int> > &_cgi);
+              std::map<int, std::vector<int> > &_cgi);
 bool IsPhp(Request *reque);
 std::vector<char> PhpResult(struct kevent *curEvnts,
                             std::vector<struct kevent> &_ChangeList,
                             std::map<int, Request *> &_cli,
-                            std::map<int, std::pair<int, int> > &_cgi);
+                            std::map<int, std::vector<int> > &_cgi);
 std::map<std::string, std::string> PhpEnvSet(struct kevent *curEvnts,
                std::map<int, Request *> &_cli,
-               std::map<int, std::pair<int, int> > &_cgi);
+               std::map<int, std::vector<int> > &_cgi);
 #endif

@@ -22,7 +22,7 @@ class EventLoop {
     std::map<int, int> _offset;
     std::map<int, std::vector<char> > _cgiResponse;
     std::map<std::string, std::string> _html;
-    std::map<int, std::pair<int, int> > _cgi;
+    std::map<int, std::vector<int> > _cgi;
     std::string _phpheader;
     std::vector<ServerBlock> _server;
     EventLoop();

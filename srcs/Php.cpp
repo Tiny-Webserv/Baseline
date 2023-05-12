@@ -7,7 +7,7 @@
 
 void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
               std::map<int, Request *> &_cli,
-              std::map<int, std::pair<int, int> > &_cgi) {
+              std::map<int, std::vector<int> > &_cgi) {
     (void)curEvnts;
     int parentWrite[2];
     int childWrite[2];
@@ -130,8 +130,8 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
         EV_SET(&tmpEvnt, pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,
                curEvnts->udata);
         _ChangeList.push_back(tmpEvnt);
-        _cgi[pid].first = curEvnts->ident;
-        _cgi[pid].second = childWrite[0];
+        _cgi[pid].push_back(curEvnts->ident);
+        _cgi[pid].push_back(childWrite[0]);
     }
     //     X-Powered-By: PHP/8.2.3
     // Content-type: text/html; charset=UTF-8
@@ -213,7 +213,7 @@ void generatePhpHeader(std::string &header, std::string &body) {
 std::vector<char> PhpResult(struct kevent *curEvnts,
                             std::vector<struct kevent> &_ChangeList,
                             std::map<int, Request *> &_cli,
-                            std::map<int, std::pair<int, int> > &_cgi) {
+                            std::map<int, std::vector<int> > &_cgi) {
     struct kevent tmpEvnt;
     EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_PROC, EV_DELETE, 0, 0,
            curEvnts->udata);
@@ -224,12 +224,12 @@ std::vector<char> PhpResult(struct kevent *curEvnts,
     std::stringstream ss;
     std::string startLine;
     std::cout << "test1?" << std::endl;
-    startLine = generatephpStatusLine(_cli[_cgi[curEvnts->ident].first]);
+    startLine = generatephpStatusLine(_cli[_cgi[curEvnts->ident][0]]);
 
     char buf[1024];
     int read_size = 1;
     while (true) {
-        read_size = read(_cgi[curEvnts->ident].second, buf, 1024);
+        read_size = read(_cgi[curEvnts->ident][1], buf, 1024);
         if (read_size == 0) {
             //
             break;
@@ -273,12 +273,11 @@ std::vector<char> PhpResult(struct kevent *curEvnts,
 	//write(1,&(res[0]),res.size());
 	//std::cout << "======res=======" << std::endl;
 
-    close(_cgi[curEvnts->ident].second);
+    close(_cgi[curEvnts->ident][1]);
 
-    EV_SET(&tmpEvnt, _cgi[curEvnts->ident].first, EVFILT_WRITE, EV_ADD, 0, 0,
+    EV_SET(&tmpEvnt, _cgi[curEvnts->ident][0], EVFILT_WRITE, EV_ADD, 0, 0,
            curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
-    _cgi.erase(curEvnts->ident);
     return (res);
 }
 
@@ -302,7 +301,7 @@ bool IsPhp(Request *reque) {
 
 std::map<std::string, std::string>
 PhpEnvSet(struct kevent *curEvnts, std::map<int, Request *> &_cli,
-          std::map<int, std::pair<int, int> > &_cgi) {
+          std::map<int, std::vector<int> > &_cgi) {
     (void)_cgi;
     std::map<std::string, std::string> _envMap;
     int sock = curEvnts->ident;
