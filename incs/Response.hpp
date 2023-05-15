@@ -7,6 +7,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define	CLIENT_SOCKET 0
+#define	CHILD_OUT 1
+
 class Request;
 
 class LocationBlock;
@@ -19,11 +22,13 @@ private:
 	Request	*_request;
 	static ServerFiles _serverFiles;
 	std::string	_contentType;
+	bool				_isDone;
+	static std::map<int, std::vector<int> > _cgi;
 
 	LocationBlock	&getLocationBlock();
 public:
 	Response(Request	*request);
-	Response(Request	*request, std::vector<struct kevent>& ChangeList);
+	Response(Request *request, struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList);
 	Response(Response &response); //
 	~Response();
 
@@ -45,6 +50,8 @@ public:
     bool 	isCGI();
 	bool	isDirectory(const char *directory);
 
+	bool	isDone();
+
 	void	getMethod();
 	void	postMethod();
 	void	deleteMethod();
@@ -57,20 +64,13 @@ public:
 	void	generateDefaultErrorPage();
 
 	std::string	fetchFilePath();
-	// auto index 처리 함수
-	// serverBlock 참고해서 특정 파일이 있는지 확인
-	// 특정 파일 읽어와 body에 실어주기
-	// cgi 처리
-	// http 통신 규약에 맞춘 status line, header, body 처리해서 ss에 넣어주기
 
-	// public:
-    // Client(Server* server) : _server(server) { }
-    // // Client 클래스의 다른 멤버 함수들
-
-	// 1. responseMsg에다가 다 담기
-	// 2. 생성자에서 404 등 에러 나오는 거 처리해주기
+	// php 처리
+	void	generatePhpHeader(std::string	phpResponse);
+	void	generatePhpBody(std::string	phpResponse);
+	std::map<std::string, std::string> PhpEnvSet();
+	bool	verifyFile(const char *filename);
+	void	forkPhp(struct kevent *curEvents, std::vector<struct kevent> &_changeList);
 };
 
 #endif
-
-// 1. 에러 페이지 만드는 거 함수 따로 만들기

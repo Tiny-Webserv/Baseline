@@ -1,6 +1,7 @@
 a.out
 webserv
-objs/*.obj
+objs/*
+objs
 .DS_Store
 .vscode/*
 output.txt

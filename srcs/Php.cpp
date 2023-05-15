@@ -8,7 +8,7 @@
 void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
               std::map<int, Request *> &_cli,
               std::map<int, std::vector<int> > &_cgi) {
-    (void)curEvnts;
+    //(void)curEvnts;
     int parentWrite[2];
     int childWrite[2];
     // char buf[1024];
@@ -105,7 +105,7 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
         dup2(childWrite[1], 1);
         close(childWrite[1]);
         // chdir("/Users/jang-insu/webservTest/html"); ////
-        char *arg[] = {"/goinfre/hyna/webserv/html/php-cgi", "./html/post/index.php",
+        char *arg[] = {"./html/php-cgi", "./html/post/index.php",
                        NULL};
 
         // std::cout << "=======in child!!!!!======" << std::endl;
@@ -136,7 +136,7 @@ void PhpStart(struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList,
     //     X-Powered-By: PHP/8.2.3
     // Content-type: text/html; charset=UTF-8
     // Name: test<br>Age: 123<br>
-	if (method != "GET") {
+	if (method != "GET") { //ㅇㅣ제 get부분 상관없이 delete해야함.
 		delete body;
 	}
 }
@@ -303,71 +303,72 @@ bool IsPhp(Request *reque) {
     return false;
 }
 
-std::map<std::string, std::string>
-PhpEnvSet(struct kevent *curEvnts, std::map<int, Request *> &_cli,
-          std::map<int, std::vector<int> > &_cgi) {
-    (void)_cgi;
-    std::map<std::string, std::string> _envMap;
-    int sock = curEvnts->ident;
-    std::cout << "===================" << sock << std::endl;
-    std::string _method = _cli[sock]->GetMethod();
-    std::string content_length = "CONTENT_LENGTH=";
-    // std::string content_type = "CONTENT_TYPE=";
-    std::string script_filename = "SCRIPT_FILENAME=";
-    std::string redirect_status = "REDIRECT_STATUS=";
-    std::string script_name = "SCRIPT_NAME=";
-    std::string request_uri = "REQUEST_URI=";
-    std::string document_root = "DOCUMENT_ROOT=";
-    std::string request_method = "REQUEST_METHOD=";
+//std::map<std::string, std::string>
+//PhpEnvSet(struct kevent *curEvnts, std::map<int, Request *> &_cli,
+//          std::map<int, std::vector<int> > &_cgi) {
+//    (void)_cgi;
+//    std::map<std::string, std::string> _envMap;
+//    int sock = curEvnts->ident;
+//    std::cout << "===================" << sock << std::endl;
+//    std::string _method = _cli[sock]->GetMethod();
+//    std::string content_length = "CONTENT_LENGTH=";
+//    // std::string content_type = "CONTENT_TYPE=";
+//    std::string script_filename = "SCRIPT_FILENAME=";
+//    std::string redirect_status = "REDIRECT_STATUS=";
+//    std::string script_name = "SCRIPT_NAME=";
+//    std::string request_uri = "REQUEST_URI=";
+//    std::string document_root = "DOCUMENT_ROOT=";
+//    std::string request_method = "REQUEST_METHOD=";
 
-    std::ostringstream os;
-    os << _cli[sock]->getBinary().size();
-    content_length += os.str();
-    // content_type += _cli[sock]->GetContentType();
-    request_method += _method;
+//    std::ostringstream os;
+//    os << _cli[sock]->getBinary().size();
+//    content_length += os.str();
+//    // content_type += _cli[sock]->GetContentType();
+//    request_method += _method;
 
-    //////////////////////////////////////////////////////////////////
-    std::string _target =
-        _cli[sock]->GetTarget(); // filename임 post요청의 target이니
-                                 // index.php가 되겠다.
-    std::vector<LocationBlock> location_vector;
-    std::vector<LocationBlock>::iterator it;
-    location_vector = _cli[sock]->GetServer().GetLocation();
-    it = location_vector.begin();
-    for (; it != location_vector.end(); it++) {
-        if (it->GetLocationTarget() == _target)
-            break;
-    }
-    if (it == location_vector.end()) {
-        std::cout << "empty location bolock mirror" << std::endl;
-    }
-    script_filename += (it->GetRoot()); //./html/post
-    script_name += (it->GetRoot());
-    script_filename += _target; // index.php
-    script_name += _target;     // index.php
-    request_uri += _target;
-    //////////////////////////////////////////////////////////////////
-    std::string _root = document_root + it->GetRoot();
-    std::cout << "doc root" << std::endl;
-    std::cout << _root << std::endl;
-    std::cout << "doc root" << std::endl;
+//    //////////////////////////////////////////////////////////////////
+//    std::string _target =
+//        _cli[sock]->GetTarget(); // filename임 post요청의 target이니
+//                                 // index.php가 되겠다.
+//    std::vector<LocationBlock> location_vector;
+//    std::vector<LocationBlock>::iterator it;
+//    location_vector = _cli[sock]->GetServer().GetLocation();
+//    it = location_vector.begin();
+//    for (; it != location_vector.end(); it++) {
+//        if (it->GetLocationTarget() == _target)
+//            break;
+//    }
+//    if (it == location_vector.end()) {
+//        std::cout << "empty location bolock mirror" << std::endl;
+//    }
+//    script_filename += (it->GetRoot()); //./html/post
+//    script_name += (it->GetRoot());
+//    script_filename += _target; // index.php
+//    script_name += _target;     // index.php
+//    request_uri += _target;
+//    //////////////////////////////////////////////////////////////////
+//    std::string _root = document_root + it->GetRoot();
+//    std::cout << "doc root" << std::endl;
+//    std::cout << _root << std::endl;
+//    std::cout << "doc root" << std::endl;
 
-    std::ostringstream os2;
-    os2 << _cli[sock]->GetErrorCode();
-    redirect_status += os2.str();
-    _envMap["CONTENT_LENGTH"] = content_length;
-    // _envMap["CONTENT_TYPE"] = (char *)content_type.c_str();
-    _envMap["SCRIPT_FILENAME"] = script_filename; // locationblock으ㅣ 루루트트
+//    std::ostringstream os2;
+//    os2 << _cli[sock]->GetErrorCode();
+//    redirect_status += os2.str();
+//    _envMap["CONTENT_LENGTH"] = content_length;
+//    // _envMap["CONTENT_TYPE"] = (char *)content_type.c_str();
+//    _envMap["SCRIPT_FILENAME"] = script_filename; // locationblock으ㅣ 루루트트
 
-    _envMap["REDIRECT_STATUS"] = redirect_status;
-    _envMap["SCRIPT_NAME"] = script_name;
-    _envMap["REQUEST_URI"] = request_uri;
-    _envMap["DOCUMENT_ROOT"] = _root;
-    std::cout << "============Key============" << std::endl;
-    std::cout << _envMap["DOCUMENT_ROOT"] << std::endl;
-    std::cout << "============Key============" << std::endl;
-    _envMap["REQUEST_METHOD"] = request_method;
-    return (_envMap);
+//    _envMap["REDIRECT_STATUS"] = redirect_status;
+//    _envMap["SCRIPT_NAME"] = script_name;
+//    _envMap["REQUEST_URI"] = request_uri;
+//    _envMap["DOCUMENT_ROOT"] = _root;
+//    std::cout << "============Key============" << std::endl;
+//    std::cout << _envMap["DOCUMENT_ROOT"] << std::endl;
+//    std::cout << "============Key============" << std::endl;
+//    _envMap["REQUEST_METHOD"] = request_method;
+//    return (_envMap);
+//}
     // std::map<std::string, char *>::iterator iti, its;
     // iti = _envMap.begin();
     // its = _envMap.end();;
@@ -393,4 +394,3 @@ PhpEnvSet(struct kevent *curEvnts, std::map<int, Request *> &_cli,
     // };
     /////////
     ////////
-}

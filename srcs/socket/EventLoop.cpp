@@ -66,8 +66,9 @@ void EventLoop::EventHandler() {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
 				if (_cgi[curEvnts->ident].size()) {
-					int tmp = _cgi[curEvnts->ident][0];
-					_cgiResponse[tmp] =
+					int sock_fd = _cgi[curEvnts->ident][0];
+                    // _response2[sock_fd]->getMethod();
+					_cgiResponse[sock_fd] =
 						PhpResult(curEvnts, _ChangeList, _cli, _cgi);
 				}
             } else {
@@ -185,7 +186,8 @@ void EventLoop::EraseMemberMap(int key) {
     this->_response2.erase(key);
     this->_offset.erase(key);
     this->_cgiResponse.erase(key);
-
+    //_cgi[pid] = std::vector<int>[0], key, child_pipe
+    // _zz[key] = pid;
 }
 
 EventLoop::EventLoop() {}
