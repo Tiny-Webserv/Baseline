@@ -140,6 +140,7 @@ std::string Response::fetchFilePath() {
 	}
 	return target;
 }
+
 void	Response::generatePhpResponse(struct kevent	*curEvnts, std::vector<struct kevent> &_ChangeList) {
 	struct kevent tmpEvnt;
 
@@ -170,6 +171,11 @@ void	Response::generatePhpResponse(struct kevent	*curEvnts, std::vector<struct k
 	generatePhpBody(phpResponse);
 	generatePhpHeader(phpResponse);
 	joinResponseMessage();
+	//struct kevent tmpEvnt;
+	EV_SET(&tmpEvnt, _cgi[curEvnts->ident][CLIENT_SOCKET], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
+		0, curEvnts->udata);
+	_ChangeList.push_back(tmpEvnt);
+	_isDone = true;
 }
 
 void	Response::generatePhpBody(std::string	&phpResponse) {
