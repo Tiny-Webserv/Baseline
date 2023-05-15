@@ -244,11 +244,8 @@ void Response::generateErrorBody() {
 }
 
 void Response::joinResponseMessage() {
-	_responseMessage.insert(_responseMessage.end(),
-							_statusHeaderMessage.begin(),
-							_statusHeaderMessage.end());
-	_responseMessage.insert(_responseMessage.end(), _bodyMessage.begin(),
-							_bodyMessage.end());
+	std::copy(_statusHeaderMessage.begin(), _statusHeaderMessage.end(), std::back_inserter(_responseMessage));
+	std::copy(_bodyMessage.begin(), _bodyMessage.end(), std::back_inserter(_responseMessage));
 	std::string crlf(CRLF);
 	std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
 	std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
