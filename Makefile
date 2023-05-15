@@ -12,7 +12,7 @@ SRCS_DIRS =  utils http server socket
 
 DIRS = $(addprefix $(OBJS_PATH)/, $(SRCS_DIRS))
 
-SRCS_NAME = webserv.cpp \
+SRCS_NAME = webserv.cpp Php.cpp \
 		server/Config.cpp server/LocationBlock.cpp server/ServerBlock.cpp \
 		socket/Socket.cpp socket/EventLoop.cpp \
 		http/ParseRequest.cpp http/Request.cpp http/Response.cpp \
