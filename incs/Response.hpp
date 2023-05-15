@@ -36,6 +36,7 @@ public:
 	std::vector<char> getResponseMessage();
     std::vector<char> getStatusHeaderMessage();
 	std::vector<char> getBodyMessage();
+	static std::map<int, std::vector<int> >	&getCGI();
 	// std::vector<char> getResponseMessage();
 
 	// setter
@@ -66,8 +67,9 @@ public:
 	std::string	fetchFilePath();
 
 	// php 처리
+	void	generatePhpResponse(struct kevent	*curEvnts, std::vector<struct kevent> &_ChangeList);
 	void	generatePhpHeader(std::string	phpResponse);
-	void	generatePhpBody(std::string	phpResponse);
+	void	generatePhpBody(std::string	&phpResponse);
 	std::map<std::string, std::string> PhpEnvSet();
 	bool	verifyFile(const char *filename);
 	void	forkPhp(struct kevent *curEvents, std::vector<struct kevent> &_changeList);

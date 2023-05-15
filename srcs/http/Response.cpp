@@ -140,6 +140,64 @@ std::string Response::fetchFilePath() {
 	}
 	return target;
 }
+void	Response::generatePhpResponse(struct kevent	*curEvnts, std::vector<struct kevent> &_ChangeList) {
+	struct kevent tmpEvnt;
+
+    EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_PROC, EV_DELETE, 0, 0,
+           curEvnts->udata);
+    _ChangeList.push_back(tmpEvnt);
+    // map
+    waitpid(curEvnts->ident, 0, WNOHANG);
+
+	std::stringstream	ss;
+	char buf[1024];
+    int read_size = 1;
+
+    while (true) {
+        read_size = read(_cgi[curEvnts->ident][CHILD_OUT], buf, 1024);
+        if (read_size == 0) {
+            //
+            break;
+        } else if (read_size == -1) {
+            //
+            break;
+        }
+        buf[read_size] = 0;
+        ss << buf;
+    }
+	std::string	phpResponse = ss.str();
+	generateStatusLine();
+	generatePhpBody(phpResponse);
+	generatePhpHeader(phpResponse);
+	joinResponseMessage();
+}
+
+void	Response::generatePhpBody(std::string	&phpResponse) {
+	size_t len = phpResponse.find("\r\n\r\n");
+
+    if (len == std::string::npos) {
+        std::cout << "npos result" << std::endl;
+        return;
+    }
+	std::string	tmp = phpResponse.substr(len + 4);
+	phpResponse.erase(phpResponse.begin() + len, phpResponse.end());
+	tmp += "\r\n\r\n";
+	std::copy(tmp.begin(), tmp.end(), std::back_inserter(_bodyMessage));
+}
+
+void Response::generatePhpHeader(std::string	phpResponse) {
+	std::stringstream ss;
+
+	ss << phpResponse << CRLF;
+	ss << "Server: Webserv" << CRLF;
+	if (_bodyMessage.size()) {
+		ss << "Content-Length: " << _bodyMessage.size() << CRLF;
+	}
+	ss << CRLF;
+	std::string line = ss.str();
+	std::copy(line.begin(), line.end(),
+			  std::back_inserter(_statusHeaderMessage));
+}
 
 LocationBlock &Response::getLocationBlock() {
 	ServerBlock Block;
@@ -568,6 +626,11 @@ void	Response::forkPhp(struct kevent *curEvents, std::vector<struct kevent> &_ch
         _cgi[pid].push_back(childWrite[0]);
 		delete body;
     }
+}
+
+
+std::map<int, std::vector<int> >	&Response::getCGI() {
+	return _cgi;
 }
 
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }

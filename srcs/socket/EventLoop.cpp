@@ -65,13 +65,14 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
-				if (_cgi[curEvnts->ident].size()) {
-					int sock_fd = _cgi[curEvnts->ident][0];
-                    // _response2[sock_fd]->getMethod();
-					_cgiResponse[sock_fd] =
-						PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+				// if (Response::getCGI()[curEvnts->ident].size())
+                // {
+				int sock_fd = Response::getCGI()[curEvnts->ident][0];
+                _response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList);
+					// _cgiResponse[sock_fd] =
+					// 	PhpResult(curEvnts, _ChangeList, _cli, _cgi);
 				}
-            } else {
+            else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
                 close(curEvnts->ident);
@@ -114,7 +115,15 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     }
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
-        PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        //PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        this->_response2[curEvnts->ident] = new Response(reque, curEvnts, _ChangeList);
+        if (this->_response2[curEvnts->ident]->isDone())
+        {
+            struct kevent tmpEvnt;
+            EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
+               0, curEvnts->udata);
+            _ChangeList.push_back(tmpEvnt);
+        }
         std::cout << "start end" << std::endl;
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
