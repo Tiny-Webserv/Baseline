@@ -3,11 +3,11 @@
 #include "EventLoop.hpp"
 
 EventLoop::EventLoop(Config &con) {
-    Socket sock(con);
-    this->_server = con._ServerBlockObject;
-    this->_kqFd = kqueue();
-    this->_ChangeList = sock.GetChangeList();
-    EventHandler();
+	Socket sock(con);
+	this->_server = con._ServerBlockObject;
+	this->_kqFd = kqueue();
+	this->_ChangeList = sock.GetChangeList();
+	EventHandler();
 }
 
 void EventLoop::EventHandler() {
@@ -31,6 +31,13 @@ void EventLoop::EventHandler() {
                         ServerBlock *sptr =
                             static_cast<ServerBlock *>(curEvnts->udata);
                         clnt_fd = accept(curEvnts->ident, 0, 0);
+                        struct linger linger_opt;
+                        linger_opt.l_onoff = 1;
+                        linger_opt.l_linger = 0; // TIME_WAIT 상태를 0초로 설정
+                        if (setsockopt(clnt_fd, SOL_SOCKET, SO_LINGER,
+                                 &linger_opt, sizeof(linger_opt)) < 0) {
+                          std::cout << "setsockopt error" << std::endl;
+                        }
                         std::cout << sptr->GetPort() << "에 새 클라이언트("
                                   << clnt_fd << ") 연결" << std::endl;
                         fcntl(clnt_fd, F_SETFL, O_NONBLOCK);
@@ -178,6 +185,7 @@ void EventLoop::EraseMemberMap(int key) {
     this->_response2.erase(key);
     this->_offset.erase(key);
     this->_cgiResponse.erase(key);
+
 }
 
 EventLoop::EventLoop() {}
