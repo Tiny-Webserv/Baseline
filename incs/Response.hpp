@@ -19,7 +19,8 @@ private:
 	Request	*_request;
 	static ServerFiles _serverFiles;
 	std::string	_contentType;
-
+	bool _isRedirection;
+	std::string _redirectLocation;
 	LocationBlock	&getLocationBlock();
 public:
 	Response(Request	*request);
@@ -44,6 +45,7 @@ public:
 	bool	isAutoIndex();
     bool 	isCGI();
 	bool	isDirectory(const char *directory);
+	bool	isRedirect();
 
 	void	getMethod();
 	void	postMethod();
