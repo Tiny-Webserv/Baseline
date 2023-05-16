@@ -23,6 +23,7 @@ private:
 	static ServerFiles _serverFiles;
 	std::string	_contentType;
 	bool				_isDone;
+	bool				_hasChildProc;
 	static std::map<int, std::vector<int> > _cgi;
 
 	LocationBlock	&getLocationBlock();
@@ -52,6 +53,7 @@ public:
 	bool	isDirectory(const char *directory);
 
 	bool	isDone();
+	bool	hasChildProc();
 
 	void	getMethod();
 	void	postMethod();

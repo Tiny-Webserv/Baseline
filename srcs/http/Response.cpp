@@ -10,7 +10,7 @@
 #include <sys/event.h>
 #include <signal.h>
 
-Response::Response(Request *request) : _request(request), _isDone(false) {
+Response::Response(Request *request) : _request(request), _isDone(false), _hasChildProc(false) {
 	try {
 		if (_request->GetContentType() == "multipart/form-data") {
 			std::string path = getLocationBlock().GetRoot() +
@@ -66,7 +66,7 @@ Response::Response(Request *request) : _request(request), _isDone(false) {
 // - 이벤트 등록하는 함수(정확히는 changeList벡터에 push_back) <- 부모
 // - 이벤트 처리 후 부를 함수 작성 (이거 하나 부르면 리스폰스 메세지 다 만들어지게)
 
-Response::Response(Request *request, struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList) : _request(request), _isDone(false) {
+Response::Response(Request *request, struct kevent *curEvnts, std::vector<struct kevent> &_ChangeList) : _request(request), _isDone(false), _hasChildProc(false) {
 	try {
 		if (request->GetErrorCode() / 100 != 2) {
 			generateErrorBody();
@@ -251,6 +251,30 @@ bool Response::isAllowed(std::string method) {
 		return false;
 	else
 		return true;
+}
+
+bool Response::isRedirect(){
+
+	_isRedirection = false;
+
+	//tmp는 return 의 경로 ex) return 302 /return_dir2;
+	std::string tmp = getLocationBlock().GetReturn().second;
+	tmp.insert(0, "http://");
+	// prefix로 헤더 필드 Location: htt:///return_dir2로 url 만들어줌
+	std::string prefix = "Location: ";
+	std::vector<char> redirectLocation(prefix.begin(), prefix.end());
+
+	redirectLocation.insert(redirectLocation.end(), tmp.begin(), tmp.end());
+	 std::string str(redirectLocation.begin(), redirectLocation.end());
+	_redirectLocation = str;
+
+	if(getLocationBlock().GetReturn().first == 302)
+	{
+		_request->SetErrorCode(302);
+		_request->SetErrorMessages("Moved Temporarily");
+		_isRedirection = true;
+	};
+	return _isRedirection;
 }
 
 void Response::generateAutoindex(const std::string &directory) {
@@ -631,9 +655,11 @@ void	Response::forkPhp(struct kevent *curEvents, std::vector<struct kevent> &_ch
         _cgi[pid].push_back(curEvents->ident);
         _cgi[pid].push_back(childWrite[0]);
 		delete body;
+		_hasChildProc = true;
     }
 }
 
+bool	Response::hasChildProc() { return _hasChildProc; }
 
 std::map<int, std::vector<int> >	&Response::getCGI() {
 	return _cgi;
