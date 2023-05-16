@@ -70,12 +70,23 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
+/* feature/phpResponse
+				// if (Response::getCGI()[curEvnts->ident].size())
+                // {
+				int sock_fd = Response::getCGI()[curEvnts->ident][0];
+                _response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList);
+					// _cgiResponse[sock_fd] =
+					// 	PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+				}
+            else {
+//
                 if (_cgi[curEvnts->ident].size()) {
                     int tmp = _cgi[curEvnts->ident][0];
                     _cgiResponse[tmp] =
                         PhpResult(curEvnts, _ChangeList, _cli, _cgi);
                 }
             } else {
+develop*/
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
                 close(curEvnts->ident);
@@ -118,7 +129,15 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     }
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
-        PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        //PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        this->_response2[curEvnts->ident] = new Response(reque, curEvnts, _ChangeList);
+        if (this->_response2[curEvnts->ident]->isDone())
+        {
+            struct kevent tmpEvnt;
+            EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
+               0, curEvnts->udata);
+            _ChangeList.push_back(tmpEvnt);
+        }
         std::cout << "start end" << std::endl;
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
@@ -189,6 +208,11 @@ void EventLoop::EraseMemberMap(int key) {
     this->_response2.erase(key);
     this->_offset.erase(key);
     this->_cgiResponse.erase(key);
+/* feature/phpResponse
+    //_cgi[pid] = std::vector<int>[0], key, child_pipe
+    // _zz[key] = pid;
+
+ develop*/
 }
 
 EventLoop::EventLoop() {}

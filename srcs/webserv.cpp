@@ -11,15 +11,17 @@ void sigint_handler(int signum) {
     std::cout << "\nReceived SIGINT signal, closing all socket and exiting..."
               << std::endl;
     int i = 3;
-    while (i != 20)
+    while (i != 2000) {
+        close(i);
         i++;
+    }
     exit(signum);
 }
 // void leaks() { system("leaks webserv"); }
 int main(int ac, char **av) {
     // atexit(leaks);
 
-    signal(SIGINT, sigint_handler);
+    signal(SIGKILL, sigint_handler);
     if (ac != 2) {
         std::cout << "Usage ./webserv [Configuration]" << std::endl;
         exit(1);
