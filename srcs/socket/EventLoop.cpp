@@ -68,36 +68,24 @@ void EventLoop::EventHandler() {
                 } else
                     SendResponse(curEvnts);
             } else if (curEvnts->filter == EVFILT_PROC) {
-                // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
-                //           << std::endl;
-/* feature/phpResponse
-				// if (Response::getCGI()[curEvnts->ident].size())
-                // {
-				int sock_fd = Response::getCGI()[curEvnts->ident][0];
-                _response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList);
-					// _cgiResponse[sock_fd] =
-					// 	PhpResult(curEvnts, _ChangeList, _cli, _cgi);
-				}
-            else {
-//
-                if (_cgi[curEvnts->ident].size()) {
-                    int tmp = _cgi[curEvnts->ident][0];
-                    _cgiResponse[tmp] =
-                        PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
+                          << std::endl;
+                if (Response::getCGI()[curEvnts->ident].size()) {
+                    int sock_fd = Response::getCGI()[curEvnts->ident][0];
+                    _response2[sock_fd]->generatePhpResponse(curEvnts,
+                                                             _ChangeList);
+                } else {
+                    std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
+                              << curEvnts->filter << ") 발생" << std::endl;
+                    close(curEvnts->ident);
+                    EraseMemberMap(curEvnts->ident);
                 }
-            } else {
-develop*/
-                std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
-                          << curEvnts->filter << ") 발생" << std::endl;
-                close(curEvnts->ident);
-                EraseMemberMap(curEvnts->ident);
             }
         }
     }
 }
 
 void EventLoop::HandleRequest(struct kevent *curEvnts) {
-    // ServerBlock *serverBlock = static_cast<ServerBlock *>(curEvnts->udata);
     Request *reque = ParseRequest(curEvnts->ident, this->_cli, _server);
     if (reque == NULL) {
         std::cout << curEvnts->ident << "로 부터 fin 요청!" << std::endl;
@@ -124,28 +112,29 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     if (_cli.find(curEvnts->ident) == _cli.end()) {
         std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
         close(curEvnts->ident);
-		EraseMemberMap(curEvnts->ident);
+        EraseMemberMap(curEvnts->ident);
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
-        //PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
-        this->_response2[curEvnts->ident] = new Response(reque, curEvnts, _ChangeList);
-        if (this->_response2[curEvnts->ident]->isDone())
-        {
+        // PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        this->_response2[curEvnts->ident] =
+            new Response(reque, curEvnts, _ChangeList);
+        if (this->_response2[curEvnts->ident]->isDone()) {
             struct kevent tmpEvnt;
-            EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
-               0, curEvnts->udata);
+            EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE,
+                   0, 0, curEvnts->udata);
             _ChangeList.push_back(tmpEvnt);
         }
         std::cout << "start end" << std::endl;
-        // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
+        // this->_response2[curEvnts->ident] = new Response(reque,
+        // _ChangeList);
     } else {
-		// system("leaks webserv");
-		if (_response2.find(curEvnts->ident) != _response2.end())
-			delete(_response2[curEvnts->ident]);
+        // system("leaks webserv");
+        if (_response2.find(curEvnts->ident) != _response2.end())
+            delete (_response2[curEvnts->ident]);
         this->_response2[curEvnts->ident] = new Response(reque);
-		// system("leaks webserv");
+        // system("leaks webserv");
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
                0, curEvnts->udata);
@@ -208,11 +197,11 @@ void EventLoop::EraseMemberMap(int key) {
     this->_response2.erase(key);
     this->_offset.erase(key);
     this->_cgiResponse.erase(key);
-/* feature/phpResponse
-    //_cgi[pid] = std::vector<int>[0], key, child_pipe
-    // _zz[key] = pid;
+    /* feature/phpResponse
+        //_cgi[pid] = std::vector<int>[0], key, child_pipe
+        // _zz[key] = pid;
 
- develop*/
+     develop*/
 }
 
 EventLoop::EventLoop() {}
