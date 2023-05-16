@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
+#include "Response.hpp"
 ServerFiles::ServerFiles() {}
 
 ServerFiles::~ServerFiles() {}
@@ -38,13 +38,14 @@ std::vector<char> ServerFiles::readTextFile(std::string filename) {
 std::vector<char> ServerFiles::readBinaryFile(std::string filename) {
 	std::ifstream tmp;
 	std::stringstream ss;
-
 	tmp.open(filename, std::ios::binary);
 	if (tmp.fail()) {
 		if (errno == EACCES)
 			throw PermissionDenied();
 		else if (errno == ENOENT)
+		{
 			throw NotExist();
+		}
 	}
 	tmp.seekg(0, std::ios::end);
 	std::streampos tmpSize = tmp.tellg();
@@ -58,15 +59,25 @@ std::vector<char> ServerFiles::readBinaryFile(std::string filename) {
 
 std::vector<char> &ServerFiles::getFile(std::string filename) {
 	std::map<std::string, std::vector<char> >::iterator iter = _file.find(filename);
-
+	std::cout << "111111111" << std::endl;
 	if (iter != _file.end())
 		return iter->second;
 	if (!filename.substr(static_cast<int>(filename.size()) - 4 >= -1 ? filename.size() - 4 : -1).compare(".png"))
+	{
+	std::cout << "222222222" << std::endl;
+		
 		_file.insert(std::pair<std::string, std::vector<char> >(
 			filename, readBinaryFile(filename)));
+
+	}
 	else
+	{
+	std::cout << "22333333322" << std::endl;
+
 		_file.insert(std::pair<std::string, std::vector<char> >(
 			filename, readTextFile(filename)));
+
+	}
 	iter = _file.find(filename);
 	return iter->second;
 }

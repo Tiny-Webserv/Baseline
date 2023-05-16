@@ -136,7 +136,9 @@ std::string Response::fetchFilePath() {
 			else
 				return target;
 		}
-		throw NotExist();
+		// redirect인지 아닌지에 따라서 throw
+		if (isRedirect() == false)
+			throw NotExist();
 	}
 	return target;
 }
@@ -333,10 +335,13 @@ void Response::generateHeader() {
 		}
 		ss << CRLF;
 	}
+	ss << _redirectLocation << CRLF;
 	ss << CRLF;
 	std::string line = ss.str();
 	std::copy(line.begin(), line.end(),
 			  std::back_inserter(_statusHeaderMessage));
+
+	std::string str(_statusHeaderMessage.begin(), _statusHeaderMessage.end());
 }
 
 void Response::generateDefaultErrorPage() {
@@ -389,6 +394,7 @@ void Response::joinResponseMessage() {
 	std::copy(crlf.begin(), crlf.end(), std::back_inserter(_responseMessage));
 }
 
+
 bool Response::isDirectory(const char *directory) {
 	struct stat buffer;
 
@@ -424,8 +430,13 @@ void Response::getMethod() {
 		generateAutoindex(fileToRead);
 		return;
 	}
+
 	// 파일 가져오는 부분
-	_bodyMessage = _serverFiles.getFile(fileToRead);
+
+	if (isRedirect())
+		_bodyMessage.empty();
+	else
+		_bodyMessage = _serverFiles.getFile(fileToRead);
 	// Content-Type 설정하는 부분
 	// 확장자가 .로 끝날경우 text/plain
 	if (fileToRead.find(".") == std::string::npos ||

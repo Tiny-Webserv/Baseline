@@ -25,7 +25,8 @@ private:
 	bool				_isDone;
 	bool				_hasChildProc;
 	static std::map<int, std::vector<int> > _cgi;
-
+	bool _isRedirection;
+	std::string _redirectLocation;
 	LocationBlock	&getLocationBlock();
 public:
 	Response(Request	*request);
@@ -51,6 +52,7 @@ public:
 	bool	isAutoIndex();
     bool 	isCGI();
 	bool	isDirectory(const char *directory);
+	bool	isRedirect();
 
 	bool	isDone();
 	bool	hasChildProc();
