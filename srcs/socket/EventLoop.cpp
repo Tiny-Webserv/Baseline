@@ -67,11 +67,6 @@ void EventLoop::EventHandler() {
                     EraseMemberMap(curEvnts->ident);
                 } else
                     SendResponse(curEvnts);
-
-                // if (this->_response2.find(curEvnts->ident) ==
-                //     this->_response2.end())
-                //     MakeResponse(curEvnts);
-                // else
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
@@ -103,7 +98,7 @@ void EventLoop::HandleRequest(struct kevent *curEvnts) {
 }
 
 void EventLoop::MakeResponse(struct kevent *curEvnts) {
-    int error = 0;
+    int error;
     socklen_t error_len = sizeof(error);
     int ret =
         getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error, &error_len);
@@ -118,6 +113,7 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     if (_cli.find(curEvnts->ident) == _cli.end()) {
         std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
         close(curEvnts->ident);
+		EraseMemberMap(curEvnts->ident);
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
@@ -126,8 +122,11 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         std::cout << "start end" << std::endl;
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
+		// system("leaks webserv");
+		if (_response2.find(curEvnts->ident) != _response2.end())
+			delete(_response2[curEvnts->ident]);
         this->_response2[curEvnts->ident] = new Response(reque);
-        std::string response_str;
+		// system("leaks webserv");
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
                0, curEvnts->udata);
