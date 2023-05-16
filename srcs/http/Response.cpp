@@ -58,7 +58,6 @@ Response::Response(Request *request) : _request(request) {
 	generateStatusLine();
 	generateHeader();
 	joinResponseMessage();
-	write(1, &_responseMessage[0], _responseMessage.size());
 }
 
 Response::~Response() {}

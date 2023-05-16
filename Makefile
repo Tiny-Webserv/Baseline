@@ -2,7 +2,7 @@ NAME = webserv
 CC = c++
 
 #리터럴 string 무시 플래그 추가
-CCFLAGS =  -std=c++98 -g3 -fsanitize=address -fsanitize=undefined -Wno-write-strings -Wall -Werror -Wextra
+CCFLAGS =  -std=c++98 -Wno-write-strings -Wall -Werror -Wextra
 
 INC_LINK = -I./incs
 
