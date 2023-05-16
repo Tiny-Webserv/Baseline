@@ -3,11 +3,11 @@
 #include "EventLoop.hpp"
 
 EventLoop::EventLoop(Config &con) {
-	Socket sock(con);
-	this->_server = con._ServerBlockObject;
-	this->_kqFd = kqueue();
-	this->_ChangeList = sock.GetChangeList();
-	EventHandler();
+    Socket sock(con);
+    this->_server = con._ServerBlockObject;
+    this->_kqFd = kqueue();
+    this->_ChangeList = sock.GetChangeList();
+    EventHandler();
 }
 
 void EventLoop::EventHandler() {
@@ -35,8 +35,13 @@ void EventLoop::EventHandler() {
                         linger_opt.l_onoff = 1;
                         linger_opt.l_linger = 0; // TIME_WAIT 상태를 0초로 설정
                         if (setsockopt(clnt_fd, SOL_SOCKET, SO_LINGER,
-                                 &linger_opt, sizeof(linger_opt)) < 0) {
-                          std::cout << "setsockopt error" << std::endl;
+                                       &linger_opt, sizeof(linger_opt)) < 0) {
+                            std::cout << "setsockopt error" << std::endl;
+                        }
+                        int sigpipe_opt = 1;
+                        if (setsockopt(clnt_fd, SOL_SOCKET, SO_NOSIGPIPE,
+                                       &sigpipe_opt, sizeof(sigpipe_opt)) < 0) {
+                            std::cout << "setsockopt error" << std::endl;
                         }
                         std::cout << sptr->GetPort() << "에 새 클라이언트("
                                   << clnt_fd << ") 연결" << std::endl;
@@ -55,16 +60,17 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_WRITE) {
                 std::cout << "클라이언트(" << curEvnts->ident
                           << ")에게 Write 이벤트 발생" << std::endl;
-
-                SendResponse(curEvnts);
-
-                // if (this->_response2.find(curEvnts->ident) ==
-                //     this->_response2.end())
-                //     MakeResponse(curEvnts);
-                // else
+                if (this->_response2.find(curEvnts->ident) ==
+                    this->_response2.end()) {
+                    std::cout << "send failed non exist response" << std::endl;
+                    close(curEvnts->ident);
+                    EraseMemberMap(curEvnts->ident);
+                } else
+                    SendResponse(curEvnts);
             } else if (curEvnts->filter == EVFILT_PROC) {
                 // std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
                 //           << std::endl;
+/* feature/phpResponse
 				// if (Response::getCGI()[curEvnts->ident].size())
                 // {
 				int sock_fd = Response::getCGI()[curEvnts->ident][0];
@@ -73,6 +79,14 @@ void EventLoop::EventHandler() {
 					// 	PhpResult(curEvnts, _ChangeList, _cli, _cgi);
 				}
             else {
+//
+                if (_cgi[curEvnts->ident].size()) {
+                    int tmp = _cgi[curEvnts->ident][0];
+                    _cgiResponse[tmp] =
+                        PhpResult(curEvnts, _ChangeList, _cli, _cgi);
+                }
+            } else {
+develop*/
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
                 close(curEvnts->ident);
@@ -95,22 +109,22 @@ void EventLoop::HandleRequest(struct kevent *curEvnts) {
 }
 
 void EventLoop::MakeResponse(struct kevent *curEvnts) {
-    // int error = 0;
-    // socklen_t error_len = sizeof(error);
-    // int ret =
-    //     getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error,
-    //     &error_len);
-    // if (ret == -1 || error != 0) {
-    //     // Socket is dead, close it and return
-    //     close(curEvnts->ident);
-    //     EraseMemberMap(curEvnts->ident);
-    //     std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" <<
-    //     std::endl; return;
-    // }
+    int error;
+    socklen_t error_len = sizeof(error);
+    int ret =
+        getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error, &error_len);
+    if (ret == -1 || error != 0) {
+        // Socket is dead, close it and return
+        close(curEvnts->ident);
+        EraseMemberMap(curEvnts->ident);
+        std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" << std::endl;
+        return;
+    }
     std::cout << curEvnts->ident << " 에게 보낼 응답 msg 생성 " << std::endl;
     if (_cli.find(curEvnts->ident) == _cli.end()) {
         std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
         close(curEvnts->ident);
+		EraseMemberMap(curEvnts->ident);
         return;
     }
     Request *reque = this->_cli[curEvnts->ident];
@@ -127,8 +141,11 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         std::cout << "start end" << std::endl;
         // this->_response2[curEvnts->ident] = new Response(reque, _ChangeList);
     } else {
+		// system("leaks webserv");
+		if (_response2.find(curEvnts->ident) != _response2.end())
+			delete(_response2[curEvnts->ident]);
         this->_response2[curEvnts->ident] = new Response(reque);
-        std::string response_str;
+		// system("leaks webserv");
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
                0, curEvnts->udata);
@@ -137,7 +154,7 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
 }
 
 void EventLoop::SendResponse(struct kevent *curEvnts) {
-    int error = 0;
+    int error;
     socklen_t error_len = sizeof(error);
     int ret =
         getsockopt(curEvnts->ident, SOL_SOCKET, SO_ERROR, &error, &error_len);
@@ -158,8 +175,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     std::vector<char> resMsg;
     if (IsPhp(_cli[curEvnts->ident])) {
         resMsg = _cgiResponse[curEvnts->ident];
-	}
-    else
+    } else
         resMsg = _response2[curEvnts->ident]->getResponseMessage();
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
                    resMsg.size() - _offset[curEvnts->ident], 0);
@@ -172,9 +188,6 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     if (res == -1) {
         std::cout << "Write fail" << '\n';
         EraseMemberMap(curEvnts->ident);
-        // delete (this->_cli[curEvnts->ident]);
-        // this->_cli.erase(curEvnts->ident);
-        // this->_response.erase(curEvnts->ident);
         close(curEvnts->ident);
         return;
     } else {
@@ -195,8 +208,11 @@ void EventLoop::EraseMemberMap(int key) {
     this->_response2.erase(key);
     this->_offset.erase(key);
     this->_cgiResponse.erase(key);
+/* feature/phpResponse
     //_cgi[pid] = std::vector<int>[0], key, child_pipe
     // _zz[key] = pid;
+
+ develop*/
 }
 
 EventLoop::EventLoop() {}
