@@ -68,18 +68,21 @@ void EventLoop::EventHandler() {
                 } else
                     SendResponse(curEvnts);
             } else if (curEvnts->filter == EVFILT_PROC) {
-                std::cout << _cgi[curEvnts->ident][0] << "cgi 호출 끝"
-                          << std::endl;
-                if (Response::getCGI()[curEvnts->ident].size()) {
-                    int sock_fd = Response::getCGI()[curEvnts->ident][0];
-                    _response2[sock_fd]->generatePhpResponse(curEvnts,
-                                                             _ChangeList);
-                } else {
-                    std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
-                              << curEvnts->filter << ") 발생" << std::endl;
-                    close(curEvnts->ident);
-                    EraseMemberMap(curEvnts->ident);
-                }
+                std::cout << Response::getCGI()[curEvnts->ident][0]
+                          << " cgi 호출 끝" << std::endl;
+                int sock_fd = Response::getCGI()[curEvnts->ident][0];
+                if (_response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList) == -1)
+					EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
+					Response::getCGI().erase(curEvnts->ident);
+                // if (Response::getCGI()[curEvnts->ident].size()) {
+                // _cgiResponse[sock_fd] =
+                // _response2[sock_fd]->getResponseMessage();
+                // }
+            } else {
+                std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
+                          << curEvnts->filter << ") 발생" << std::endl;
+                close(curEvnts->ident);
+                EraseMemberMap(curEvnts->ident);
             }
         }
     }
@@ -115,26 +118,27 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         EraseMemberMap(curEvnts->ident);
         return;
     }
+    if (_response2.find(curEvnts->ident) != _response2.end())
+        delete (_response2[curEvnts->ident]);
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
         // PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
+        std::cout << reque->GetTarget() << std::endl;
         this->_response2[curEvnts->ident] =
             new Response(reque, curEvnts, _ChangeList);
         if (this->_response2[curEvnts->ident]->isDone()) {
+            std::cout << "php failed" << std::endl;
             struct kevent tmpEvnt;
             EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE,
                    0, 0, curEvnts->udata);
             _ChangeList.push_back(tmpEvnt);
         }
         std::cout << "start end" << std::endl;
+
         // this->_response2[curEvnts->ident] = new Response(reque,
         // _ChangeList);
     } else {
-        // system("leaks webserv");
-        if (_response2.find(curEvnts->ident) != _response2.end())
-            delete (_response2[curEvnts->ident]);
         this->_response2[curEvnts->ident] = new Response(reque);
-        // system("leaks webserv");
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0,
                0, curEvnts->udata);
@@ -162,10 +166,11 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     //  std::string response_str = this->_response[curEvnts->ident];
     // int response_size = response_str.size();
     std::vector<char> resMsg;
-    if (IsPhp(_cli[curEvnts->ident])) {
-        resMsg = _cgiResponse[curEvnts->ident];
-    } else
-        resMsg = _response2[curEvnts->ident]->getResponseMessage();
+    // if (IsPhp(_cli[curEvnts->ident]) ||
+    // !_response2[curEvnts->ident]->isDone()) {
+    //     resMsg =  _response2[curEvnts->ident]->getResponseMessage();
+    // } else
+    resMsg = _response2[curEvnts->ident]->getResponseMessage();
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
                    resMsg.size() - _offset[curEvnts->ident], 0);
     if (res > 0) {
@@ -196,10 +201,11 @@ void EventLoop::EraseMemberMap(int key) {
     this->_cli.erase(key);
     this->_response2.erase(key);
     this->_offset.erase(key);
-    this->_cgiResponse.erase(key);
+    // this->_cgiResponse.erase(key);
     /* feature/phpResponse
-        //_cgi[pid] = std::vector<int>[0], key, child_pipe
-        // _zz[key] = pid;
+                                    //_cgi[pid] = std::vector<int>[0], key,
+     child_pipe
+                                    // _zz[key] = pid;
 
      develop*/
 }
