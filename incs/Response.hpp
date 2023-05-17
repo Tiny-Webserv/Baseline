@@ -71,7 +71,7 @@ public:
 	std::string	fetchFilePath();
 
 	// php 처리
-	void	generatePhpResponse(struct kevent	*curEvnts, std::vector<struct kevent> &_ChangeList);
+	int	generatePhpResponse(struct kevent	*curEvnts, std::vector<struct kevent> &_ChangeList);
 	void	generatePhpHeader(std::string	phpResponse);
 	void	generatePhpBody(std::string	&phpResponse);
 	std::map<std::string, std::string> PhpEnvSet();

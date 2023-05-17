@@ -158,7 +158,7 @@ std::string Response::fetchFilePath() {
 	return target;
 }
 
-void Response::generatePhpResponse(struct kevent *curEvnts,
+int Response::generatePhpResponse(struct kevent *curEvnts,
 								   std::vector<struct kevent> &_ChangeList) {
 	// map
 	waitpid(curEvnts->ident, 0, WNOHANG);
@@ -178,8 +178,9 @@ void Response::generatePhpResponse(struct kevent *curEvnts,
 			break;
 		} else if (read_size == -1) {
 			std::cout << "php 터짐 ㅠㅠ" << std::endl;
-			//이 경우 예외 처리 고려해봐야 함
-			break;
+			close(curEvnts->ident);
+			close(_cgi[curEvnts->ident][CHILD_OUT]);
+			return -1;
 		}
 		buf[read_size] = 0;
 		ss << buf;
@@ -195,6 +196,7 @@ void Response::generatePhpResponse(struct kevent *curEvnts,
 		   EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
 	_ChangeList.push_back(tmpEvnt);
 	_isDone = true;
+	return 0;
 }
 
 void Response::generatePhpBody(std::string &phpResponse) {

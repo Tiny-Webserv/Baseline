@@ -71,7 +71,9 @@ void EventLoop::EventHandler() {
                 std::cout << Response::getCGI()[curEvnts->ident][0]
                           << " cgi 호출 끝" << std::endl;
                 int sock_fd = Response::getCGI()[curEvnts->ident][0];
-                _response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList);
+                if (_response2[sock_fd]->generatePhpResponse(curEvnts, _ChangeList) == -1)
+					EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
+					Response::getCGI().erase(curEvnts->ident);
                 // if (Response::getCGI()[curEvnts->ident].size()) {
                 // _cgiResponse[sock_fd] =
                 // _response2[sock_fd]->getResponseMessage();
