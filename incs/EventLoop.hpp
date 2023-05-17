@@ -16,17 +16,11 @@ class EventLoop {
     int _kqFd;
     std::vector<struct kevent> _ChangeList;
 
-    std::map<int, Request *> _cli;
-    std::map<int, std::string> _request;
-    std::map<int, Response *> _response2;
+    std::map<int, Request *> _request;
+    std::map<int, Response *> _response;
     std::map<int, int> _offset;
-    std::map<std::string, std::string> _html;
-    // std::map<int, std::vector<char> > _cgiResponse;
-    // std::map<int, std::vector<int> > _cgi;
-    std::string _phpheader;
     std::vector<ServerBlock> _server;
     EventLoop();
-    void OpenHtmlFile(std::string filePath);
 
   public:
     EventLoop(Config &con);
