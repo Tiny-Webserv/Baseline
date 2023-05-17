@@ -100,6 +100,9 @@ Response::Response(Request *request, struct kevent *curEvnts,
 		_contentType = "text/html";
 		std::cout << "test2" << std::endl;
 		_isDone = true;
+		generateStatusLine();
+		generateHeader();
+		joinResponseMessage();
 	} catch (StateCode &e) {
 		_request->SetErrorCode(e._errorCode);
 		_request->SetErrorMessages(e.what());
@@ -111,6 +114,7 @@ Response::Response(Request *request, struct kevent *curEvnts,
 		std::cout << "test3" << std::endl;
 		_isDone = true;
 	}
+	
 	// 127.0.0.1/aaaaa.php
 }
 
@@ -163,15 +167,18 @@ void Response::generatePhpResponse(struct kevent *curEvnts,
 	char buf[1024];
 	int read_size = 1;
 	struct kevent tmpEvnt;
-	EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_PROC, EV_DELETE, 0, 0,
-		   curEvnts->udata);
-	_ChangeList.push_back(tmpEvnt);
+	close(curEvnts->ident); // 우선은 강제 종료 느낌으로 처리 이거 이벤트 왜 삭제 안되는지 알아보면 좋을 듯
+	// EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_PROC, EV_DELETE, 0, 0,
+	// 	   curEvnts->udata);
+	// _ChangeList.push_back(tmpEvnt);
 	while (true) {
 		read_size = read(_cgi[curEvnts->ident][CHILD_OUT], buf, 1024);
 		if (read_size == 0) {
-			//
+			std::cout << "php 다 읽음 ㅋㅋ" << std::endl;
 			break;
 		} else if (read_size == -1) {
+			std::cout << "php 터짐 ㅠㅠ" << std::endl;
+			//이 경우 예외 처리 고려해봐야 함
 			break;
 		}
 		buf[read_size] = 0;
