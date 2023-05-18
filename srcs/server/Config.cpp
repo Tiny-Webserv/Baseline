@@ -50,8 +50,7 @@ Config::Config(std::string filename) {
 				}
 			}
 			if (token == "}") {
-				if (curServerBlockObject.GetLocation().size() == 0)
-				{
+				if (curServerBlockObject.GetLocation().size() == 0) {
 					std::cout << "non 존재 LocationBlock err" << std::endl;
 					exit(1);
 				}
@@ -213,13 +212,58 @@ void Config::LocationRoot(LocationBlock &curLocationBlock,
 void Config::LocationLimitExcept(LocationBlock &curLocationBlock,
 								 std::stringstream &ss) {
 	std::string token;
+	int arr[3] = {0, };
+	int size = 0;
 	while (ss >> token) {
 		if (token == "{")
 			break;
-		curLocationBlock.AddLimitExcept(token);
+		if ((token == "GET" || token == "POST" || token == "DELETE") &&
+			size < 3) {
+			if (token == "GET") {
+				if (arr[0] == 1) {
+					std::cout << "limit_except err" << std::endl;
+					exit(1);
+				}
+				arr[0] = 1;
+			} else if (token == "POST") {
+				if (arr[1] == 1) {
+					std::cout << "limit_except err" << std::endl;
+					exit(1);
+				}
+				arr[1] = 1;
+			} else if (token == "DELETE") {
+				if (arr[2] == 1) {
+					std::cout << "limit_except err" << std::endl;
+					exit(1);
+				}
+				arr[2] = 1;
+			}
+			size++;
+			curLocationBlock.AddLimitExcept(token);
+		} else {
+			std::cout << "limit_except err" << std::endl;
+			exit(1);
+		}
 	}
-	while (token != "}")
-		ss >> token;
+	if (size == 0) {
+		std::cout << "limit_except err" << std::endl;
+		exit(1);
+	}
+	ss >> token;
+	if (token != "deny") {
+		std::cout << "limit_except err" << std::endl;
+		exit(1);
+	}
+	ss >> token;
+	if (token != "all;") {
+		std::cout << "limit_except err" << std::endl;
+		exit(1);
+	}
+	ss >> token;
+	if (token != "}") {
+		std::cout << "limit_except err" << std::endl;
+		exit(1);
+	}
 }
 void Config::LocationAutoIndex(LocationBlock &curLocationBlock,
 							   std::stringstream &ss) {
