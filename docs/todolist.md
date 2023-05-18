@@ -1,17 +1,21 @@
-// TODO 모든 파트에서
-- [ ] cgi 처리 고민
+## todo list
 
-// TODO config part
-- [ ] 변수명 컨벤션에 맞게 수정하기
+- [ ] payloadTooLarge 처리
+- [ ] `std::cout` 정리
+- [ ] *.conf 파일에 맞추어 디렉토리 파일 정리 / 반대로 *.conf 파일도 정리
 
-// TODO request part
-- [x] request header HOST NAME 받기
-  - 보류
-- [x] vector로 서버블록 받아서 필요한 서버블록 저장하기
-	- ParseRequest()에서 리퀘스트 객체 생성후 처기
-- [x] 리퀘스트에서 바이너리 파일도 받을 수 있도록 수정
+## test list
 
-// TODO response part
-- [x] GET 처리
-- [x] POST 처리
-- [x] DELETE 처리
+### 기본 기능 테스트
+- [ ] GET 요청
+- [ ] POST 요청
+- [ ] DELETE 요청
+
+### cgi 요청
+- [ ] GET 요청
+- [ ] POST 요청
+
+### 기본 체크 사항
+- [ ] 여러 페이지의 접속(끊김 없이 가능한지)
+- [ ] `kevent()` 몇 번 사용했는지?
+- [ ] `write()`나 `read()` 호출 이후 실패시 `errno` 확인하지는 않는 지
