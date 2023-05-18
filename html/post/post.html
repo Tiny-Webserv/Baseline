@@ -15,7 +15,6 @@
 		<input type="number" id="age" name="Age"><br>
 		<input type="submit" value="전송">
 	</form>
-</body>
 	<h1>올바른 GET 요청</h1>
 	<form method="GET" action="get.php">
 		<label for="name">이름:</label>
@@ -24,12 +23,33 @@
 		<input type="number" id="age" name="Age"><br>
 		<input type="submit" value="전송">
 	</form>
-	<h1>잘못된  요청</h1>
-	<form method="DELETE" action="get.php">
+	<h1>잚못된GET 요청</h1>
+	<form id="blogForm" action="/donggu/blog" method="DELETE">
+		<input type="hidden" name="_method" value="PUT">
 		<label for="name">이름:</label>
-		<input type="text" id="name" name="Name"><br>
+		<input type="text" id="name" name="name" required>
 		<label for="age">나이:</label>
-		<input type="number" id="age" name="Age"><br>
+		<input type="age" id="age" name="age" required>
 		<input type="submit" value="전송">
-	</form>
+</body>
+<script>
+	const form = document.getElementById('blogForm');
+	form.addEventListener('submit', function (event) {
+		event.preventDefault();
+
+		const formData = new FormData(this);
+
+		fetch(this.action, {
+			method: 'PUT',
+			body: formData
+		})
+			.then(response => {
+				// PUT 요청 완료 후의 처리
+			})
+			.catch(error => {
+				// 에러 처리
+			});
+	});
+</script>
+
 </html>
