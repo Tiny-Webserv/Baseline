@@ -10,7 +10,8 @@
 Request::Request() : _chunked(false) {}
 
 Request::Request(int fd, std::stringstream &stream)
-    : _contentLength(-1), _errorMessages("OK"), _errorCode(OK), _chunked(false), _hostPort(80), _isEnd(false) {
+    : _contentLength(-1), _errorMessages("OK"), _errorCode(OK), _chunked(false),
+      _hostPort(80), _isEnd(false), _connection(false) {
 
     try {
         std::string buff;
@@ -19,8 +20,8 @@ Request::Request(int fd, std::stringstream &stream)
         setHeader(stream.str());
         readBody(fd);
         splitHost();
-		if (_contentType == "multipart/form-data")
-			parseFormData();
+        if (_contentType == "multipart/form-data")
+            parseFormData();
 
     } catch (const StateCode &e) {
         SetErrorCode(_errorCode);
@@ -29,33 +30,35 @@ Request::Request(int fd, std::stringstream &stream)
 }
 
 // formData를 위한 생성자
-Request::Request(std::vector<char>	&formData, std::string	delimeter){
-	//boundary, header, body 모두 복사
-    std::string	headerStr(formData.begin(), formData.end());
-	std::string doubleCRLF = CRLF;
-	doubleCRLF.append(CRLF);
-	size_t crlfPos = headerStr.find("\r\n-");
-	size_t delimeterPos = headerStr.find(delimeter);
+Request::Request(std::vector<char> &formData, std::string delimeter) {
+    // boundary, header, body 모두 복사
+    std::string headerStr(formData.begin(), formData.end());
+    std::string doubleCRLF = CRLF;
+    doubleCRLF.append(CRLF);
+    size_t crlfPos = headerStr.find("\r\n-");
+    size_t delimeterPos = headerStr.find(delimeter);
 
-	if (delimeterPos == std::string::npos)
-		return ;
+    if (delimeterPos == std::string::npos)
+        return;
     setHeader(headerStr.substr(0, delimeterPos));
-	if (headerStr.find(doubleCRLF) == std::string::npos)
-		return ;
-	delimeterPos = headerStr.find(doubleCRLF) + doubleCRLF.size();
-	crlfPos -= delimeterPos;
-	formData.erase(formData.begin(), formData.begin() + headerStr.find(doubleCRLF) + doubleCRLF.size());
+    if (headerStr.find(doubleCRLF) == std::string::npos)
+        return;
+    delimeterPos = headerStr.find(doubleCRLF) + doubleCRLF.size();
+    crlfPos -= delimeterPos;
+    formData.erase(formData.begin(), formData.begin() +
+                                         headerStr.find(doubleCRLF) +
+                                         doubleCRLF.size());
     std::copy(formData.begin(), formData.begin() + crlfPos,
               std::back_inserter(_binary));
-	formData.erase(formData.begin(), formData.begin() + crlfPos);
-	if (formData.size() >= 2 && formData[0] == '\r' && formData[1] == '\n')
-		formData.erase(formData.begin(), formData.begin() + 2);
+    formData.erase(formData.begin(), formData.begin() + crlfPos);
+    if (formData.size() >= 2 && formData[0] == '\r' && formData[1] == '\n')
+        formData.erase(formData.begin(), formData.begin() + 2);
 }
 
 Request::~Request() {
-	if (_contentType == "multipart/form-data") {
-		for (size_t i = 0; i < _formData.size(); i++)
-			delete _formData[i];
+    if (_contentType == "multipart/form-data") {
+        for (size_t i = 0; i < _formData.size(); i++)
+            delete _formData[i];
     }
 }
 
@@ -101,17 +104,15 @@ bool Request::GetIsEnd() { return _isEnd; }
 
 void Request::SetIsEnd(bool isEnd) { _isEnd = isEnd; }
 
-void Request::setFileName(std::string fileName){ _fileName = fileName; }
+void Request::setFileName(std::string fileName) { _fileName = fileName; }
 
 std::string Request::getFileName() { return _fileName; }
 
-std::vector<Request *>	Request::getFormData() {
-	return _formData;
-}
+std::vector<Request *> Request::getFormData() { return _formData; }
 
-std::vector<char> Request::getBinary() {
-    return _binary;
-}
+std::vector<char> Request::getBinary() { return _binary; }
+
+bool	Request::getConnection() { return _connection; }
 
 Request &Request::operator=(const Request &request) {
     _method = request._method;
@@ -133,11 +134,20 @@ Request::Request(const Request &request)
 void Request::setStartLine(std::string startLine) {
     std::vector<std::string> data = Split(startLine, std::string(" "));
     if (!data[0].compare("GET") || !data[0].compare("POST") ||
-        !data[0].compare("DELETE"))
-        _method = data[0];
+        !data[0].compare("DELETE")) {
+            std::cout << "****method*******" << std::endl;
+            std::cout << "method : " << data[0] << std::endl;
+            std::cout << "****method*******" << std::endl;
+            _method = data[0];
+        }
     else
         throw MethodError();
-    _target = Split(data[1], std::string(":"))[0]; //[0]은 vector 0번째 인덱스 접근을 위함
+    _target = Split(
+        data[1], std::string(":"))[0]; //[0]은 vector 0번째 인덱스 접근을 위함
+    if (_target.find('?') != std::string::npos) {
+        _query = _target.substr(_target.find('?') + 1);
+        _target.erase(_target.find('?'));
+    }
     if (data[2].compare("HTTP/1.1\r"))
         throw HTTPVersionError();
 }
@@ -152,9 +162,9 @@ void Request::setHeader(std::string header) {
     iter = find(splited.begin(), splited.end(), "Content-Type:");
     if (iter != splited.end() && iter + 1 != splited.end()) {
         _contentType = *(iter + 1);
-		if (_contentType == "multipart/form-data")
-			_boundary = (*(iter + 2)).substr(9);
-	}
+        if (_contentType == "multipart/form-data")
+            _boundary = (*(iter + 2)).substr(9);
+    }
     iter = find(splited.begin(), splited.end(), "Host:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _hostName = *(iter + 1); // example.com:8080
@@ -165,16 +175,19 @@ void Request::setHeader(std::string header) {
     iter = find(splited.begin(), splited.end(), "Content-Length:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _contentLength = atoi((iter + 1)->c_str());
-	iter = find(splited.begin(), splited.end(), "Content-Disposition:");
-	if (iter != splited.end()) {
-		for (int i = 0; iter + i < splited.end(); i++) {
-			if ((iter + i)->find("filename=") != std::string::npos) {
-				_fileName = (iter + i)->substr(std::string("filename=").size());
-				_fileName.erase(0, 1);
-				_fileName.erase(_fileName.size() - 1, 1);
+    iter = find(splited.begin(), splited.end(), "Content-Disposition:");
+    if (iter != splited.end()) {
+        for (int i = 0; iter + i < splited.end(); i++) {
+            if ((iter + i)->find("filename=") != std::string::npos) {
+                _fileName = (iter + i)->substr(std::string("filename=").size());
+                _fileName.erase(0, 1);
+                _fileName.erase(_fileName.size() - 1, 1);
             }
-		}
-	}
+        }
+    }
+	iter = find(splited.begin(), splited.end(), "Connection:");
+    if (iter != splited.end() && iter + 1 != splited.end())
+        _connection = (*(iter + 1) == "close" ? true : false);
 }
 
 void Request::splitHost() {
@@ -207,7 +220,8 @@ void Request::readBody(int fd) {
         _contentLength = static_cast<int>(x);
     }
     while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
-        std::copy(buffer.begin(), buffer.begin() + valRead, std::back_inserter(_binary));
+        std::copy(buffer.begin(), buffer.begin() + valRead,
+                  std::back_inserter(_binary));
     }
     // CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
     if (!_chunked && _binary.size()) {
@@ -215,37 +229,44 @@ void Request::readBody(int fd) {
         if (end > 3 && _binary[end] == '\n' && _binary[end - 1] == '\r' &&
             _binary[end - 2] == '\n' && _binary[end - 3] == '\r') {
             _isEnd = true;
-			_binary.erase(_binary.end() - 5, _binary.end() - 1);
-		}
-        else if (valRead != -1)
+            _binary.erase(_binary.end() - 5, _binary.end() - 1);
+        } else if (valRead != -1)
             throw BodySizeError();
-		 // TODO 얼마나 읽었는지 체크해서 다시 예외
-                                   // 처리
+        // TODO 얼마나 읽었는지 체크해서 다시 예외
+        // 처리
     } else {
         // if (valRead != CRLF_SIZE * 2 || line.compare(0, valRead, crlf) != 0)
         //	throw BodySizeError(); // TODO 얼마나 읽었는지 체크해서 다시
-        //예외 처리
+        // 예외 처리
         _isEnd = false;
     }
 }
 
 void Request::parseFormData() {
-	size_t i = 0;
-	while (_boundary[i] == '-') i++;
-	_boundary.erase(0, i);
-	i = 0;
-	while (1) {
-		i = 0;
-		while (i < _binary.size() && _binary[i] == '-') i++;
-		_binary.erase(_binary.begin(), _binary.begin() + i);
-		i = 0;
-		while (i < _binary.size() && _binary[i] == _boundary[i]) i++;
-		_binary.erase(_binary.begin(), _binary.begin() + i);
-		i = 0;
-		if (_binary.size() >= 2 && _binary[i] == '\r' && _binary[i + 1] == '\n')
-			_binary.erase(_binary.begin(), _binary.begin() + 2);
-		if (_binary.size() == 0 || _binary[0] == '-')
-			break ;
-		_formData.push_back(new Request(_binary, _boundary));
-	}
+    size_t i = 0;
+    while (_boundary[i] == '-')
+        i++;
+    _boundary.erase(0, i);
+    i = 0;
+    while (1) {
+        i = 0;
+        while (i < _binary.size() && _binary[i] == '-')
+            i++;
+        _binary.erase(_binary.begin(), _binary.begin() + i);
+        i = 0;
+        while (i < _binary.size() && _binary[i] == _boundary[i])
+            i++;
+        _binary.erase(_binary.begin(), _binary.begin() + i);
+        i = 0;
+        if (_binary.size() >= 2 && _binary[i] == '\r' && _binary[i + 1] == '\n')
+            _binary.erase(_binary.begin(), _binary.begin() + 2);
+        if (_binary.size() == 0 || _binary[0] == '-')
+            break;
+        _formData.push_back(new Request(_binary, _boundary));
+    }
+}
+
+std::string Request::GetQuery()
+{
+    return _query;
 }
