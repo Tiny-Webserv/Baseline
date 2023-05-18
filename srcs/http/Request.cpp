@@ -11,7 +11,7 @@ Request::Request() : _chunked(false) {}
 
 Request::Request(int fd, std::stringstream &stream)
     : _contentLength(-1), _errorMessages("OK"), _errorCode(OK), _chunked(false),
-      _hostPort(80), _isEnd(false) {
+      _hostPort(80), _isEnd(false), _connection(false) {
 
     try {
         std::string buff;
@@ -112,6 +112,8 @@ std::vector<Request *> Request::getFormData() { return _formData; }
 
 std::vector<char> Request::getBinary() { return _binary; }
 
+bool	Request::getConnection() { return _connection; }
+
 Request &Request::operator=(const Request &request) {
     _method = request._method;
     _target = request._target;
@@ -183,6 +185,9 @@ void Request::setHeader(std::string header) {
             }
         }
     }
+	iter = find(splited.begin(), splited.end(), "Connection:");
+    if (iter != splited.end() && iter + 1 != splited.end())
+        _connection = (*(iter + 1) == "close" ? true : false);
 }
 
 void Request::splitHost() {

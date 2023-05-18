@@ -40,6 +40,7 @@ class Request {
     std::string _boundary;
     std::vector<Request *> _formData;
     std::string _query;
+	bool	_connection;
   public:
     Request();
     Request(int fd, std::stringstream &stream);
@@ -81,6 +82,7 @@ class Request {
     std::vector<char> getBinary();
     std::vector<Request *> getFormData();
     std::string getFileName();
+	bool	getConnection();
 
     // void SetBody(std::vector<std::string>::iterator iter);
     void splitHost();
