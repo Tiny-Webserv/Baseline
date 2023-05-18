@@ -123,7 +123,6 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     Request *reque = this->_cli[curEvnts->ident];
     if (IsPhp(reque)) {
         // PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
-        std::cout << reque->GetTarget() << std::endl;
         this->_response2[curEvnts->ident] =
             new Response(reque, curEvnts, _ChangeList);
         if (this->_response2[curEvnts->ident]->isDone()) {

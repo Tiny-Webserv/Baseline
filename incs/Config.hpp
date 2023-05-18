@@ -59,6 +59,7 @@ class Config {
     std::vector<ServerBlock> _ServerBlockObject;
     Config(std::string filename);
     ~Config();
+    void LocationSort();
     // int		nginx_word(std::string word);
 };
 

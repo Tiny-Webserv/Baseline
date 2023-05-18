@@ -18,8 +18,9 @@ void sigint_handler(int signum) {
     exit(signum);
 }
 // void leaks() { system("leaks webserv"); }
+
 int main(int ac, char **av) {
-    // atexit(leaks);
+    // atexit(leaks);₩
 
     signal(SIGKILL, sigint_handler);
     if (ac != 2) {
@@ -27,5 +28,6 @@ int main(int ac, char **av) {
         exit(1);
     }
     Config con(static_cast<std::string>(av[1]));
+    con.LocationSort();
     EventLoop loop(con);
 }

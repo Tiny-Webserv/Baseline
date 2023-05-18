@@ -325,3 +325,21 @@ int NginxWord(std::string line) {
 	}
 	return 1;
 }
+
+bool Fcomp(LocationBlock t1, LocationBlock t2) {
+    if (t1.GetLocationTarget().size() >= t2.GetLocationTarget().size())
+        return true;
+    else
+        return false;
+}
+
+void Config::LocationSort() {
+	std::vector<ServerBlock>::iterator it;
+    std::vector<ServerBlock>::iterator its;
+    its = _ServerBlockObject.end();
+    it = _ServerBlockObject.begin();
+    for (; it != its; it++) {
+        std::vector<LocationBlock> vec_loc = it->GetLocation();
+        std::stable_sort(vec_loc.begin(), vec_loc.end(), Fcomp);
+    }
+}
