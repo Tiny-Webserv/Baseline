@@ -215,7 +215,6 @@ void Request::readBody(int fd) {
             _isEnd = true;
             return;
         }
-        _contentLength = static_cast<int>(x);
     }
     while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
 		readSize += valRead;
@@ -229,9 +228,9 @@ void Request::readBody(int fd) {
             _binary[end - 2] == '\n' && _binary[end - 3] == '\r') {
             _isEnd = true;
             _binary.erase(_binary.end() - 5, _binary.end() - 1);
-        }        // TODO 얼마나 읽었는지 체크해서 다시 예외
+        }
     } else if (_chunked) {
-		if (static_cast<unsigned int>(readSize) > x || _binary.size() > _server->GetClientMaxBodySize())
+		if (static_cast<unsigned int>(readSize) > x || (_server != NULL && _binary.size() > _server->GetClientMaxBodySize()))
 			throw BodySizeError();
         _isEnd = false;
     } else if (_binary.size() == 0)

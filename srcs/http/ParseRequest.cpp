@@ -42,7 +42,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 	if (clientsIterator == clients.end()) {
 		char *line = get_next_line(fd);
 		if (line == NULL)
-			return nullptr;
+			return NULL;
 		while (line) {
 			ss << line;
 			std::string tmp(line);
@@ -56,10 +56,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		request->SetServer(FindServer(servers, request));
 		try {
 			if (request->getBinary().size() > request->GetServer().GetClientMaxBodySize())
-			{
-				std::cerr << "너 잘 나오니?" << std::endl;
 				throw BodySizeError();
-			}
 		} catch (const StateCode &e) {
 			request->SetErrorCode(e._errorCode);
 			request->SetErrorMessages(e.what());

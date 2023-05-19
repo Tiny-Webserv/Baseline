@@ -39,6 +39,7 @@ Response::Response(Request *request)
         else if (request->GetMethod() == "DELETE")
             deleteMethod();
     } catch (NotExist &e) {
+		std::cerr << "srcs/http/Response.cpp:42" << std::endl;
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
@@ -49,6 +50,7 @@ Response::Response(Request *request)
                 generateErrorBody();
             }
         } catch (NotExist &e) {
+			std::cerr << "srcs/http/Response.cpp:53" << std::endl;
             generateErrorBody();
         }
         _contentType = "text/html";
@@ -64,10 +66,6 @@ Response::Response(Request *request)
     joinResponseMessage();
     _isDone = true;
 }
-
-// - 이벤트 등록하는 함수(정확히는 changeList벡터에 push_back) <- 부모
-// - 이벤트 처리 후 부를 함수 작성 (이거 하나 부르면 리스폰스 메세지 다
-// 만들어지게)
 
 Response::Response(Request *request, struct kevent *curEvnts,
                    std::vector<struct kevent> &_ChangeList)
@@ -87,6 +85,7 @@ Response::Response(Request *request, struct kevent *curEvnts,
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
+			std::cerr << "srcs/http/Response.cpp:87" << std::endl;
             if (isAutoIndex())
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
@@ -148,6 +147,7 @@ std::string Response::fetchFilePath() {
         }
         // redirect인지 아닌지에 따라서 throw
         if (isRedirect() == false) {
+			std::cerr << "fetch file path" << std::endl;
             throw NotExist();
         }
     }
@@ -235,6 +235,7 @@ LocationBlock &Response::getLocationBlock() {
     }
     if (rootLocationIndex != -1)
         return _request->GetServer().GetLocation()[rootLocationIndex];
+	std::cerr << "get location block" << std::endl;
     throw NotExist();
 }
 
@@ -278,7 +279,6 @@ bool Response::isRedirect() {
     redirectLocation.insert(redirectLocation.end(), tmp.begin(), tmp.end());
     std::string str(redirectLocation.begin(), redirectLocation.end());
     _redirectLocation = str;
-
     if (getLocationBlock().GetReturn().first == 302) {
         _request->SetErrorCode(302);
         _request->SetErrorMessages("Moved Temporarily");
@@ -298,9 +298,14 @@ void Response::generateAutoindex(const std::string &directory) {
        << "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last "
           "Modified</th><th>Size</th></tr>\n";
 
-    while ((entry = readdir(dir)) != nullptr) {
+    while ((entry = readdir(dir)) != NULL) {
         std::string name = entry->d_name; // 파일/디렉토리 이름
-        ss << "<tr><td><a href=\"" << name << "\">" << name
+		if (_request->GetErrorCode() != NotFound) {
+			name.insert(0, "/");
+			name.insert(0, _request->GetTarget());
+		}
+        ss << "<tr><td><a href=\"" << name << "\">";
+		ss << std::string(entry->d_name)
            << "</a></td><td></td><td></td></tr>\n";
     }
 
@@ -343,7 +348,9 @@ void Response::generateHeader() {
         }
         ss << CRLF;
     }
-    ss << _redirectLocation << CRLF;
+	if (_request->GetErrorCode() / 100 == 3)
+        ss << _redirectLocation << CRLF;
+
     ss << CRLF;
     std::string line = ss.str();
     std::copy(line.begin(), line.end(),
@@ -353,7 +360,7 @@ void Response::generateHeader() {
 }
 
 void Response::generateDefaultErrorPage() {
-    std::vector<char> vec = _serverFiles.getFile("./docs/error.html");
+    std::vector<char> vec = _serverFiles.getFile("./html/errorpage.html");
     std::string str(vec.begin(), vec.end());
     str.push_back('\0');
     std::stringstream ss;
@@ -428,8 +435,10 @@ bool Response::verifyFile(const char *filename) {
     if (stat(filename, &buffer) != 0) {
         if (errno == EACCES)
             throw PermissionDenied();
-        else if (errno == ENOENT)
+        else if (errno == ENOENT) {
+			std::cerr << "verifyFile" << std::endl;
             throw NotExist();
+		}
         throw ServerError(strerror(errno));
     }
     return true;
@@ -445,6 +454,7 @@ void Response::getMethod() {
     if (isDirectory(fileToRead.c_str())) {
         if (!isAutoIndex())
             throw PermissionDenied();
+		std::cerr << "fileToRead : " << fileToRead << std::endl;
         generateAutoindex(fileToRead);
         return;
     }
@@ -452,7 +462,7 @@ void Response::getMethod() {
     // 파일 가져오는 부분
 
     if (isRedirect())
-        _bodyMessage.empty();
+        _bodyMessage.clear();
     else
         _bodyMessage = _serverFiles.getFile(fileToRead);
     // Content-Type 설정하는 부분
@@ -465,7 +475,7 @@ void Response::getMethod() {
             fileToRead.substr((fileToRead.rfind(".") + 1 <= fileToRead.size()
                                    ? fileToRead.rfind(".") + 1
                                    : -1));
-        if (!extention.compare(".png")) // png 확장자 확인
+        if (!extention.compare("png")) // png 확장자 확인
             _contentType = "image/png";
         else if (!extention.compare("txt"))
             _contentType = "text/plain";
@@ -514,10 +524,11 @@ void Response::deleteMethod() {
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
     if (remove(fileToRead.c_str()) != 0) {
+		std::cerr << "delete method" << std::endl;
         throw NotExist();
-    } else {
-    }
+
     _request->SetErrorCode(NoContent);
+	}
 }
 
 std::map<std::string, std::string> Response::PhpEnvSet() {
@@ -587,8 +598,9 @@ void Response::forkPhp(struct kevent *curEvents,
     std::string *body;
 
     if (_request->GetMethod() == "GET") {
-        body = new std::string(_request->GetTarget());
-        body->erase(0, body->find("?") + 1);
+        //body = new std::string(_request->GetTarget());
+        //body->erase(0, body->find("?") + 1);
+		body = new std::string(_request->GetQuery());
         // "REQUEST_METHOD=GET"
     } else if (_request->GetMethod() == "POST") {
         std::vector<char> bodyVec = _request->getBinary();
@@ -602,6 +614,8 @@ void Response::forkPhp(struct kevent *curEvents,
     int pid;
 
     if (pipe(parentWrite) == -1 || pipe(childWrite) == -1) {
+		close(parentWrite[0]);
+		close(parentWrite[1]);
         throw ServerError(strerror(errno));
     }
     *body += "\r\n\r\n";
@@ -658,7 +672,7 @@ void Response::forkPhp(struct kevent *curEvents,
             close(parentWrite[1]);
             close(childWrite[0]);
             throw ServerError("php write failed");
-        } 
+        }
         close(parentWrite[1]);
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,

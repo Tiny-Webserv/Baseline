@@ -7,6 +7,12 @@
 </head>
 
 <body>
+    <h1>이미지 업로드 및 내려받기</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+        <br><br>
+        <input type="submit" value="업로드">
+    </form>  
 	<h1>POST 요청</h1>
 	<form method="POST" action="index.php">
 		<label for="name">이름:</label>
@@ -33,23 +39,23 @@
 		<input type="submit" value="전송">
 </body>
 <script>
-	const form = document.getElementById('blogForm');
-	form.addEventListener('submit', function (event) {
-		event.preventDefault();
+	// const form = document.getElementById('blogForm');
+	// form.addEventListener('submit', function (event) {
+	// 	event.preventDefault();
 
-		const formData = new FormData(this);
+	// 	const formData = new FormData(this);
 
-		fetch(this.action, {
-			method: 'PUT',
-			body: formData
-		})
-			.then(response => {
-				// PUT 요청 완료 후의 처리
-			})
-			.catch(error => {
-				// 에러 처리
-			});
-	});
+	// 	fetch(this.action, {
+	// 		method: 'PUT',
+	// 		body: formData
+	// 	})
+	// 		.then(response => {
+	// 			// PUT 요청 완료 후의 처리
+	// 		})
+	// 		.catch(error => {
+	// 			// 에러 처리
+	// 		});
+	// });
 </script>
 
 </html>

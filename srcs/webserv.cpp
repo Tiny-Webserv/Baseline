@@ -20,7 +20,7 @@ void sigint_handler(int signum) {
 // void leaks() { system("leaks webserv"); }
 
 int main(int ac, char **av) {
-    // atexit(leaks);₩
+    // at exit(leaks);₩
 
     signal(SIGKILL, sigint_handler);
     if (ac != 2) {

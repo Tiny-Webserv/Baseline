@@ -96,6 +96,9 @@ void EventLoop::HandleRequest(struct kevent *curEvnts) {
         close(curEvnts->ident);
         return;
     }
+    std::cout <<"=====rq trget===" << std::endl;
+    std::cout << reque->GetTarget() << std::endl;
+    std::cout <<"=====rq trget===" << std::endl;
     MakeResponse(curEvnts);
 }
 
