@@ -330,7 +330,7 @@ void Config::LocationEssentialCheck(ServerBlock &curServerBlockObject,
 	}
 	if (curLocationBlock.GetRoot() == "" ||
 		curLocationBlock.GetIndex().empty()) {
-		std::cout << "err serroot, location root or _Index" << std::endl;
+		std::cout << "err server root, location root or _Index" << std::endl;
 		exit(1);
 	}
 }

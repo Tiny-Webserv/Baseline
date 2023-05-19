@@ -135,9 +135,6 @@ void Request::setStartLine(std::string startLine) {
     std::vector<std::string> data = Split(startLine, std::string(" "));
     if (!data[0].compare("GET") || !data[0].compare("POST") ||
         !data[0].compare("DELETE")) {
-            std::cout << "****method*******" << std::endl;
-            std::cout << "method : " << data[0] << std::endl;
-            std::cout << "****method*******" << std::endl;
             _method = data[0];
         }
     else

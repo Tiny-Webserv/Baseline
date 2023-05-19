@@ -108,12 +108,12 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         // Socket is dead, close it and return
         close(curEvnts->ident);
         EraseMemberMap(curEvnts->ident);
-        std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" << std::endl;
+        //std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" << std::endl;
         return;
     }
     std::cout << curEvnts->ident << " 에게 보낼 응답 msg 생성 " << std::endl;
     if (_request.find(curEvnts->ident) == _request.end()) {
-        std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
+        //std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
         close(curEvnts->ident);
         EraseMemberMap(curEvnts->ident);
         return;
@@ -123,7 +123,6 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
     Request *reque = this->_request[curEvnts->ident];
     if (IsPhp(reque)) {
         // PhpStart(curEvnts, _ChangeList, this->_cli, _cgi);
-        std::cout << reque->GetTarget() << std::endl;
         this->_response[curEvnts->ident] =
             new Response(reque, curEvnts, _ChangeList);
         if (this->_response[curEvnts->ident]->isDone()) {
@@ -133,8 +132,6 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
                    0, 0, curEvnts->udata);
             _ChangeList.push_back(tmpEvnt);
         }
-        std::cout << "start end" << std::endl;
-
         // this->_response2[curEvnts->ident] = new Response(reque,
         // _ChangeList);
     } else {
@@ -155,28 +152,17 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
         // Socket is dead, close it and return
         close(curEvnts->ident);
         EraseMemberMap(curEvnts->ident);
-        std::cout << "이미 뒤진 소켓 SendResponse 에서 발견되다" << std::endl;
+        //std::cout << "이미 뒤진 소켓 SendResponse 에서 발견되다" << std::endl;
         return;
     }
     std::cout << curEvnts->ident << " 에게 응답 msg 전송 " << std::endl;
-    // std::vector<char>::iterator it, its;
-    // it = _response2[curEvnts->ident]->getResponseMessage().begin();
-    // its = _response2[curEvnts->ident]->getResponseMessage().end();
-    // std::string response_str(it + _offset[curEvnts->ident], its);
-    //  std::string response_str = this->_response[curEvnts->ident];
-    // int response_size = response_str.size();
     std::vector<char> resMsg;
-    // if (IsPhp(_cli[curEvnts->ident]) ||
-    // !_response2[curEvnts->ident]->isDone()) {
-    //     resMsg =  _response2[curEvnts->ident]->getResponseMessage();
-    // } else
     resMsg = _response[curEvnts->ident]->getResponseMessage();
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
                    resMsg.size() - _offset[curEvnts->ident], 0);
     if (res > 0) {
         std::cout << curEvnts->ident << "번 다시 보내" << std::endl;
         _offset[curEvnts->ident] += res;
-        // this->_response[curEvnts->ident].erase(0, res);
         return;
     }
     if (res == -1) {
@@ -185,7 +171,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
         close(curEvnts->ident);
         return;
     } else {
-        std::cout << "전송 완료 해쓰여 " << std::endl;
+        std::cout << "전송 완료" << std::endl;
     }
     std::cout << "Event Delete" << std::endl;
     struct kevent tmpEvnt;
@@ -203,13 +189,6 @@ void EventLoop::EraseMemberMap(int key) {
     this->_request.erase(key);
     this->_response.erase(key);
     this->_offset.erase(key);
-    // this->_cgiResponse.erase(key);
-    /* feature/phpResponse
-                                    //_cgi[pid] = std::vector<int>[0], key,
-     child_pipe
-                                    // _zz[key] = pid;
-
-     develop*/
 }
 
 EventLoop::EventLoop() {}

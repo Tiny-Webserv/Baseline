@@ -78,7 +78,6 @@ Response::Response(Request *request, struct kevent *curEvnts,
             generateStatusLine();
             generateHeader();
             joinResponseMessage();
-            std::cout << "test1" << std::endl;
             _isDone = true;
         }
         std::string filename = fetchFilePath();
@@ -98,7 +97,6 @@ Response::Response(Request *request, struct kevent *curEvnts,
             generateErrorBody();
         }
         _contentType = "text/html";
-        std::cout << "test2" << std::endl;
         _isDone = true;
         generateStatusLine();
         generateHeader();
@@ -111,7 +109,6 @@ Response::Response(Request *request, struct kevent *curEvnts,
         generateStatusLine();
         generateHeader();
         joinResponseMessage();
-        std::cout << "test3" << std::endl;
         _isDone = true;
     }
 
@@ -132,19 +129,11 @@ bool Response::isDone() { return _isDone; }
 
 std::string Response::fetchFilePath() {
     std::string location = getLocationBlock().GetLocationTarget();
-	std::cout << "====================location" << std::endl;
-	std::cout << "location : " << location << std::endl;
-	std::cout << "====================location" << std::endl;
     std::string target = _request->GetTarget().substr(location.size());
-	std::cout << "====================target" << std::endl;
-	std::cout << "target : " << target << std::endl;
-	std::cout << "====================target" << std::endl;
     if (target.size()) {
         target.insert(0, getLocationBlock().GetRoot() + "/");
 	}
     else {
-        std::cout << "!!" << target << std::endl;
-        std::cout << target.size() << std::endl;
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
@@ -154,21 +143,14 @@ std::string Response::fetchFilePath() {
                 continue;
             else
 			{
-				std::cout << "======================" << std::endl;
-				std::cout << "bf2 return = " << target << std::endl;
-				std::cout << "======================" << std::endl;
                 return target;
 			}
         }
         // redirect인지 아닌지에 따라서 throw
         if (isRedirect() == false) {
-            // std::cout << "test!!!" << std::endl;
             throw NotExist();
         }
     }
-	std::cout << "======================" << std::endl;
-	std::cout << "bf return = " << target << std::endl;
-	std::cout << "======================" << std::endl;
 
     return target;
 }
@@ -182,18 +164,13 @@ int Response::generatePhpResponse(struct kevent *curEvnts,
     char buf[1024];
     int read_size = 1;
     struct kevent tmpEvnt;
-    close(curEvnts->ident); // 우선은 강제 종료 느낌으로 처리 이거 이벤트 왜
-                            // 삭제 안되는지 알아보면 좋을 듯
-    // EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_PROC, EV_DELETE, 0, 0,
-    // 	   curEvnts->udata);
-    // _ChangeList.push_back(tmpEvnt);
+    close(curEvnts->ident);
+
     while (true) {
         read_size = read(_cgi[curEvnts->ident][CHILD_OUT], buf, 1024);
         if (read_size == 0) {
-            std::cout << "php 다 읽음 ㅋㅋ" << std::endl;
             break;
         } else if (read_size == -1) {
-            std::cout << "php 터짐 ㅠㅠ" << std::endl;
             close(curEvnts->ident);
             close(_cgi[curEvnts->ident][CHILD_OUT]);
             return -1;
@@ -207,7 +184,6 @@ int Response::generatePhpResponse(struct kevent *curEvnts,
     generatePhpBody(phpResponse);
     generatePhpHeader(phpResponse);
     joinResponseMessage();
-    // struct kevent tmpEvnt;
     EV_SET(&tmpEvnt, _cgi[curEvnts->ident][CLIENT_SOCKET], EVFILT_WRITE,
            EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
@@ -217,9 +193,7 @@ int Response::generatePhpResponse(struct kevent *curEvnts,
 
 void Response::generatePhpBody(std::string &phpResponse) {
     size_t len = phpResponse.find("\r\n\r\n");
-    std::cout << phpResponse << std::endl;
     if (len == std::string::npos) {
-        std::cout << "npos result" << std::endl;
         return;
     }
     std::string tmp = phpResponse.substr(len + 4);
@@ -446,12 +420,10 @@ bool Response::verifyFile(const char *filename) {
     std::string _filename(filename);
     size_t idx;
     idx = _filename.find(".php?");
-    std::cout << filename << std::endl;
     if (idx != std::string::npos) {
         _filename.erase(idx + 4, _filename.length());
         filename = _filename.c_str();
     }
-    //////////////////////////////////////////////////
 
     if (stat(filename, &buffer) != 0) {
         if (errno == EACCES)
@@ -559,12 +531,11 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     std::string request_uri = "REQUEST_URI=";
     std::string document_root = "DOCUMENT_ROOT=";
     std::string request_method = "REQUEST_METHOD=";
-    std::string query_string = "QUERY_STRING="; // get 일 때 필요
+    std::string query_string = "QUERY_STRING="; //
 
     std::string _target =
         _request->GetTarget(); // filename임 post요청의 target이니
                                // index.php가 되겠다.
-    std::cout << "target = " << _target << std::endl;
     std::ostringstream os;
     os << _request->getBinary().size();
     if (_method == "POST")
@@ -573,10 +544,8 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
         query_string += _request->GetQuery();
     }
 
-    // content_type += _cli[sock]->GetContentType();
     request_method += _method;
 
-    //////////////////////////////////////////////////////////////////
     std::vector<LocationBlock> location_vector;
     std::vector<LocationBlock>::iterator it;
     location_vector = _request->GetServer().GetLocation();
@@ -586,6 +555,7 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
             break;
     }
     if (it == location_vector.end()) {
+        //여기 물어봐야함
         std::cout << "empty location bolock mirror" << std::endl;
     }
     script_filename += (it->GetRoot()); //./html/post
@@ -593,11 +563,8 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     script_filename += _target; // index.php
     script_name += _target;     // index.php
     request_uri += _target;
-    //////////////////////////////////////////////////////////////////
+
     std::string _root = document_root + it->GetRoot();
-    std::cout << "doc root" << std::endl;
-    std::cout << _root << std::endl;
-    std::cout << "doc root" << std::endl;
 
     std::ostringstream os2;
     os2 << _request->GetErrorCode();
@@ -611,9 +578,6 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     _envMap["REQUEST_URI"] = request_uri;
     _envMap["DOCUMENT_ROOT"] = _root;
     _envMap["QUERY_STRING"] = query_string; // get 일 때 필요
-    std::cout << "============Key============" << std::endl;
-    std::cout << _envMap["DOCUMENT_ROOT"] << std::endl;
-    std::cout << "============Key============" << std::endl;
     _envMap["REQUEST_METHOD"] = request_method;
     return (_envMap);
 }
@@ -622,19 +586,16 @@ void Response::forkPhp(struct kevent *curEvents,
                        std::vector<struct kevent> &_changeList) {
     std::string *body;
 
-    if (_request->GetMethod() == "GET") { //_cli[curEvnts->ident]->GetTarget()
+    if (_request->GetMethod() == "GET") {
         body = new std::string(_request->GetTarget());
         body->erase(0, body->find("?") + 1);
         // "REQUEST_METHOD=GET"
     } else if (_request->GetMethod() == "POST") {
         std::vector<char> bodyVec = _request->getBinary();
         body = new std::string(bodyVec.begin(),
-                               bodyVec.end()); //>>> delete ㅍㅣㄹㅇㅛ
-        // body = _cli[curEvnts->ident]->GetStream().str(); // getBinary();
-        //  "REQUEST_METHOD=POST"
+                               bodyVec.end());
     } else {
-        body = new std::string(); // delete 필요함
-        std::cout << "??????" << std::endl;
+        body = new std::string();
     }
     int parentWrite[2];
     int childWrite[2];
@@ -646,11 +607,6 @@ void Response::forkPhp(struct kevent *curEvents,
     *body += "\r\n\r\n";
 
     std::map<std::string, std::string> _envMap = PhpEnvSet();
-    // std::map<std::string, std::string>::iterator iti, its;
-    // iti = _envMap.begin();
-    // its = _envMap.end();
-    // for ( ; iti != its ; iti++)
-    // 	std::cout << iti->second << std::endl;
 
     char *env[] = {
         "GATEWAY_INTERFACE=CGI/1.1",
@@ -678,18 +634,11 @@ void Response::forkPhp(struct kevent *curEvents,
         close(parentWrite[0]);
         dup2(childWrite[1], 1);
         close(childWrite[1]);
-        // chdir("/Users/jang-insu/webservTest/html"); ////
         std::string	arg2 = fetchFilePath();
-        std::cout << "===========test target" << std::endl;
-		std::cout << arg2 << std::endl;
-        std::cout << "===========test target" << std::endl;
 
         char *arg[] = {"./html/php-cgi", (char *)arg2.c_str(), NULL};
 
-        // std::cout << "=======in child!!!!!======" << std::endl;
         execve(arg[0], arg, env);
-        std::cerr << "exe err" << std::endl;
-        // std::cerr << strerror(errno) << std::endl;
         exit(-1);
 
     } else if (pid == -1) {
@@ -709,11 +658,7 @@ void Response::forkPhp(struct kevent *curEvents,
             close(parentWrite[1]);
             close(childWrite[0]);
             throw ServerError("php write failed");
-        } // msg를 body로 바꿨음
-          // std::cout << "=======body in P======" << std::endl;
-        // write(2, body->c_str(), body->length());
-        // std::cout << "=======body in P======" << std::endl;
-
+        } 
         close(parentWrite[1]);
         struct kevent tmpEvnt;
         EV_SET(&tmpEvnt, pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,

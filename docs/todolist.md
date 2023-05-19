@@ -1,7 +1,7 @@
 ## todo list
 
-- [ ] payloadTooLarge 처리
-- [ ] max body size 처리
+- [x] payloadTooLarge 처리
+- [x] max body size 처리
 - [ ] `std::cout` 정리
 - [ ] *.conf 파일에 맞추어 디렉토리 파일 정리 / 반대로 *.conf 파일도 정리
 
