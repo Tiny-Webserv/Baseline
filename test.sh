@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# result=$(ps | grep "./webserv" | awk 'NR==1 {print $1; exit}')
+pid=$(ps aux | grep "[w]ebserv" | awk '{print $2}')
 
-while [ 1 ]; do leaks ${1} | grep "total leaked bytes."; sleep 1; done
+while [ 1 ]; do leaks ${pid} | grep "total leaked bytes."; sleep 1; done
