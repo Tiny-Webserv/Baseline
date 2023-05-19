@@ -192,7 +192,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_DELETE, 0, 0,
            curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
-	if (_cli[curEvnts->ident]->getConnection())
+	if (_request[curEvnts->ident]->getConnection())
 		close(curEvnts->ident);
     EraseMemberMap(curEvnts->ident);
 }

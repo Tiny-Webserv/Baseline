@@ -206,6 +206,7 @@ void Request::readBody(int fd) {
     std::stringstream ss;
     std::string line;
     int valRead;
+	int	readSize = 0;
     std::vector<char> buffer(1024);
 
     if (_chunked) {
@@ -220,6 +221,7 @@ void Request::readBody(int fd) {
         _contentLength = static_cast<int>(x);
     }
     while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
+		readSize += valRead;
         std::copy(buffer.begin(), buffer.begin() + valRead,
                   std::back_inserter(_binary));
     }
@@ -230,16 +232,13 @@ void Request::readBody(int fd) {
             _binary[end - 2] == '\n' && _binary[end - 3] == '\r') {
             _isEnd = true;
             _binary.erase(_binary.end() - 5, _binary.end() - 1);
-        } else if (valRead != -1)
-            throw BodySizeError();
-        // TODO 얼마나 읽었는지 체크해서 다시 예외
-        // 처리
-    } else {
-        // if (valRead != CRLF_SIZE * 2 || line.compare(0, valRead, crlf) != 0)
-        //	throw BodySizeError(); // TODO 얼마나 읽었는지 체크해서 다시
-        // 예외 처리
+        }        // TODO 얼마나 읽었는지 체크해서 다시 예외
+    } else if (_chunked) {
+		if (static_cast<unsigned int>(readSize) > x || _binary.size() > _server->GetClientMaxBodySize())
+			throw BodySizeError();
         _isEnd = false;
-    }
+    } else if (_binary.size() == 0)
+		_isEnd = true;
 }
 
 void Request::parseFormData() {

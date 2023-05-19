@@ -54,6 +54,16 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		Request *request = new Request(fd, ss);
 		clients.insert(std::pair<int, Request *>(fd, request));
 		request->SetServer(FindServer(servers, request));
+		try {
+			if (request->getBinary().size() > request->GetServer().GetClientMaxBodySize())
+			{
+				std::cerr << "너 잘 나오니?" << std::endl;
+				throw BodySizeError();
+			}
+		} catch (const StateCode &e) {
+			request->SetErrorCode(e._errorCode);
+			request->SetErrorMessages(e.what());
+		}
     } else {
 
         Request *request = clients[fd];
