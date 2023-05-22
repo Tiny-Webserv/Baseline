@@ -129,15 +129,27 @@ bool Response::isDone() { return _isDone; }
 std::string Response::fetchFilePath() {
     std::string location = getLocationBlock().GetLocationTarget();
     std::string target = _request->GetTarget().substr(location.size());
-    if (target.size()) {
-        target.insert(0, getLocationBlock().GetRoot() + "/");
+	std::cerr << "target : " << target << std::endl;
+    if (target.size() && !(*(target.end() -1) == '/' && target.size() == 1)) {
+		if (target[0] != '/')
+        {
+			target.insert(0, "/");
+            std::cerr << "FUCK\n";
+        }
+        target.insert(0, getLocationBlock().GetRoot());
 	}
     else {
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
         for (size_t i = 0; i < index.size(); i++) {
-            target = getLocationBlock().GetRoot() + "/" + index[i];
+            target = getLocationBlock().GetRoot();
+			if (index[i][0] != '/')
+            {
+				target += "/";
+                std::cerr << "YOU\n";
+            }
+			target += index[i];
             if (stat(target.c_str(), &buffer) != 0)
                 continue;
             else
@@ -288,6 +300,7 @@ bool Response::isRedirect() {
 }
 
 void Response::generateAutoindex(const std::string &directory) {
+	std::cerr << "dir_path : " << directory << std::endl;
     std::string dir_path = directory;
     DIR *dir = opendir(dir_path.c_str());
     struct dirent *entry;
@@ -295,18 +308,28 @@ void Response::generateAutoindex(const std::string &directory) {
     std::string tmp;
     ss << "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " << dir_path
        << "</title>\n</head>\n<body>\n<h1>Index of " << dir_path
-       << "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last "
-          "Modified</th><th>Size</th></tr>\n";
+       << "</h1>\n<hr>\n<table>\n<tr><th>Name</th></tr>\n";
 
     while ((entry = readdir(dir)) != NULL) {
         std::string name = entry->d_name; // 파일/디렉토리 이름
+		std::cerr << "name : " << name << std::endl;
 		if (_request->GetErrorCode() != NotFound) {
-			name.insert(0, "/");
-			name.insert(0, _request->GetTarget());
+			if (name == "..") {
+				name.clear();
+				size_t	found = _request->GetTarget().find_last_of("/");
+				name = _request->GetTarget().substr(0, found);
+			}
+			else {
+				if (name == ".")
+					name.clear();
+				else if (name[0] != '/')
+					name.insert(0, "/");
+				name.insert(0, _request->GetTarget());
+			}
 		}
         ss << "<tr><td><a href=\"" << name << "\">";
 		ss << std::string(entry->d_name)
-           << "</a></td><td></td><td></td></tr>\n";
+           << "</a></td></tr>\n";
     }
 
     ss << "</table>\n<hr>\n</body>\n</html>\n";
