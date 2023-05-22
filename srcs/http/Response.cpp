@@ -291,8 +291,7 @@ bool Response::isRedirect() {
     redirectLocation.insert(redirectLocation.end(), tmp.begin(), tmp.end());
     std::string str(redirectLocation.begin(), redirectLocation.end());
     _redirectLocation = str;
-    
-    if (getLocationBlock().GetReturn().first == 302 && _request->GetTarget() == getLocationBlock().GetReturn().second) {
+    if (getLocationBlock().GetReturn().first == 302) {
         _request->SetErrorCode(302);
         _request->SetErrorMessages("Moved Temporarily");
         _isRedirection = true;
