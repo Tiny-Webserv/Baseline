@@ -267,7 +267,11 @@ bool Response::isAutoIndex() {
 
 bool Response::isAllowed(std::string method) {
     std::vector<std::string> limit_except = getLocationBlock().GetLimitExcept();
-
+    size_t i = limit_except.size();
+    std::cout << "dasnnjklasfdjknlfewnjklqwndidiwoefnc" << std::endl;
+    for (size_t j = 0; j < i ; j++) {
+        std::cout << limit_except[j] << std::endl;
+    }
     if (limit_except.size() == 0)
         return true;
     else if (find(limit_except.begin(), limit_except.end(), method) ==

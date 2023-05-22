@@ -24,7 +24,7 @@ Request::Request(int fd, std::stringstream &stream)
             parseFormData();
 
     } catch (const StateCode &e) {
-        SetErrorCode(_errorCode);
+        SetErrorCode(e._errorCode);
         SetErrorMessages(e.what());
     }
 }

@@ -7,17 +7,17 @@
 </head>
 
 <body>
-    <h1>이미지 업로드 및 내려받기</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">
-        <br><br>
-        <input type="submit" value="업로드">
-    </form>
+	<h1>이미지 업로드 및 내려받기</h1>
+	<form action="/upload" method="post" enctype="multipart/form-data">
+		<input type="file" name="file">
+		<br><br>
+		<input type="submit" value="업로드">
+	</form>
 	<h1>이미지 요청 및 표시</h1>
-    <button onclick="loadImage()">이미지 로드</button>
-    <br>
-    <img id="image" src="/download" alt="이미지">
-    <br>
+	<button onclick="loadImage()">이미지 로드</button>
+	<br>
+	<img id="image" src="/download" alt="이미지">
+	<br>
 	<h1>POST 요청</h1>
 	<form method="POST" action="/post.php">
 		<label for="name">이름:</label>
@@ -34,14 +34,6 @@
 		<input type="number" id="age" name="Age"><br>
 		<input type="submit" value="전송">
 	</form>
-	<h1>잚못된GET 요청</h1>
-	<form id="blogForm" action="/donggu/blog" method="DELETE">
-		<input type="hidden" name="_method" value="PUT">
-		<label for="name">이름:</label>
-		<input type="text" id="name" name="name" required>
-		<label for="age">나이:</label>
-		<input type="age" id="age" name="age" required>
-		<input type="submit" value="전송">
 </body>
 <script>
 	// const form = document.getElementById('blogForm');
