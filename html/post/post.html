@@ -7,16 +7,21 @@
 </head>
 
 <body>
-	<h1>이미지 업로드</h1>
-		<form action="/upload" method="post" enctype="multipart/form-data">
-			<input type="file" name="file">
-			<input type="submit" value="업로드">
-		</form>
-    <h1>이미지 내려받기</h1>
-		<img src="/download" alt="Image">
+    <h1>이미지 업로드 및 내려받기</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+        <br><br>
+        <input type="submit" value="업로드">
     </form>
+	<h1>이미지 요청 및 표시</h1>
+    <button onclick="loadImage()">이미지 로드</button>
+    <br>
+    <img id="image" src="/download" alt="이미지">
+    <br>
+    <img id="image" src="" alt="이미지">
+	<a href="/Users/devicii/Baseline/html/post/tmp/upload/wtf.png" download>파일 다운로드</a>
 	<h1>POST 요청</h1>
-	<form method="POST" action="/post">
+	<form method="POST" action="/post.php">
 		<label for="name">이름:</label>
 		<input type="text" id="name" name="Name"><br>
 		<label for="age">나이:</label>
@@ -24,7 +29,7 @@
 		<input type="submit" value="전송">
 	</form>
 	<h1>올바른 GET 요청</h1>
-	<form method="GET" action="get.php">
+	<form method="GET" action="/get.php">
 		<label for="name">이름:</label>
 		<input type="text" id="name" name="Name"><br>
 		<label for="age">나이:</label>

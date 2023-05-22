@@ -592,11 +592,12 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
         //여기 물어봐야함
         std::cout << "empty location bolock mirror" << std::endl;
     }
-    script_filename += (it->GetRoot()); //./html/post
-    script_name += (it->GetRoot());
+    _target = fetchFilePath();
+    // script_filename += (it->GetRoot()); //./html/post
+    // script_name += (it->GetRoot());
     script_filename += _target; // index.php
-    script_name += _target;     // index.php
     request_uri += _target;
+    script_name += request_uri.substr(request_uri.find_last_of("/") + 1);     // index.php
 
     std::string _root = document_root + it->GetRoot();
 
@@ -613,6 +614,17 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     _envMap["DOCUMENT_ROOT"] = _root;
     _envMap["QUERY_STRING"] = query_string; // get 일 때 필요
     _envMap["REQUEST_METHOD"] = request_method;
+	std::map<std::string, std::string>::iterator it1;
+	std::map<std::string, std::string>::iterator it2;
+	it1 = _envMap.begin();
+	it2 = _envMap.end();
+	std::cerr << "====env====" << std::endl;
+	for(;it1!=it2;it1++)
+	{
+		std::cerr << it1->second << std::endl;
+	}
+	std::cerr << "====env====" << std::endl;
+
     return (_envMap);
 }
 
