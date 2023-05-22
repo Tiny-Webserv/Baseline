@@ -55,6 +55,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		request->SetServer(FindServer(servers, request));
 		try {
 			if (FindServer(servers, request) == NULL) {
+				std::cerr << "could not find server" << std::endl;
 				delete request;
 				return NULL;
 			}

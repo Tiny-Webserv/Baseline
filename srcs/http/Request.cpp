@@ -16,10 +16,10 @@ Request::Request(int fd, std::stringstream &stream)
     try {
         std::string buff;
         std::getline(stream, buff, '\n');
-        setStartLine(buff);
         setHeader(stream.str());
-        readBody(fd);
         splitHost();
+        setStartLine(buff);
+        readBody(fd);
         if (_contentType == "multipart/form-data")
             parseFormData();
 
@@ -133,12 +133,17 @@ Request::Request(const Request &request)
 
 void Request::setStartLine(std::string startLine) {
     std::vector<std::string> data = Split(startLine, std::string(" "));
+    std::cerr << "========method==========" << std::endl;
+    std::cerr << data[0] << std::endl;
+    std::cerr << "========method==========" << std::endl;
     if (!data[0].compare("GET") || !data[0].compare("POST") ||
         !data[0].compare("DELETE")) {
             _method = data[0];
         }
-    else
+    else {
+        std::cerr << "WHAT?????? " << std::endl;
         throw MethodError();
+    }
     _target = Split(
         data[1], std::string(":"))[0]; //[0]은 vector 0번째 인덱스 접근을 위함
     if (_target.find('?') != std::string::npos) {
