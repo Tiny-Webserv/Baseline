@@ -122,7 +122,7 @@ Response::Response(Response &response) {
 
 ServerFiles Response::_serverFiles = ServerFiles();
 
-std::map<int, std::vector<int>> Response::_cgi;
+std::map<int, std::vector<int> > Response::_cgi;
 
 bool Response::isDone() { return _isDone; }
 
@@ -287,13 +287,27 @@ bool Response::isRedirect() {
     redirectLocation.insert(redirectLocation.end(), tmp.begin(), tmp.end());
     std::string str(redirectLocation.begin(), redirectLocation.end());
     _redirectLocation = str;
-    if (getLocationBlock().GetReturn().first == 302) {
-        _request->SetErrorCode(302);
-        _request->SetErrorMessages("Moved Temporarily");
-        _isRedirection = true;
-    };
+
+    if (!getLocationBlock().GetLocationTarget().empty())
+    {
+        if (getLocationBlock().GetReturn().first == 302 && getLocationBlock().GetLocationTarget() == _request->GetTarget()) {
+            // std::cout << "성공"  << std::endl;
+            _request->SetErrorCode(302);
+            _request->SetErrorMessages("Moved Temporarily");
+            _isRedirection = true;
+        };
+    }
+    else
+    {
+            _request->SetErrorCode(404);
+            _isRedirection = false;
+    }
     return _isRedirection;
 }
+
+
+
+
 
 void Response::generateAutoindex(const std::string &directory) {
     std::cerr << "dir_path : " << directory << std::endl;
@@ -715,7 +729,7 @@ void Response::forkPhp(struct kevent *curEvents,
 
 bool Response::hasChildProc() { return _hasChildProc; }
 
-std::map<int, std::vector<int>> &Response::getCGI() { return _cgi; }
+std::map<int, std::vector<int> > &Response::getCGI() { return _cgi; }
 
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
 std::vector<char> Response::getStatusHeaderMessage() {
