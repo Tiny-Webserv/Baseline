@@ -52,9 +52,13 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 			line = get_next_line(fd);
 		}
 		Request *request = new Request(fd, ss);
-		clients.insert(std::pair<int, Request *>(fd, request));
 		request->SetServer(FindServer(servers, request));
 		try {
+			if (FindServer(servers, request) == NULL) {
+				delete request;
+				return NULL;
+			}
+			clients.insert(std::pair<int, Request *>(fd, request));
 			if (request->getBinary().size() > request->GetServer().GetClientMaxBodySize())
 				throw BodySizeError();
 		} catch (const StateCode &e) {
