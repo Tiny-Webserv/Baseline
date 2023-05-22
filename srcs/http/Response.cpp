@@ -39,7 +39,7 @@ Response::Response(Request *request)
         else if (request->GetMethod() == "DELETE")
             deleteMethod();
     } catch (NotExist &e) {
-		std::cerr << "srcs/http/Response.cpp:42" << std::endl;
+        std::cerr << "srcs/http/Response.cpp:42" << std::endl;
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
@@ -50,7 +50,7 @@ Response::Response(Request *request)
                 generateErrorBody();
             }
         } catch (NotExist &e) {
-			std::cerr << "srcs/http/Response.cpp:53" << std::endl;
+            std::cerr << "srcs/http/Response.cpp:53" << std::endl;
             generateErrorBody();
         }
         _contentType = "text/html";
@@ -85,7 +85,7 @@ Response::Response(Request *request, struct kevent *curEvnts,
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
-			std::cerr << "srcs/http/Response.cpp:87" << std::endl;
+            std::cerr << "srcs/http/Response.cpp:87" << std::endl;
             if (isAutoIndex())
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
@@ -122,44 +122,40 @@ Response::Response(Response &response) {
 
 ServerFiles Response::_serverFiles = ServerFiles();
 
-std::map<int, std::vector<int> > Response::_cgi;
+std::map<int, std::vector<int>> Response::_cgi;
 
 bool Response::isDone() { return _isDone; }
 
 std::string Response::fetchFilePath() {
     std::string location = getLocationBlock().GetLocationTarget();
     std::string target = _request->GetTarget().substr(location.size());
-	std::cerr << "target : " << target << std::endl;
-    if (target.size() && !(*(target.end() -1) == '/' && target.size() == 1)) {
-		if (target[0] != '/')
-        {
-			target.insert(0, "/");
+    std::cerr << "target : " << target << std::endl;
+    if (target.size() && !(*(target.end() - 1) == '/' && target.size() == 1)) {
+        if (target[0] != '/') {
+            target.insert(0, "/");
             std::cerr << "FUCK\n";
         }
         target.insert(0, getLocationBlock().GetRoot());
-	}
-    else {
+    } else {
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
         for (size_t i = 0; i < index.size(); i++) {
             target = getLocationBlock().GetRoot();
-			if (index[i][0] != '/')
-            {
-				target += "/";
+            if (index[i][0] != '/') {
+                target += "/";
                 std::cerr << "YOU\n";
             }
-			target += index[i];
+            target += index[i];
             if (stat(target.c_str(), &buffer) != 0)
                 continue;
-            else
-			{
+            else {
                 return target;
-			}
+            }
         }
         // redirect인지 아닌지에 따라서 throw
         if (isRedirect() == false) {
-			std::cerr << "fetch file path" << std::endl;
+            std::cerr << "fetch file path" << std::endl;
             throw NotExist();
         }
     }
@@ -247,7 +243,7 @@ LocationBlock &Response::getLocationBlock() {
     }
     if (rootLocationIndex != -1)
         return _request->GetServer().GetLocation()[rootLocationIndex];
-	std::cerr << "get location block" << std::endl;
+    std::cerr << "get location block" << std::endl;
     throw NotExist();
 }
 
@@ -300,7 +296,7 @@ bool Response::isRedirect() {
 }
 
 void Response::generateAutoindex(const std::string &directory) {
-	std::cerr << "dir_path : " << directory << std::endl;
+    std::cerr << "dir_path : " << directory << std::endl;
     std::string dir_path = directory;
     DIR *dir = opendir(dir_path.c_str());
     struct dirent *entry;
@@ -312,24 +308,22 @@ void Response::generateAutoindex(const std::string &directory) {
 
     while ((entry = readdir(dir)) != NULL) {
         std::string name = entry->d_name; // 파일/디렉토리 이름
-		std::cerr << "name : " << name << std::endl;
-		if (_request->GetErrorCode() != NotFound) {
-			if (name == "..") {
-				name.clear();
-				size_t	found = _request->GetTarget().find_last_of("/");
-				name = _request->GetTarget().substr(0, found);
-			}
-			else {
-				if (name == ".")
-					name.clear();
-				else if (name[0] != '/')
-					name.insert(0, "/");
-				name.insert(0, _request->GetTarget());
-			}
-		}
+        std::cerr << "name : " << name << std::endl;
+        if (_request->GetErrorCode() != NotFound) {
+            if (name == "..") {
+                name.clear();
+                size_t found = _request->GetTarget().find_last_of("/");
+                name = _request->GetTarget().substr(0, found);
+            } else {
+                if (name == ".")
+                    name.clear();
+                else if (name[0] != '/')
+                    name.insert(0, "/");
+                name.insert(0, _request->GetTarget());
+            }
+        }
         ss << "<tr><td><a href=\"" << name << "\">";
-		ss << std::string(entry->d_name)
-           << "</a></td></tr>\n";
+        ss << std::string(entry->d_name) << "</a></td></tr>\n";
     }
 
     ss << "</table>\n<hr>\n</body>\n</html>\n";
@@ -371,7 +365,7 @@ void Response::generateHeader() {
         }
         ss << CRLF;
     }
-	if (_request->GetErrorCode() / 100 == 3)
+    if (_request->GetErrorCode() / 100 == 3)
         ss << _redirectLocation << CRLF;
 
     ss << CRLF;
@@ -459,9 +453,9 @@ bool Response::verifyFile(const char *filename) {
         if (errno == EACCES)
             throw PermissionDenied();
         else if (errno == ENOENT) {
-			std::cerr << "verifyFile" << std::endl;
+            std::cerr << "verifyFile" << std::endl;
             throw NotExist();
-		}
+        }
         throw ServerError(strerror(errno));
     }
     return true;
@@ -477,7 +471,7 @@ void Response::getMethod() {
     if (isDirectory(fileToRead.c_str())) {
         if (!isAutoIndex())
             throw PermissionDenied();
-		std::cerr << "fileToRead : " << fileToRead << std::endl;
+        std::cerr << "fileToRead : " << fileToRead << std::endl;
         generateAutoindex(fileToRead);
         return;
     }
@@ -547,11 +541,11 @@ void Response::deleteMethod() {
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
     if (remove(fileToRead.c_str()) != 0) {
-		std::cerr << "delete method" << std::endl;
+        std::cerr << "delete method" << std::endl;
         throw NotExist();
 
-    _request->SetErrorCode(NoContent);
-	}
+        _request->SetErrorCode(NoContent);
+    }
 }
 
 std::map<std::string, std::string> Response::PhpEnvSet() {
@@ -589,7 +583,7 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
             break;
     }
     if (it == location_vector.end()) {
-        //여기 물어봐야함
+        // 여기 물어봐야함
         std::cout << "empty location bolock mirror" << std::endl;
     }
     _target = fetchFilePath();
@@ -597,7 +591,8 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     // script_name += (it->GetRoot());
     script_filename += _target; // index.php
     request_uri += _target;
-    script_name += request_uri.substr(request_uri.find_last_of("/") + 1);     // index.php
+    script_name +=
+        request_uri.substr(request_uri.find_last_of("/") + 1); // index.php
 
     std::string _root = document_root + it->GetRoot();
 
@@ -614,16 +609,15 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     _envMap["DOCUMENT_ROOT"] = _root;
     _envMap["QUERY_STRING"] = query_string; // get 일 때 필요
     _envMap["REQUEST_METHOD"] = request_method;
-	std::map<std::string, std::string>::iterator it1;
-	std::map<std::string, std::string>::iterator it2;
-	it1 = _envMap.begin();
-	it2 = _envMap.end();
-	std::cerr << "====env====" << std::endl;
-	for(;it1!=it2;it1++)
-	{
-		std::cerr << it1->second << std::endl;
-	}
-	std::cerr << "====env====" << std::endl;
+    std::map<std::string, std::string>::iterator it1;
+    std::map<std::string, std::string>::iterator it2;
+    it1 = _envMap.begin();
+    it2 = _envMap.end();
+    std::cerr << "====env====" << std::endl;
+    for (; it1 != it2; it1++) {
+        std::cerr << it1->second << std::endl;
+    }
+    std::cerr << "====env====" << std::endl;
 
     return (_envMap);
 }
@@ -633,14 +627,13 @@ void Response::forkPhp(struct kevent *curEvents,
     std::string *body;
 
     if (_request->GetMethod() == "GET") {
-        //body = new std::string(_request->GetTarget());
-        //body->erase(0, body->find("?") + 1);
-		body = new std::string(_request->GetQuery());
+        // body = new std::string(_request->GetTarget());
+        // body->erase(0, body->find("?") + 1);
+        body = new std::string(_request->GetQuery());
         // "REQUEST_METHOD=GET"
     } else if (_request->GetMethod() == "POST") {
         std::vector<char> bodyVec = _request->getBinary();
-        body = new std::string(bodyVec.begin(),
-                               bodyVec.end());
+        body = new std::string(bodyVec.begin(), bodyVec.end());
     } else {
         body = new std::string();
     }
@@ -649,8 +642,8 @@ void Response::forkPhp(struct kevent *curEvents,
     int pid;
 
     if (pipe(parentWrite) == -1 || pipe(childWrite) == -1) {
-		close(parentWrite[0]);
-		close(parentWrite[1]);
+        close(parentWrite[0]);
+        close(parentWrite[1]);
         throw ServerError(strerror(errno));
     }
     *body += "\r\n\r\n";
@@ -683,7 +676,7 @@ void Response::forkPhp(struct kevent *curEvents,
         close(parentWrite[0]);
         dup2(childWrite[1], 1);
         close(childWrite[1]);
-        std::string	arg2 = fetchFilePath();
+        std::string arg2 = fetchFilePath();
 
         char *arg[] = {"./html/php-cgi", (char *)arg2.c_str(), NULL};
 
@@ -722,7 +715,7 @@ void Response::forkPhp(struct kevent *curEvents,
 
 bool Response::hasChildProc() { return _hasChildProc; }
 
-std::map<int, std::vector<int> > &Response::getCGI() { return _cgi; }
+std::map<int, std::vector<int>> &Response::getCGI() { return _cgi; }
 
 std::vector<char> Response::getResponseMessage() { return _responseMessage; }
 std::vector<char> Response::getStatusHeaderMessage() {

@@ -24,7 +24,7 @@ Request::Request(int fd, std::stringstream &stream)
             parseFormData();
 
     } catch (const StateCode &e) {
-        SetErrorCode(_errorCode);
+        SetErrorCode(e._errorCode);
         SetErrorMessages(e.what());
     }
 }
@@ -112,7 +112,7 @@ std::vector<Request *> Request::getFormData() { return _formData; }
 
 std::vector<char> Request::getBinary() { return _binary; }
 
-bool	Request::getConnection() { return _connection; }
+bool Request::getConnection() { return _connection; }
 
 Request &Request::operator=(const Request &request) {
     _method = request._method;
@@ -138,9 +138,8 @@ void Request::setStartLine(std::string startLine) {
     std::cerr << "========method==========" << std::endl;
     if (!data[0].compare("GET") || !data[0].compare("POST") ||
         !data[0].compare("DELETE")) {
-            _method = data[0];
-        }
-    else {
+        _method = data[0];
+    } else {
         std::cerr << "WHAT?????? " << std::endl;
         throw MethodError();
     }
@@ -187,7 +186,7 @@ void Request::setHeader(std::string header) {
             }
         }
     }
-	iter = find(splited.begin(), splited.end(), "Connection:");
+    iter = find(splited.begin(), splited.end(), "Connection:");
     if (iter != splited.end() && iter + 1 != splited.end())
         _connection = (*(iter + 1) == "close" ? true : false);
 }
@@ -208,7 +207,7 @@ void Request::readBody(int fd) {
     std::stringstream ss;
     std::string line;
     int valRead;
-	int	readSize = 0;
+    int readSize = 0;
     std::vector<char> buffer(1024);
 
     if (_chunked) {
@@ -222,7 +221,7 @@ void Request::readBody(int fd) {
         }
     }
     while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
-		readSize += valRead;
+        readSize += valRead;
         std::copy(buffer.begin(), buffer.begin() + valRead,
                   std::back_inserter(_binary));
     }
@@ -235,11 +234,13 @@ void Request::readBody(int fd) {
             _binary.erase(_binary.end() - 5, _binary.end() - 1);
         }
     } else if (_chunked) {
-		if (static_cast<unsigned int>(readSize) > x || (_server != NULL && _binary.size() > _server->GetClientMaxBodySize()))
-			throw BodySizeError();
+        if (static_cast<unsigned int>(readSize) > x ||
+            (_server != NULL &&
+             _binary.size() > _server->GetClientMaxBodySize()))
+            throw BodySizeError();
         _isEnd = false;
     } else if (_binary.size() == 0)
-		_isEnd = true;
+        _isEnd = true;
 }
 
 void Request::parseFormData() {
@@ -266,7 +267,4 @@ void Request::parseFormData() {
     }
 }
 
-std::string Request::GetQuery()
-{
-    return _query;
-}
+std::string Request::GetQuery() { return _query; }
