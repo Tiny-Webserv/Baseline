@@ -7,11 +7,16 @@
 </head>
 
 <body>
-    <h1>이미지 업로드 및 내려받기</h1>
+	<h1>이미지 업로드</h1>
+		<form action="/upload" method="post" enctype="multipart/form-data">
+			<input type="file" name="file">
+			<input type="submit" value="업로드">
+		</form>
+    <h1>이미지 내려받기</h1>
 		<img src="/download" alt="Image">
-    </form>  
+    </form>
 	<h1>POST 요청</h1>
-	<form method="POST" action="index.php">
+	<form method="POST" action="/post">
 		<label for="name">이름:</label>
 		<input type="text" id="name" name="Name"><br>
 		<label for="age">나이:</label>

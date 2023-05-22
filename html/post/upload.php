@@ -10,7 +10,7 @@
         <br><br>
         <input type="submit" value="업로드">
         </form>
-    
+
     <h1>GET 요청 버튼</h1>
     <?php
     $documentRoot = $_SERVER['DOCUMENT_ROOT'];
