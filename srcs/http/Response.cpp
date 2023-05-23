@@ -238,12 +238,14 @@ LocationBlock &Response::getLocationBlock() {
                 rootLocationIndex = static_cast<int>(i);
                 continue;
             }
+			if (!(target.size() > locationTarget.size() && target[locationTarget.size()] == '/'))
+				continue ;
             return _request->GetServer().GetLocation()[i];
         }
     }
     if (rootLocationIndex != -1)
         return _request->GetServer().GetLocation()[rootLocationIndex];
-    std::cerr << "get location block" << std::endl;
+    std::cerr << "srcs/http/Response.cpp:248" << std::endl;
     throw NotExist();
 }
 
