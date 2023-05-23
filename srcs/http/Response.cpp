@@ -163,15 +163,13 @@ std::string Response::fetchFilePath() {
     return target;
 }
 
-int Response::generatePhpResponse(struct kevent *curEvnts,
-                                  std::vector<struct kevent> &_ChangeList) {
+int Response::generatePhpResponse(struct kevent *curEvnts) {
     // map
     waitpid(curEvnts->ident, 0, WNOHANG);
     _hasChildProc = false;
     std::stringstream ss;
     char buf[1024];
     int read_size = 1;
-    struct kevent tmpEvnt;
     close(curEvnts->ident);
 
     while (true) {
@@ -181,7 +179,7 @@ int Response::generatePhpResponse(struct kevent *curEvnts,
         } else if (read_size == -1) {
             close(curEvnts->ident);
             close(_cgi[curEvnts->ident][CHILD_OUT]);
-            return -1;
+            throw ServerError("php read failed");
         }
         buf[read_size] = 0;
         ss << buf;
@@ -192,9 +190,6 @@ int Response::generatePhpResponse(struct kevent *curEvnts,
     generatePhpBody(phpResponse);
     generatePhpHeader(phpResponse);
     joinResponseMessage();
-    EV_SET(&tmpEvnt, _cgi[curEvnts->ident][CLIENT_SOCKET], EVFILT_WRITE,
-           EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
-    _ChangeList.push_back(tmpEvnt);
     _isDone = true;
     return 0;
 }
@@ -238,8 +233,8 @@ LocationBlock &Response::getLocationBlock() {
                 rootLocationIndex = static_cast<int>(i);
                 continue;
             }
-			if (!(target.size() > locationTarget.size() && target[locationTarget.size()] == '/'))
-				continue ;
+			// if (!(target.size() > locationTarget.size() && target[locationTarget.size()] == '/'))
+			// 	continue ;
             return _request->GetServer().GetLocation()[i];
         }
     }
@@ -748,4 +743,21 @@ void Response::setStatusHeaderMessage(std::vector<char> &statusHeaderMessage) {
 }
 void Response::setBodyMessage(std::vector<char> &bodyMessage) {
     _bodyMessage = bodyMessage;
+}
+
+void    Response::PhpResultRead(struct kevent *curEvnts)
+{
+    try{
+        generatePhpResponse(curEvnts);
+    }
+    catch (StateCode &e) {
+        _request->SetErrorCode(e._errorCode);
+        _request->SetErrorMessages(e.what());
+        generateErrorBody();
+        _contentType = "text/html";
+        generateStatusLine();
+        generateHeader();
+        joinResponseMessage();
+        _isDone = true;
+    }
 }

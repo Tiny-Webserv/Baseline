@@ -71,13 +71,20 @@ void EventLoop::EventHandler() {
                 std::cout << Response::getCGI()[curEvnts->ident][0]
                           << " cgi 호출 끝" << std::endl;
                 int sock_fd = Response::getCGI()[curEvnts->ident][0];
-                if (_response[sock_fd]->generatePhpResponse(curEvnts, _ChangeList) == -1)
-					EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
-					Response::getCGI().erase(curEvnts->ident);
-                // if (Response::getCGI()[curEvnts->ident].size()) {
-                // _cgiResponse[sock_fd] =
-                // _response2[sock_fd]->getResponseMessage();
-                // }
+                _response[sock_fd]->PhpResultRead(curEvnts);
+                struct kevent tmpEvnt;
+                EV_SET(&tmpEvnt, sock_fd, EVFILT_WRITE,
+                    EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
+                _ChangeList.push_back(tmpEvnt);
+
+
+				Response::getCGI().erase(curEvnts->ident);
+                // EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
+                
+                
+                //if (_response[sock_fd]->generatePhpResponse(curEvnts, _ChangeList) == -1)
+					// EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
+					// Response::getCGI().erase(curEvnts->ident);
             } else {
                 std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
                           << curEvnts->filter << ") 발생" << std::endl;
