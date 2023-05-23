@@ -133,10 +133,12 @@ std::string Response::fetchFilePath() {
     if (target.size() && !(*(target.end() - 1) == '/' && target.size() == 1)) {
         if (target[0] != '/') {
             target.insert(0, "/");
-            std::cerr << "FUCK\n";
+            //std::cerr << "FUCK\n";
         }
         target.insert(0, getLocationBlock().GetRoot());
     } else {
+		if (_request->GetMethod() == "DELETE")
+			throw NotExist();
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
@@ -236,6 +238,8 @@ LocationBlock &Response::getLocationBlock() {
         if (!strncmp(locationTarget.c_str(), target.c_str(),
                      locationTarget.size())) {
             if (locationTarget.size() > longestLength) {
+				if (locationTarget != "/" && target.size() > locationTarget.size() && target[locationTarget.size()] != '/')
+					continue ;
 				longestLength = locationTarget.size();
                 longestIndex = static_cast<int>(i);
 			}
@@ -555,13 +559,14 @@ void Response::deleteMethod() {
     std::string fileToRead;
     if (!isAllowed("DELETE"))
         throw MethodNotAllowed();
+	//if (_request->GetTarget() == getLocationBlock().GetLocationTarget())
+    //    throw NotExist();
     fileToRead = fetchFilePath();
     if (remove(fileToRead.c_str()) != 0) {
         std::cerr << "delete method" << std::endl;
         throw NotExist();
-
-        _request->SetErrorCode(NoContent);
     }
+	_request->SetErrorCode(NoContent);
 }
 
 std::map<std::string, std::string> Response::PhpEnvSet() {
