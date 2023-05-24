@@ -80,6 +80,9 @@ public:
 	virtual const char *what() const throw();
 };
 
-
+class ReadFail : public std::exception {
+public:
+	const char *what() const throw();
+};
 
 #endif
