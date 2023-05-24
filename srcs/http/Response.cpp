@@ -43,10 +43,21 @@ Response::Response(Request *request)
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
-            if (isAutoIndex())
+            std::string fileToRead;
+            fileToRead = fetchFilePath();
+            std::cout << "======;;;===" << std::endl;
+            std::cout << fileToRead << std::endl;
+            std::cout << "======;;;===" << std::endl;
+
+            std::cout << "=====check3====" << std::endl;
+            if (isAutoIndex() && isDirectory(fileToRead.c_str()))
+            {
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
+            }
             else {
+                std::cout << "=====check4====" << std::endl;
+
                 generateErrorBody();
             }
         } catch (NotExist &e) {
@@ -86,9 +97,13 @@ Response::Response(Request *request, struct kevent *curEvnts,
         _request->SetErrorMessages(e.what());
         try {
             std::cerr << "srcs/http/Response.cpp:87" << std::endl;
-            if (isAutoIndex())
+            if (isAutoIndex() && verifyFile(_request->GetServer().GetRoot().c_str()))
+            {
+
+                std::cout << "=====check4====" << std::endl;
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
+            }
             else {
                 generateErrorBody();
             }
@@ -154,7 +169,7 @@ std::string Response::fetchFilePath() {
             }
         }
         // redirect인지 아닌지에 따라서 throw
-        if (isRedirect() == false) {
+        if (isRedirect() == false && isAutoIndex() == false) {
             std::cerr << "fetch file path" << std::endl;
             throw NotExist();
         }
@@ -309,6 +324,10 @@ bool Response::isRedirect() {
 void Response::generateAutoindex(const std::string &directory) {
     std::cerr << "dir_path : " << directory << std::endl;
     std::string dir_path = directory;
+    std::cout << "=======dir_path========" << std::endl;
+    std::cout << dir_path << std::endl;
+    std::cout << "=======dir_path========" << std::endl;
+
     DIR *dir = opendir(dir_path.c_str());
     struct dirent *entry;
     std::stringstream ss;
@@ -483,6 +502,7 @@ void Response::getMethod() {
     // 디렉토리인지 체크
 	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
+        std::cout << "=====check1====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
         std::cerr << "fileToRead : " << fileToRead << std::endl;
@@ -524,6 +544,7 @@ void Response::postMethod() {
     fileToRead = fetchFilePath();
 	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
+        std::cout << "=====check2====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
         generateAutoindex(fileToRead);
