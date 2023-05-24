@@ -145,6 +145,8 @@ std::string Response::fetchFilePath() {
         }
         target.insert(0, getLocationBlock().GetRoot());
     } else {
+		if (_request->GetMethod() == "DELETE")
+			throw NotExist();
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
