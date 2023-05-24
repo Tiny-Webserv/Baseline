@@ -133,10 +133,12 @@ std::string Response::fetchFilePath() {
     if (target.size() && !(*(target.end() - 1) == '/' && target.size() == 1)) {
         if (target[0] != '/') {
             target.insert(0, "/");
-            std::cerr << "FUCK\n";
+            //std::cerr << "FUCK\n";
         }
         target.insert(0, getLocationBlock().GetRoot());
     } else {
+		if (_request->GetMethod() == "DELETE")
+			throw NotExist();
         struct stat buffer;
         std::vector<std::string> index = getLocationBlock().GetIndex();
 
@@ -226,7 +228,8 @@ void Response::generatePhpHeader(std::string phpResponse) {
 
 LocationBlock &Response::getLocationBlock() {
     ServerBlock Block;
-    int rootLocationIndex = -1;
+    int longestIndex = -1;
+	size_t longestLength = 0;
 
     std::string target = _request->GetTarget();
     for (size_t i = 0; i < _request->GetServer().GetLocation().size(); i++) {
@@ -234,17 +237,18 @@ LocationBlock &Response::getLocationBlock() {
             _request->GetServer().GetLocation()[i].GetLocationTarget();
         if (!strncmp(locationTarget.c_str(), target.c_str(),
                      locationTarget.size())) {
-            if (locationTarget == "/") {
-                rootLocationIndex = static_cast<int>(i);
-                continue;
-            }
-			if (!(target.size() > locationTarget.size() && target[locationTarget.size()] == '/'))
-				continue ;
-            return _request->GetServer().GetLocation()[i];
+            if (locationTarget.size() > longestLength) {
+				if (locationTarget != "/" && target.size() > locationTarget.size() && target[locationTarget.size()] != '/')
+					continue ;
+				longestLength = locationTarget.size();
+                longestIndex = static_cast<int>(i);
+			}
         }
     }
-    if (rootLocationIndex != -1)
-        return _request->GetServer().GetLocation()[rootLocationIndex];
+    if (longestIndex != -1) {
+		std::cout << "location block : " << _request->GetServer().GetLocation()[longestIndex].GetLocationTarget() << std::endl;
+        return _request->GetServer().GetLocation()[longestIndex];
+	}
     std::cerr << "srcs/http/Response.cpp:248" << std::endl;
     throw NotExist();
 }
@@ -555,13 +559,14 @@ void Response::deleteMethod() {
     std::string fileToRead;
     if (!isAllowed("DELETE"))
         throw MethodNotAllowed();
+	//if (_request->GetTarget() == getLocationBlock().GetLocationTarget())
+    //    throw NotExist();
     fileToRead = fetchFilePath();
     if (remove(fileToRead.c_str()) != 0) {
         std::cerr << "delete method" << std::endl;
         throw NotExist();
-
-        _request->SetErrorCode(NoContent);
     }
+	_request->SetErrorCode(NoContent);
 }
 
 std::map<std::string, std::string> Response::PhpEnvSet() {
