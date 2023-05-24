@@ -196,10 +196,12 @@ void Request::setHeader(std::string header) {
 }
 
 void Request::splitHost() {
-    std::vector<std::string> splited = Split(_hostName, ":");
-    _hostName = splited[0]; // name
-    if (splited.size() > 1)
-        _hostPort = atoi(splited[1].c_str());
+	std::cerr << "hostname : " << _hostName << std::endl;
+	if (_hostName.find(":") != std::string::npos && _hostName.find(":") != _hostName.size()) {
+		_hostPort = atoi(_hostName.substr(_hostName.find(":") + 1).c_str());
+		std::cerr << "_hostPort : " << _hostPort << std::endl;
+	}
+	_hostName = _hostName.substr(0, _hostName.find(":"));
 }
 
 std::string Request::GetHostName() { return this->_hostName; }
@@ -218,7 +220,7 @@ void Request::readBody(int fd) {
         line = line.substr(0, line.size() - CRLF_SIZE);
         ss << std::hex << line;
         ss >> x;
-        _contentLength = x; 
+        _contentLength = x;
         std::cout << "chunked = " << x << std::endl;
         if (x == 0) {
             _isEnd = true;
