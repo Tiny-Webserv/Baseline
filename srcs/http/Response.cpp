@@ -43,20 +43,13 @@ Response::Response(Request *request)
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
-            std::string fileToRead;
-            fileToRead = fetchFilePath();
-            std::cout << "======;;;===" << std::endl;
-            std::cout << fileToRead << std::endl;
-            std::cout << "======;;;===" << std::endl;
-
-            std::cout << "=====check3====" << std::endl;
-            if (isAutoIndex() && isDirectory(fileToRead.c_str()))
+			// target 유효성 검증 조건문 추가
+            if (isAutoIndex() && verifyFile(_request->GetTarget().c_str()))
             {
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
             }
             else {
-                std::cout << "=====check4====" << std::endl;
 
                 generateErrorBody();
             }
