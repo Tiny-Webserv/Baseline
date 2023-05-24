@@ -39,7 +39,6 @@ Response::Response(Request *request)
         else if (request->GetMethod() == "DELETE")
             deleteMethod();
     } catch (NotExist &e) {
-        std::cerr << "srcs/http/Response.cpp:42" << std::endl;
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
@@ -54,7 +53,6 @@ Response::Response(Request *request)
                 generateErrorBody();
             }
         } catch (NotExist &e) {
-            std::cerr << "srcs/http/Response.cpp:53" << std::endl;
             generateErrorBody();
         }
         _contentType = "text/html";
@@ -89,11 +87,9 @@ Response::Response(Request *request, struct kevent *curEvnts,
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
-            std::cerr << "srcs/http/Response.cpp:87" << std::endl;
 
             if (isAutoIndex() && verifyFile(_request->GetTarget().c_str()))
             {
-                std::cout << "=====check4====" << std::endl;
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
                 }
@@ -137,11 +133,9 @@ bool Response::isDone() { return _isDone; }
 std::string Response::fetchFilePath() {
     std::string location = getLocationBlock().GetLocationTarget();
     std::string target = _request->GetTarget().substr(location.size());
-    std::cerr << "target : " << target << std::endl;
     if (target.size() && !(*(target.end() - 1) == '/' && target.size() == 1)) {
         if (target[0] != '/') {
             target.insert(0, "/");
-            //std::cerr << "FUCK\n";
         }
         target.insert(0, getLocationBlock().GetRoot());
     } else {
@@ -154,7 +148,6 @@ std::string Response::fetchFilePath() {
             target = getLocationBlock().GetRoot();
             if (index[i][0] != '/') {
                 target += "/";
-                std::cerr << "YOU\n";
             }
             target += index[i];
             if (stat(target.c_str(), &buffer) != 0)
@@ -165,7 +158,6 @@ std::string Response::fetchFilePath() {
         }
         // redirect인지 아닌지에 따라서 throw
         if (isRedirect() == false && isAutoIndex() == false) {
-            std::cerr << "fetch file path" << std::endl;
             throw NotExist();
         }
     }
@@ -249,10 +241,8 @@ LocationBlock &Response::getLocationBlock() {
         }
     }
     if (longestIndex != -1) {
-		std::cout << "location block : " << _request->GetServer().GetLocation()[longestIndex].GetLocationTarget() << std::endl;
         return _request->GetServer().GetLocation()[longestIndex];
 	}
-    std::cerr << "srcs/http/Response.cpp:248" << std::endl;
     throw NotExist();
 }
 
@@ -304,12 +294,12 @@ bool Response::isRedirect() {
             _request->SetErrorCode(302);
             _request->SetErrorMessages("Moved Temporarily");
             _isRedirection = true;
-            std::cout << "여기서 404 ?22" << std::endl;
+            // std::cout << "여기서 404 ?22" << std::endl;
         };
     }
     else
     {
-			std::cout << "여기서 404 ?" << std::endl;
+			// std::cout << "여기서 404 ?" << std::endl;
             _request->SetErrorCode(404);
             _isRedirection = false;
     }
@@ -321,11 +311,7 @@ bool Response::isRedirect() {
 
 
 void Response::generateAutoindex(const std::string &directory) {
-    std::cerr << "dir_path : " << directory << std::endl;
     std::string dir_path = directory;
-    std::cout << "=======dir_path========" << std::endl;
-    std::cout << dir_path << std::endl;
-    std::cout << "=======dir_path========" << std::endl;
 
     DIR *dir = opendir(dir_path.c_str());
     struct dirent *entry;
@@ -337,7 +323,6 @@ void Response::generateAutoindex(const std::string &directory) {
 
     while ((entry = readdir(dir)) != NULL) {
         std::string name = entry->d_name; // 파일/디렉토리 이름
-        std::cerr << "name : " << name << std::endl;
         if (_request->GetErrorCode() != NotFound) {
             if (name == "..") {
                 name.clear();
@@ -487,10 +472,8 @@ bool Response::verifyFile(const char *filename) {
             throw PermissionDenied();
         // ~/hello42.html 이후에 /hello42.html/42라는 잘못된 요청에 대해서 유효성 검증
         else if ((errno == ENOENT || errno == 20) && isRedirect() == false) {
-            std::cerr << "verifyFile" << std::endl;
             throw NotExist();
         }
-		std::cerr << "errorno : " << errno << std::endl;
         throw ServerError(strerror(errno));
     }
     return true;
@@ -505,10 +488,8 @@ void Response::getMethod() {
     // 디렉토리인지 체크
 	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
-        std::cout << "=====check1====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
-        std::cerr << "fileToRead : " << fileToRead << std::endl;
         generateAutoindex(fileToRead);
         return;
     }
@@ -547,7 +528,6 @@ void Response::postMethod() {
     fileToRead = fetchFilePath();
 	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
-        std::cout << "=====check2====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
         generateAutoindex(fileToRead);
@@ -583,7 +563,6 @@ void Response::deleteMethod() {
     fileToRead = fetchFilePath();
 	verifyFile(fileToRead.c_str());
     if (remove(fileToRead.c_str()) != 0) {
-        std::cerr << "delete method" << std::endl;
         throw NotExist();
     }
 	_request->SetErrorCode(NoContent);
@@ -623,10 +602,6 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
         if (it->GetLocationTarget() == _target)
             break;
     }
-    if (it == location_vector.end()) {
-        // 여기 물어봐야함
-        std::cout << "empty location bolock mirror" << std::endl;
-    }
     _target = fetchFilePath();
     // script_filename += (it->GetRoot()); //./html/post
     // script_name += (it->GetRoot());
@@ -650,16 +625,6 @@ std::map<std::string, std::string> Response::PhpEnvSet() {
     _envMap["DOCUMENT_ROOT"] = _root;
     _envMap["QUERY_STRING"] = query_string; // get 일 때 필요
     _envMap["REQUEST_METHOD"] = request_method;
-    std::map<std::string, std::string>::iterator it1;
-    std::map<std::string, std::string>::iterator it2;
-    it1 = _envMap.begin();
-    it2 = _envMap.end();
-    std::cerr << "====env====" << std::endl;
-    for (; it1 != it2; it1++) {
-        std::cerr << it1->second << std::endl;
-    }
-    std::cerr << "====env====" << std::endl;
-
     return (_envMap);
 }
 

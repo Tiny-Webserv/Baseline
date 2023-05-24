@@ -30,6 +30,7 @@ void Socket::ServerInit(Config::iterator it, Config &con)
 	int option = 1;
     if (setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0) {
         std::cout << "setsockopt error" << std::endl;
+		exit(1);
     }
 	// TIME_WAIT 상태인 소켓 재사용 가능 (테스트가 끝난면 삭제 ㄱㄱ)
 
@@ -45,10 +46,16 @@ void Socket::ServerInit(Config::iterator it, Config &con)
 			exit(80);
 		}
 		else
+		{
 			std::cout << "bind err" << std::endl;
+			exit(1);
+		}
 	}
 	if (listen(servSock, 1000) < 0)
+	{
 		std::cout << "listen err" << std::endl;
+		exit(1);
+	}
 	AddSocketEvent(servSock, *it);
 }
 

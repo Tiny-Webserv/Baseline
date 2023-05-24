@@ -136,14 +136,10 @@ Request::Request(const Request &request)
 
 void Request::setStartLine(std::string startLine) {
     std::vector<std::string> data = Split(startLine, std::string(" "));
-    std::cerr << "========method==========" << std::endl;
-    std::cerr << data[0] << std::endl;
-    std::cerr << "========method==========" << std::endl;
     if (!data[0].compare("GET") || !data[0].compare("POST") ||
         !data[0].compare("DELETE")) {
         _method = data[0];
     } else {
-        std::cerr << "WHAT?????? " << std::endl;
         throw MethodError();
     }
     _target = Split(
@@ -192,14 +188,12 @@ void Request::setHeader(std::string header) {
     }
     iter = find(splited.begin(), splited.end(), "Connection:");
     if (iter != splited.end() && iter + 1 != splited.end())
-        _connection = (*(iter + 1) == "close" ? true : false);
+        _connection = (*(iter + 1) == "keep-alive" ? true : false);
 }
 
 void Request::splitHost() {
-	std::cerr << "hostname : " << _hostName << std::endl;
 	if (_hostName.find(":") != std::string::npos && _hostName.find(":") != _hostName.size()) {
 		_hostPort = atoi(_hostName.substr(_hostName.find(":") + 1).c_str());
-		std::cerr << "_hostPort : " << _hostPort << std::endl;
 	}
 	_hostName = _hostName.substr(0, _hostName.find(":"));
 }
@@ -221,28 +215,28 @@ void Request::readBody(int fd) {
         ss << std::hex << line;
         ss >> x;
         _contentLength = x;
-        std::cout << "chunked = " << x << std::endl;
+        // std::cout << "chunked = " << x << std::endl;
         if (x == 0) {
             _isEnd = true;
             return;
         }
     }
-    std::cout << _contentLength << std::endl;
+    // std::cout << _contentLength << std::endl;
     if (_contentLength == -1) // contentLength 가 없고 chunked가 아닌데 바디가 있는 경우
         _contentLength = 10;
     std::vector<char> buffer(_contentLength);
     valRead = recv(fd, &buffer[0], _contentLength, 0); //non block * block
     if (valRead == _contentLength) {
-        std::cout << "valread good!!!" << std::endl;
+        // std::cout << "valread good!!!" << std::endl;
         std::copy(buffer.begin(), buffer.begin() + valRead,
                 std::back_inserter(_binary));
     }
-    else if (valRead == -1) {
-        std::cout << "valread == -1" << std::endl;
+    else {
+        // std::cout << "valread == -1" << std::endl;
         throw ReadFail();
     }
-    else
-        std::cout << "valread error" << std::endl;
+
+
 
     // CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
     if (!_chunked && _binary.size()) {
