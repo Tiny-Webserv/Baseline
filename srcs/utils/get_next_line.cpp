@@ -1,4 +1,5 @@
 #include "get_next_line.h"
+#include "StateCode.hpp"
 
 t_fdnode	*ft_getfdnode(t_fdnode **node, int fd)
 {
@@ -72,6 +73,8 @@ int	ft_makesave(t_fdnode **h, t_fdnode *t, int fd, char *bf)
 	while (!(t->cntn) && i[0] > 0)
 	{
 		i[0] = read(fd, bf, BUFFER_SIZE);
+		if (i[0] == - 1)
+			throw ReadFail();
 		i[1] = 0;
 		while (i[1] < i[0])
 			if (bf[i[1]++] == '\n')
