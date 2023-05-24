@@ -463,10 +463,12 @@ bool Response::verifyFile(const char *filename) {
     if (stat(filename, &buffer) != 0) {
         if (errno == EACCES)
             throw PermissionDenied();
-        else if (errno == ENOENT) {
+        // ~/hello42.html 이후에 /hello42.html/42라는 잘못된 요청에 대해서 유효성 검증
+        else if (errno == ENOENT || errno == 20) {
             std::cerr << "verifyFile" << std::endl;
             throw NotExist();
         }
+		std::cerr << "errorno : " << errno << std::endl;
         throw ServerError(strerror(errno));
     }
     return true;
@@ -479,6 +481,7 @@ void Response::getMethod() {
     // 파일 경로 가져오기
     fileToRead = fetchFilePath();
     // 디렉토리인지 체크
+	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
         if (!isAutoIndex())
             throw PermissionDenied();
@@ -519,6 +522,7 @@ void Response::postMethod() {
     if (!isAllowed("POST"))
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
+	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
         if (!isAutoIndex())
             throw PermissionDenied();
@@ -551,6 +555,7 @@ void Response::deleteMethod() {
     if (!isAllowed("DELETE"))
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
+	verifyFile(fileToRead.c_str());
     if (remove(fileToRead.c_str()) != 0) {
         std::cerr << "delete method" << std::endl;
         throw NotExist();
