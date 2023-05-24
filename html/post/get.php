@@ -1,6 +1,5 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    echo "This is get req !";
     $name = $_GET['Name'];
     $age = $_GET['Age'];
     echo "Name: " . $name . "<br>";

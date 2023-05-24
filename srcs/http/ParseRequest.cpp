@@ -40,18 +40,28 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 
 	std::map<int, Request *>::iterator clientsIterator = clients.find(fd);
 	if (clientsIterator == clients.end()) {
-		char *line = get_next_line(fd);
-		if (line == NULL)
+		try {
+			char *line = get_next_line(fd);
+			if (line == NULL)
+				return NULL;
+			while (line) {
+				ss << line;
+				std::string tmp(line);
+				free(line);
+				if (tmp == CRLF)
+					break;
+				line = get_next_line(fd);
+			}
+			std::cout << ss.str() << std::endl;
+		}
+		catch (ReadFail &e) {
 			return NULL;
-		while (line) {
-			ss << line;
-			std::string tmp(line);
-			free(line);
-			if (tmp == CRLF)
-				break;
-			line = get_next_line(fd);
 		}
 		Request *request = new Request(fd, ss);
+		if (request->GetErrorCode() == 600) {
+			delete(request);
+			return NULL;
+		}
 		request->SetServer(FindServer(servers, request));
 		try {
 			if (FindServer(servers, request) == NULL) {
@@ -67,10 +77,12 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 			request->SetErrorMessages(e.what());
 		}
     } else {
-
         Request *request = clients[fd];
 		try {
-			request->readBody(fd);
+			if (request->GetMethod() == "POST")
+				request->readBody(fd); 
+		} catch (ReadFail &e){
+			return NULL;
 		} catch (const StateCode &e) {
 			request->SetErrorCode(e._errorCode);
 			request->SetErrorMessages(e.what());

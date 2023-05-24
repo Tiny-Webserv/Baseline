@@ -106,7 +106,8 @@ void EventLoop::HandleRequest(struct kevent *curEvnts) {
     std::cout <<"=====rq trget===" << std::endl;
     std::cout << reque->GetTarget() << std::endl;
     std::cout <<"=====rq trget===" << std::endl;
-    MakeResponse(curEvnts);
+    if ((reque->GetChunked() && reque->GetIsEnd()) || !reque->GetChunked())
+        MakeResponse(curEvnts);
 }
 
 void EventLoop::MakeResponse(struct kevent *curEvnts) {

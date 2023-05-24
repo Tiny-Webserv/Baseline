@@ -43,10 +43,14 @@ Response::Response(Request *request)
         _request->SetErrorCode(e._errorCode);
         _request->SetErrorMessages(e.what());
         try {
-            if (isAutoIndex())
+			// target 유효성 검증 조건문 추가
+            if (isAutoIndex() && verifyFile(_request->GetTarget().c_str()))
+            {
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
+            }
             else {
+
                 generateErrorBody();
             }
         } catch (NotExist &e) {
@@ -86,9 +90,13 @@ Response::Response(Request *request, struct kevent *curEvnts,
         _request->SetErrorMessages(e.what());
         try {
             std::cerr << "srcs/http/Response.cpp:87" << std::endl;
-            if (isAutoIndex())
+
+            if (isAutoIndex() && verifyFile(_request->GetTarget().c_str()))
+            {
+                std::cout << "=====check4====" << std::endl;
                 generateAutoindex(
                     _request->GetServer().GetRoot()); // autoindex 처리
+                }
             else {
                 generateErrorBody();
             }
@@ -154,7 +162,7 @@ std::string Response::fetchFilePath() {
             }
         }
         // redirect인지 아닌지에 따라서 throw
-        if (isRedirect() == false) {
+        if (isRedirect() == false && isAutoIndex() == false) {
             std::cerr << "fetch file path" << std::endl;
             throw NotExist();
         }
@@ -292,10 +300,12 @@ bool Response::isRedirect() {
             _request->SetErrorCode(302);
             _request->SetErrorMessages("Moved Temporarily");
             _isRedirection = true;
+            std::cout << "여기서 404 ?22" << std::endl;
         };
     }
     else
     {
+			std::cout << "여기서 404 ?" << std::endl;
             _request->SetErrorCode(404);
             _isRedirection = false;
     }
@@ -309,6 +319,10 @@ bool Response::isRedirect() {
 void Response::generateAutoindex(const std::string &directory) {
     std::cerr << "dir_path : " << directory << std::endl;
     std::string dir_path = directory;
+    std::cout << "=======dir_path========" << std::endl;
+    std::cout << dir_path << std::endl;
+    std::cout << "=======dir_path========" << std::endl;
+
     DIR *dir = opendir(dir_path.c_str());
     struct dirent *entry;
     std::stringstream ss;
@@ -451,8 +465,12 @@ bool Response::isDirectory(const char *directory) {
 bool Response::verifyFile(const char *filename) {
     struct stat buffer;
 
-    // get 요청일 때 쿼리 스트링 짜르는 부분///////////
-    std::string _filename(filename);
+    if( isRedirect() == true)
+	{
+		return true;
+	}
+        // get 요청일 때 쿼리 스트링 짜르는 부분///////////
+        std::string _filename(filename);
     size_t idx;
     idx = _filename.find(".php?");
     if (idx != std::string::npos) {
@@ -463,10 +481,12 @@ bool Response::verifyFile(const char *filename) {
     if (stat(filename, &buffer) != 0) {
         if (errno == EACCES)
             throw PermissionDenied();
-        else if (errno == ENOENT) {
+        // ~/hello42.html 이후에 /hello42.html/42라는 잘못된 요청에 대해서 유효성 검증
+        else if ((errno == ENOENT || errno == 20) && isRedirect() == false) {
             std::cerr << "verifyFile" << std::endl;
             throw NotExist();
         }
+		std::cerr << "errorno : " << errno << std::endl;
         throw ServerError(strerror(errno));
     }
     return true;
@@ -479,7 +499,9 @@ void Response::getMethod() {
     // 파일 경로 가져오기
     fileToRead = fetchFilePath();
     // 디렉토리인지 체크
+	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
+        std::cout << "=====check1====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
         std::cerr << "fileToRead : " << fileToRead << std::endl;
@@ -519,7 +541,9 @@ void Response::postMethod() {
     if (!isAllowed("POST"))
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
+	verifyFile(fileToRead.c_str());
     if (isDirectory(fileToRead.c_str())) {
+        std::cout << "=====check2====" << std::endl;
         if (!isAutoIndex())
             throw PermissionDenied();
         generateAutoindex(fileToRead);
@@ -551,6 +575,7 @@ void Response::deleteMethod() {
     if (!isAllowed("DELETE"))
         throw MethodNotAllowed();
     fileToRead = fetchFilePath();
+	verifyFile(fileToRead.c_str());
     if (remove(fileToRead.c_str()) != 0) {
         std::cerr << "delete method" << std::endl;
         throw NotExist();

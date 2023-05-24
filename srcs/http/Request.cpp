@@ -19,11 +19,14 @@ Request::Request(int fd, std::stringstream &stream)
         setHeader(stream.str());
         splitHost();
         setStartLine(buff);
-        readBody(fd);
+        if (GetMethod() == "POST") {
+            readBody(fd);
+        }
         if (_contentType == "multipart/form-data")
             parseFormData();
-
-    } catch (const StateCode &e) {
+    } catch (ReadFail &e){
+		SetErrorCode(600);
+	} catch (const StateCode &e) {
         SetErrorCode(e._errorCode);
         SetErrorMessages(e.what());
     }
@@ -149,6 +152,7 @@ void Request::setStartLine(std::string startLine) {
         _query = _target.substr(_target.find('?') + 1);
         _target.erase(_target.find('?'));
     }
+
     if (data[2].compare("HTTP/1.1\r"))
         throw HTTPVersionError();
 }
@@ -207,24 +211,37 @@ void Request::readBody(int fd) {
     std::stringstream ss;
     std::string line;
     int valRead;
-    int readSize = 0;
-    std::vector<char> buffer(1024);
-
     if (_chunked) {
-        line = get_next_line(fd);
+        char *str = get_next_line(fd);
+        line = str;
+        free(str);
         line = line.substr(0, line.size() - CRLF_SIZE);
         ss << std::hex << line;
         ss >> x;
+        _contentLength = x; 
+        std::cout << "chunked = " << x << std::endl;
         if (x == 0) {
             _isEnd = true;
             return;
         }
     }
-    while ((valRead = recv(fd, &buffer[0], 1024, 0)) > 0) {
-        readSize += valRead;
+    std::cout << _contentLength << std::endl;
+    if (_contentLength == -1) // contentLength 가 없고 chunked가 아닌데 바디가 있는 경우
+        _contentLength = 10;
+    std::vector<char> buffer(_contentLength);
+    valRead = recv(fd, &buffer[0], _contentLength, 0); //non block * block
+    if (valRead == _contentLength) {
+        std::cout << "valread good!!!" << std::endl;
         std::copy(buffer.begin(), buffer.begin() + valRead,
-                  std::back_inserter(_binary));
+                std::back_inserter(_binary));
     }
+    else if (valRead == -1) {
+        std::cout << "valread == -1" << std::endl;
+        throw ReadFail();
+    }
+    else
+        std::cout << "valread error" << std::endl;
+
     // CRLF가 2번인지 확인해서 다 읽었는지 아닌지 확인
     if (!_chunked && _binary.size()) {
         size_t end = _binary.size() - 1;
@@ -234,10 +251,12 @@ void Request::readBody(int fd) {
             _binary.erase(_binary.end() - 5, _binary.end() - 1);
         }
     } else if (_chunked) {
-        if (static_cast<unsigned int>(readSize) > x ||
+        if (static_cast<unsigned int>(valRead) > x ||
             (_server != NULL &&
-             _binary.size() > _server->GetClientMaxBodySize()))
+             _binary.size() > _server->GetClientMaxBodySize())) {  //chunked 일때 _binary에 이어붙이고 있는데
+             std::string str(_binary.begin(), _binary.end());      // 조건문을 보면 chunked여도 maxbodysize 못넘길걸로 예상
             throw BodySizeError();
+             }
         _isEnd = false;
     } else if (_binary.size() == 0)
         _isEnd = true;

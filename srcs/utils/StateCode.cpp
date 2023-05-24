@@ -48,6 +48,10 @@ const char *MethodNotAllowed::what() const throw() {
     return "Not Allowed : Method not allowed";
 }
 
+const char* ReadFail::what() const throw() {
+    return "Read operation failed";
+}
+
 ServerError::ServerError(const char *condition) {
 	_errorCode = InternalServerError;
     char *msg = new char[std::strlen(condition) + 25];
