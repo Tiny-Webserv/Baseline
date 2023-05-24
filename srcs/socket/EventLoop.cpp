@@ -20,9 +20,6 @@ void EventLoop::EventHandler() {
                           16, NULL);
         _ChangeList.clear();
         for (int i = 0; i < newEvnts; i++) {
-            std::cout
-                << "========================================================"
-                << std::endl;
             curEvnts = &evntLst[i];
             if (curEvnts->filter == EVFILT_READ) {
                 if (curEvnts->ident < (uintptr_t)servcnt + 3) { // 서버 소켓?
@@ -31,17 +28,23 @@ void EventLoop::EventHandler() {
                         ServerBlock *sptr =
                             static_cast<ServerBlock *>(curEvnts->udata);
                         clnt_fd = accept(curEvnts->ident, 0, 0);
+                        if (clnt_fd == -1)
+                            continue;
                         struct linger linger_opt;
                         linger_opt.l_onoff = 1;
                         linger_opt.l_linger = 0; // TIME_WAIT 상태를 0초로 설정
                         if (setsockopt(clnt_fd, SOL_SOCKET, SO_LINGER,
                                        &linger_opt, sizeof(linger_opt)) < 0) {
                             std::cout << "setsockopt error" << std::endl;
+                            close(clnt_fd);
+                            continue;
                         }
                         int sigpipe_opt = 1;
                         if (setsockopt(clnt_fd, SOL_SOCKET, SO_NOSIGPIPE,
                                        &sigpipe_opt, sizeof(sigpipe_opt)) < 0) {
                             std::cout << "setsockopt error" << std::endl;
+                            close(clnt_fd);
+                            continue;
                         }
                         std::cout << sptr->GetPort() << "에 새 클라이언트("
                                   << clnt_fd << ") 연결" << std::endl;
@@ -50,8 +53,7 @@ void EventLoop::EventHandler() {
                         EV_SET(&tmpEvnt, clnt_fd, EVFILT_READ,
                                EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
                         _ChangeList.push_back(tmpEvnt);
-                    } else
-                        std::cout << "이상한 연결 요청" << std::endl;
+                    }
                 } else {
                     std::cout << "클라이언트(" << curEvnts->ident
                               << ")으로부터 request 들어옴" << std::endl;
@@ -62,7 +64,7 @@ void EventLoop::EventHandler() {
                           << ")에게 Write 이벤트 발생" << std::endl;
                 if (this->_response.find(curEvnts->ident) ==
                     this->_response.end()) {
-                    std::cout << "send failed non exist response" << std::endl;
+                    // std::cout << "send failed non exist response" << std::endl;
                     close(curEvnts->ident);
                     EraseMemberMap(curEvnts->ident);
                 } else
@@ -80,14 +82,12 @@ void EventLoop::EventHandler() {
 
 				Response::getCGI().erase(curEvnts->ident);
                 // EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
-                
-                
+
+
                 //if (_response[sock_fd]->generatePhpResponse(curEvnts, _ChangeList) == -1)
 					// EraseMemberMap(Response::getCGI()[curEvnts->ident][0]);
 					// Response::getCGI().erase(curEvnts->ident);
             } else {
-                std::cout << curEvnts->ident << "번 알 수 없는 이벤트 필터("
-                          << curEvnts->filter << ") 발생" << std::endl;
                 close(curEvnts->ident);
                 EraseMemberMap(curEvnts->ident);
             }
@@ -98,14 +98,11 @@ void EventLoop::EventHandler() {
 void EventLoop::HandleRequest(struct kevent *curEvnts) {
     Request *reque = ParseRequest(curEvnts->ident, this->_request, _server);
     if (reque == NULL) {
-        std::cout << curEvnts->ident << "로 부터 fin 요청!" << std::endl;
+        std::cout << curEvnts->ident << " : fin 요청" << std::endl;
         EraseMemberMap(curEvnts->ident);
         close(curEvnts->ident);
         return;
     }
-    std::cout <<"=====rq trget===" << std::endl;
-    std::cout << reque->GetTarget() << std::endl;
-    std::cout <<"=====rq trget===" << std::endl;
     if ((reque->GetChunked() && reque->GetIsEnd()) || !reque->GetChunked())
         MakeResponse(curEvnts);
 }
@@ -122,9 +119,8 @@ void EventLoop::MakeResponse(struct kevent *curEvnts) {
         //std::cout << "이미 뒤진 소켓 MakeResponse 에서 발견되다" << std::endl;
         return;
     }
-    std::cout << curEvnts->ident << " 에게 보낼 응답 msg 생성 " << std::endl;
+    // std::cout << curEvnts->ident << " 에게 보낼 응답 msg 생성 " << std::endl;
     if (_request.find(curEvnts->ident) == _request.end()) {
-        //std::cout << "dlfjsruddnrk dlTdmfRk??" << std::endl;
         close(curEvnts->ident);
         EraseMemberMap(curEvnts->ident);
         return;
@@ -163,7 +159,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
         // Socket is dead, close it and return
         close(curEvnts->ident);
         EraseMemberMap(curEvnts->ident);
-        //std::cout << "이미 뒤진 소켓 SendResponse 에서 발견되다" << std::endl;
+        //std::cout << "이미 del 소켓 SendResponse 에서 발견되다" << std::endl;
         return;
     }
     std::cout << curEvnts->ident << " 에게 응답 msg 전송 " << std::endl;
@@ -172,7 +168,6 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     int res = send(curEvnts->ident, &resMsg[_offset[curEvnts->ident]],
                    resMsg.size() - _offset[curEvnts->ident], 0);
     if (res > 0) {
-        std::cout << curEvnts->ident << "번 다시 보내" << std::endl;
         _offset[curEvnts->ident] += res;
         return;
     }
@@ -189,7 +184,7 @@ void EventLoop::SendResponse(struct kevent *curEvnts) {
     EV_SET(&tmpEvnt, curEvnts->ident, EVFILT_WRITE, EV_DELETE, 0, 0,
            curEvnts->udata);
     _ChangeList.push_back(tmpEvnt);
-	if (_request[curEvnts->ident]->getConnection())
+	if (!_request[curEvnts->ident]->getConnection())
 		close(curEvnts->ident);
     EraseMemberMap(curEvnts->ident);
 }

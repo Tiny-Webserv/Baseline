@@ -359,9 +359,9 @@ int NginxWord(std::string line) {
 			if (test(line))
 				return 1;
 			else {
-				std::cout << "=====semicolon test======" << std::endl;
-				std::cout << FirstToken << std::endl;
-				std::cout << "=====semicolon test======" << std::endl;
+				// std::cout << "=====semicolon test======" << std::endl;
+				// std::cout << FirstToken << std::endl;
+				// std::cout << "=====semicolon test======" << std::endl;
 
 				return 0;
 			}

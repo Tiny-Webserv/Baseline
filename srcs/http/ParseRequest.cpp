@@ -65,7 +65,6 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
 		request->SetServer(FindServer(servers, request));
 		try {
 			if (FindServer(servers, request) == NULL) {
-				std::cerr << "could not find server" << std::endl;
 				delete request;
 				return NULL;
 			}
@@ -80,7 +79,7 @@ Request *ParseRequest(int fd, std::map<int, Request *> &clients,
         Request *request = clients[fd];
 		try {
 			if (request->GetMethod() == "POST")
-				request->readBody(fd); 
+				request->readBody(fd);
 		} catch (ReadFail &e){
 			return NULL;
 		} catch (const StateCode &e) {
