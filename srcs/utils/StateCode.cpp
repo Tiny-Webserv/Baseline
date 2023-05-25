@@ -29,7 +29,7 @@ const char *HTTPVersionError::what() const throw() {
 }
 
 const char *MethodError::what() const throw() {
-    return "Method error : Bad method request";
+    return "Not Implemented : Bad method request";
 }
 
 const char *BodySizeError::what() const throw() {

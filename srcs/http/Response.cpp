@@ -650,6 +650,7 @@ void Response::forkPhp(struct kevent *curEvents,
     if (pipe(parentWrite) == -1 || pipe(childWrite) == -1) {
         close(parentWrite[0]);
         close(parentWrite[1]);
+        delete body;
         throw ServerError(strerror(errno));
     }
     *body += "\r\n\r\n";

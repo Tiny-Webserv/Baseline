@@ -6,6 +6,13 @@ EventLoop::EventLoop(Config &con) {
     Socket sock(con);
     this->_server = con._ServerBlockObject;
     this->_kqFd = kqueue();
+    if (this->_kqFd == -1) {
+        Config::iterator begin = con._ServerBlockObject.begin();
+        Config::iterator end = con._ServerBlockObject.end();
+		for ( ; begin != end ; begin++)
+			close(begin->GetPort());
+		exit(80);
+    }
     this->_ChangeList = sock.GetChangeList();
     EventHandler();
 }

@@ -35,7 +35,6 @@ void Socket::ServerInit(Config::iterator it, Config &con)
 			b = serverNames.begin();
 			e = serverNames.end();
 			for ( ; b != e ; b++) {
-				std::cout << *b <<std::endl;
 				if (std::find(_dupPort[it->GetPort()].begin(), _dupPort[it->GetPort()].end(), *b) != _dupPort[it->GetPort()].end()) {
 					std::cout << "duplicate port err" << std::endl;
 					Config::iterator begin = con._ServerBlockObject.begin();
