@@ -656,7 +656,7 @@ void Response::forkPhp(struct kevent *curEvents,
 
     std::map<std::string, std::string> _envMap = PhpEnvSet();
 
-    char *env[] = {
+    const char *env[] = {
         "GATEWAY_INTERFACE=CGI/1.1",
         "SERVER_PROTOCOL=HTTP/1.1", /// gateway, protocol is const!
         "CONTENT_TYPE=application/x-www-form-urlencoded", // const same!
@@ -684,9 +684,9 @@ void Response::forkPhp(struct kevent *curEvents,
         close(childWrite[1]);
         std::string arg2 = fetchFilePath();
 
-        char *arg[] = {"./html/php-cgi", (char *)arg2.c_str(), NULL};
+        const char *arg[] = {"./html/php-cgi", (char *)arg2.c_str(), NULL};
 
-        execve(arg[0], arg, env);
+        execve(arg[0], const_cast<char* const*>(arg), const_cast<char* const*>(env));
         exit(-1);
 
     } else if (pid == -1) {

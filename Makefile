@@ -1,5 +1,5 @@
 NAME = webserv
-CC = c++
+CXX = c++
 
 #리터럴 string 무시 플래그 추가
 CCFLAGS =  -std=c++98  -Wall -Werror -Wextra -Wno-write-strings #-g3 -fsanitize=address -fsanitize=undefined
@@ -30,14 +30,14 @@ OBJS = $(addprefix $(OBJS_PATH)/, $(OBJS_NAME))
 all : $(NAME)
 
 $(NAME) : $(DIRS) $(OBJS)
-	$(CC) $(CCFLAGS) -o $(NAME) $(OBJS)
+	$(CXX) $(CCFLAGS) -o $(NAME) $(OBJS)
 
 $(DIRS) :
 	@mkdir $(OBJS_PATH) 2> /dev/null || true
 	@mkdir $(DIRS) 2> /dev/null || true
 
 $(OBJS_PATH)/%.obj : $(SRCS_PATH)/%.cpp
-	$(CC) $(INC_LINK) $(CCFLAGS) -c $< -o $@
+	$(CXX) $(INC_LINK) $(CCFLAGS) -c $< -o $@
 
 clean :
 	rm -rf $(OBJS_PATH)

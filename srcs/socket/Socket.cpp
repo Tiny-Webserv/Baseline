@@ -19,6 +19,55 @@ void Socket::ServerInit(Config::iterator it, Config &con)
 	int servSock;
 	struct sockaddr_in serv_addr;
 
+	//이미 들어왔던 포트
+	if (std::find(_portCheck.begin(), _portCheck.end(), it->GetPort()) != _portCheck.end()) {
+		std::vector<std::string> serverNames = it->GetServerName();
+		if (serverNames.empty()) {
+			std::cout << "serverName setting err" << std::endl;
+			Config::iterator begin = con._ServerBlockObject.begin();
+			for ( ; it != begin ; it--)
+				close(it->GetPort());
+			exit(80);
+		}
+		//서버네임이 중복인지 체크
+		else {
+			std::vector<std::string>::iterator b, e;
+			b = serverNames.begin();
+			e = serverNames.end();
+			for ( ; b != e ; b++) {
+				std::cout << *b <<std::endl;
+				if (std::find(_dupPort[it->GetPort()].begin(), _dupPort[it->GetPort()].end(), *b) != _dupPort[it->GetPort()].end()) {
+					std::cout << "duplicate port err" << std::endl;
+					Config::iterator begin = con._ServerBlockObject.begin();
+					for ( ; it != begin ; it--)
+						close(it->GetPort());
+					exit(80);
+				}
+			}
+		}
+		//중복이 아님
+		if (serverNames.empty())
+			_dupPort[it->GetPort()].push_back("_");
+		else {
+			for (size_t i = 0 ; i < serverNames.size() ; i++) {
+				_dupPort[it->GetPort()].push_back(serverNames[i]);
+			}
+		}
+		return ;
+	}
+	//들어온적 없는 포트
+	else {
+		std::vector<std::string> serverNames = it->GetServerName();
+		if (serverNames.empty())
+			_dupPort[it->GetPort()].push_back("_");
+		else {
+			for (size_t i = 0 ; i < serverNames.size() ; i++) {
+				_dupPort[it->GetPort()].push_back(serverNames[i]);
+			}
+		}
+	}
+
+	_portCheck.push_back(it->GetPort());
 	servSock = socket(PF_INET, SOCK_STREAM, 0);
 
 	memset(&serv_addr, 0, sizeof(serv_addr));

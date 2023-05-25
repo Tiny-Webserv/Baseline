@@ -14,6 +14,8 @@
 class Socket
 {
 private:
+	std::vector<int> _portCheck;
+	std::map<int, std::vector<std::string> > _dupPort;
 	std::vector<struct kevent> _changList;
 	/* data */
 	void ServerInit(Config::iterator it, Config& con);
