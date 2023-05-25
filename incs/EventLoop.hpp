@@ -20,6 +20,13 @@ class EventLoop {
     std::map<int, Response *> _response;
     std::map<int, int> _offset;
     std::vector<ServerBlock> _server;
+    typedef struct phpUdata {
+        std::string *body;
+        int clnt_sock;
+        int pid;
+        int child_write_zero;
+        int parent_write_one;
+    } phpUdata;
     EventLoop();
 
   public:

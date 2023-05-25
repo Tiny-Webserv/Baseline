@@ -58,7 +58,7 @@ void EventLoop::EventHandler() {
                         fcntl(clnt_fd, F_SETFL, O_NONBLOCK);
                         struct kevent tmpEvnt;
                         EV_SET(&tmpEvnt, clnt_fd, EVFILT_READ,
-                               EV_ADD | EV_ENABLE, 0, 0, curEvnts->udata);
+                               EV_ADD | EV_ENABLE, 0, 0, 0);
                         _ChangeList.push_back(tmpEvnt);
                     }
                 } else {
@@ -69,7 +69,11 @@ void EventLoop::EventHandler() {
             } else if (curEvnts->filter == EVFILT_WRITE) {
                 std::cout << "클라이언트(" << curEvnts->ident
                           << ")에게 Write 이벤트 발생" << std::endl;
-                if (this->_response.find(curEvnts->ident) ==
+                if (curEvnts->udata != NULL) { //ident = parentWrite[1];
+                    std::cout << "?child write" << std::endl;
+                    phpUdata *udata = static_cast<phpUdata *>(curEvnts->udata);
+                    _response[udata->clnt_sock]->PhpChildWrite(curEvnts, _ChangeList);
+                } else if (this->_response.find(curEvnts->ident) ==
                     this->_response.end()) {
                     // std::cout << "send failed non exist response" << std::endl;
                     close(curEvnts->ident);

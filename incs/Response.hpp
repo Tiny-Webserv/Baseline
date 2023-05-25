@@ -25,6 +25,16 @@ private:
 	bool				_isDone;
 	bool				_hasChildProc;
 	static std::map<int, std::vector<int> > _cgi;
+	typedef struct phpUdata
+	{
+		std::string *body;
+		int			clnt_sock;
+        int			pid;
+        int 		child_write_zero;
+    	int			parent_write_one; 
+	} phpUdata;
+	phpUdata _phpUdata;
+	
 	bool _isRedirection;
 	std::string _redirectLocation;
 	LocationBlock	&getLocationBlock();
@@ -78,6 +88,7 @@ public:
 	bool	verifyFile(const char *filename);
 	void	forkPhp(struct kevent *curEvents, std::vector<struct kevent> &_changeList);
 	void	PhpResultRead(struct kevent *curEvnts);
+	void	PhpChildWrite(struct kevent *curEvnts, std::vector<struct kevent> &_changeList);
 };
 
 #endif

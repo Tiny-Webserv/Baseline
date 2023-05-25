@@ -701,24 +701,24 @@ void Response::forkPhp(struct kevent *curEvents,
     {
         close(parentWrite[0]);
         close(childWrite[1]);
-        
-        //asd
-        if ((write(parentWrite[1], body->c_str(), body->length())) == -1) {
-            kill(pid, SIGKILL);
-            delete body;
-            close(parentWrite[1]);
-            close(childWrite[0]);
-            throw ServerError("php write failed");
-        }
-        close(parentWrite[1]);
+        _phpUdata.body = body;
+        _phpUdata.clnt_sock = curEvents->ident;
+        _phpUdata.pid = pid;
+        _phpUdata.child_write_zero = childWrite[0];
+        _phpUdata.parent_write_one = parentWrite[1];
         struct kevent tmpEvnt;
-        EV_SET(&tmpEvnt, pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,
-               curEvents->udata);
+        EV_SET(&tmpEvnt, parentWrite[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+               &_phpUdata);
         _changeList.push_back(tmpEvnt);
-        _cgi[pid].push_back(curEvents->ident);
-        _cgi[pid].push_back(childWrite[0]);
-        delete body;
-        _hasChildProc = true;
+        std::cout << "자식 write 등록 완료" << std::endl;
+        ////////////////////////////////////////////////////////////////////////
+        // curEvent->ident [clnt 소켓) udata 가 반드시 포함
+        
+        // string *body
+        // int pid (자식 프로세스 id)
+        // child write[0]
+        // parent write[1]
+        //////////////////////////////////////////////////////////////
     }
 }
 
@@ -758,4 +758,26 @@ void    Response::PhpResultRead(struct kevent *curEvnts)
         joinResponseMessage();
         _isDone = true;
     }
+}
+
+
+void	Response::PhpChildWrite(struct kevent *curEvnts, std::vector<struct kevent> &_changeList) {
+    phpUdata *udata = static_cast<phpUdata *>(curEvnts->udata);
+    std::string *body = udata->body;
+    if ((write(curEvnts->ident/*curEvents->ident*/, body->c_str(), body->length())) == -1) {
+        kill(udata->pid, SIGKILL);//udata에서 가져옴
+        delete body;
+        close(udata->child_write_zero);//udata
+        close(udata->parent_write_one);//udata
+        throw ServerError("php write failed");
+    }
+    close(udata->parent_write_one);//udata
+    struct kevent tmpEvnt;
+    EV_SET(&tmpEvnt, udata->pid, EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0,
+            0);
+    _changeList.push_back(tmpEvnt);
+    _cgi[udata->pid/*udata*/].push_back(udata->clnt_sock);
+    _cgi[udata->pid].push_back(udata->child_write_zero);
+    delete body;
+    _hasChildProc = true;
 }
