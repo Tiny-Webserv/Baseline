@@ -701,6 +701,8 @@ void Response::forkPhp(struct kevent *curEvents,
     {
         close(parentWrite[0]);
         close(childWrite[1]);
+        
+        //asd
         if ((write(parentWrite[1], body->c_str(), body->length())) == -1) {
             kill(pid, SIGKILL);
             delete body;
